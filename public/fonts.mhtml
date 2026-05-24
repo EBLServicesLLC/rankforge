@@ -1,0 +1,714 @@
+From: <Saved by Blink>
+Snapshot-Content-Location: https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/fonts/
+Subject: @tabler/icons-webfont CDN by jsDelivr - A free, fast, and reliable Open Source CDN
+Date: Sat, 23 May 2026 15:12:17 -0400
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----MultipartBoundary--mbrwATKM2LXDG2PTv8dCohJZcAKPsaeb1jpUzrVG6R----"
+
+
+------MultipartBoundary--mbrwATKM2LXDG2PTv8dCohJZcAKPsaeb1jpUzrVG6R----
+Content-Type: text/html
+Content-ID: <frame-707B024C976C261F0BAF0B7D231E720D@mhtml.blink>
+Content-Transfer-Encoding: quoted-printable
+Content-Location: https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/fonts/
+
+<!DOCTYPE html><html lang=3D"en"><head><meta http-equiv=3D"Content-Type" co=
+ntent=3D"text/html; charset=3DUTF-8"><link rel=3D"stylesheet" type=3D"text/=
+css" href=3D"cid:css-379746b4-eaa7-4103-9903-e58b612e843d@mhtml.blink" />
+	=09
+		<meta name=3D"description" content=3D"@tabler/icons-webfont CDN by jsDeli=
+vr - A free, fast, and reliable Open Source CDN for npm and GitHub">
+		<meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D=
+1">
+		<title>@tabler/icons-webfont CDN by jsDelivr - A free, fast, and reliable=
+ Open Source CDN</title>
+	=09
+	</head>
+
+	<body>
+		<div class=3D"container">
+			<div class=3D"header">
+				<h1>@tabler/icons-webfont CDN files</h1>
+
+				<a class=3D"badge" href=3D"https://www.jsdelivr.com/package/npm/@tabler=
+/icons-webfont" title=3D"jsDelivr monthly hits">
+					<img alt=3D"jsDelivr monthly hits badge" src=3D"https://data.jsdelivr.=
+com/v1/package/npm/@tabler/icons-webfont/badge">
+				</a>
+			</div>
+
+
+			<div class=3D"path">
+				<ol itemscope=3D"" itemtype=3D"https://schema.org/BreadcrumbList">
+					<li itemprop=3D"itemListElement" itemscope=3D"" itemtype=3D"https://sc=
+hema.org/ListItem">
+						<a itemscope=3D"" itemtype=3D"https://schema.org/WebPage" itemprop=3D=
+"item" itemid=3D"/npm/@tabler/icons-webfont@3.10.0/" href=3D"https://cdn.js=
+delivr.net/npm/@tabler/icons-webfont@3.10.0/" rel=3D"nofollow">
+							<span itemprop=3D"name">@tabler/icons-webfont@3.10.0</span></a> /
+						<meta itemprop=3D"position" content=3D"0">
+					</li>
+					<li itemprop=3D"itemListElement" itemscope=3D"" itemtype=3D"https://sc=
+hema.org/ListItem">
+						<a itemscope=3D"" itemtype=3D"https://schema.org/WebPage" itemprop=3D=
+"item" itemid=3D"/npm/@tabler/icons-webfont@3.10.0/dist/" href=3D"https://c=
+dn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/" rel=3D"nofollow">
+							<span itemprop=3D"name">dist</span></a> /
+						<meta itemprop=3D"position" content=3D"1">
+					</li>
+					<li itemprop=3D"itemListElement" itemscope=3D"" itemtype=3D"https://sc=
+hema.org/ListItem">
+						<span itemprop=3D"name">fonts</span>
+						<meta itemprop=3D"position" content=3D"2">
+					</li>
+				</ol>
+
+				<select class=3D"versions select-css">
+					<option value=3D"@tabler/icons-webfont@3.44.0">@tabler/icons-webfont@3=
+.44.0</option>
+					<option value=3D"@tabler/icons-webfont@3.43.0">@tabler/icons-webfont@3=
+.43.0</option>
+					<option value=3D"@tabler/icons-webfont@3.42.0">@tabler/icons-webfont@3=
+.42.0</option>
+					<option value=3D"@tabler/icons-webfont@3.41.1">@tabler/icons-webfont@3=
+.41.1</option>
+					<option value=3D"@tabler/icons-webfont@3.41.0">@tabler/icons-webfont@3=
+.41.0</option>
+					<option value=3D"@tabler/icons-webfont@3.40.0">@tabler/icons-webfont@3=
+.40.0</option>
+					<option value=3D"@tabler/icons-webfont@3.39.0">@tabler/icons-webfont@3=
+.39.0</option>
+					<option value=3D"@tabler/icons-webfont@3.38.0">@tabler/icons-webfont@3=
+.38.0</option>
+					<option value=3D"@tabler/icons-webfont@3.37.1">@tabler/icons-webfont@3=
+.37.1</option>
+					<option value=3D"@tabler/icons-webfont@3.37.0">@tabler/icons-webfont@3=
+.37.0</option>
+					<option value=3D"@tabler/icons-webfont@3.36.1">@tabler/icons-webfont@3=
+.36.1</option>
+					<option value=3D"@tabler/icons-webfont@3.36.0">@tabler/icons-webfont@3=
+.36.0</option>
+					<option value=3D"@tabler/icons-webfont@3.35.0">@tabler/icons-webfont@3=
+.35.0</option>
+					<option value=3D"@tabler/icons-webfont@3.34.1">@tabler/icons-webfont@3=
+.34.1</option>
+					<option value=3D"@tabler/icons-webfont@3.34.0">@tabler/icons-webfont@3=
+.34.0</option>
+					<option value=3D"@tabler/icons-webfont@3.33.0">@tabler/icons-webfont@3=
+.33.0</option>
+					<option value=3D"@tabler/icons-webfont@3.32.0">@tabler/icons-webfont@3=
+.32.0</option>
+					<option value=3D"@tabler/icons-webfont@3.31.0">@tabler/icons-webfont@3=
+.31.0</option>
+					<option value=3D"@tabler/icons-webfont@3.30.0">@tabler/icons-webfont@3=
+.30.0</option>
+					<option value=3D"@tabler/icons-webfont@3.29.0">@tabler/icons-webfont@3=
+.29.0</option>
+					<option value=3D"@tabler/icons-webfont@3.28.1">@tabler/icons-webfont@3=
+.28.1</option>
+					<option value=3D"@tabler/icons-webfont@3.28.0">@tabler/icons-webfont@3=
+.28.0</option>
+					<option value=3D"@tabler/icons-webfont@3.27.1">@tabler/icons-webfont@3=
+.27.1</option>
+					<option value=3D"@tabler/icons-webfont@3.27.0">@tabler/icons-webfont@3=
+.27.0</option>
+					<option value=3D"@tabler/icons-webfont@3.26.0">@tabler/icons-webfont@3=
+.26.0</option>
+					<option value=3D"@tabler/icons-webfont@3.25.0">@tabler/icons-webfont@3=
+.25.0</option>
+					<option value=3D"@tabler/icons-webfont@3.24.0">@tabler/icons-webfont@3=
+.24.0</option>
+					<option value=3D"@tabler/icons-webfont@3.23.0">@tabler/icons-webfont@3=
+.23.0</option>
+					<option value=3D"@tabler/icons-webfont@3.22.0">@tabler/icons-webfont@3=
+.22.0</option>
+					<option value=3D"@tabler/icons-webfont@3.21.0">@tabler/icons-webfont@3=
+.21.0</option>
+					<option value=3D"@tabler/icons-webfont@3.20.0">@tabler/icons-webfont@3=
+.20.0</option>
+					<option value=3D"@tabler/icons-webfont@3.19.0">@tabler/icons-webfont@3=
+.19.0</option>
+					<option value=3D"@tabler/icons-webfont@3.18.0">@tabler/icons-webfont@3=
+.18.0</option>
+					<option value=3D"@tabler/icons-webfont@3.17.0">@tabler/icons-webfont@3=
+.17.0</option>
+					<option value=3D"@tabler/icons-webfont@3.16.0">@tabler/icons-webfont@3=
+.16.0</option>
+					<option value=3D"@tabler/icons-webfont@3.15.0">@tabler/icons-webfont@3=
+.15.0</option>
+					<option value=3D"@tabler/icons-webfont@3.14.0">@tabler/icons-webfont@3=
+.14.0</option>
+					<option value=3D"@tabler/icons-webfont@3.13.0">@tabler/icons-webfont@3=
+.13.0</option>
+					<option value=3D"@tabler/icons-webfont@3.12.0">@tabler/icons-webfont@3=
+.12.0</option>
+					<option value=3D"@tabler/icons-webfont@3.11.0">@tabler/icons-webfont@3=
+.11.0</option>
+					<option value=3D"@tabler/icons-webfont@3.10.0">@tabler/icons-webfont@3=
+.10.0</option>
+					<option value=3D"@tabler/icons-webfont@3.9.0">@tabler/icons-webfont@3.=
+9.0</option>
+					<option value=3D"@tabler/icons-webfont@3.8.0">@tabler/icons-webfont@3.=
+8.0</option>
+					<option value=3D"@tabler/icons-webfont@3.7.0">@tabler/icons-webfont@3.=
+7.0</option>
+					<option value=3D"@tabler/icons-webfont@3.6.0">@tabler/icons-webfont@3.=
+6.0</option>
+					<option value=3D"@tabler/icons-webfont@3.5.0">@tabler/icons-webfont@3.=
+5.0</option>
+					<option value=3D"@tabler/icons-webfont@3.4.0">@tabler/icons-webfont@3.=
+4.0</option>
+					<option value=3D"@tabler/icons-webfont@3.3.0">@tabler/icons-webfont@3.=
+3.0</option>
+					<option value=3D"@tabler/icons-webfont@3.2.0">@tabler/icons-webfont@3.=
+2.0</option>
+					<option value=3D"@tabler/icons-webfont@3.1.0">@tabler/icons-webfont@3.=
+1.0</option>
+					<option value=3D"@tabler/icons-webfont@3.0.3">@tabler/icons-webfont@3.=
+0.3</option>
+					<option value=3D"@tabler/icons-webfont@3.0.2">@tabler/icons-webfont@3.=
+0.2</option>
+					<option value=3D"@tabler/icons-webfont@3.0.1">@tabler/icons-webfont@3.=
+0.1</option>
+					<option value=3D"@tabler/icons-webfont@3.0.0">@tabler/icons-webfont@3.=
+0.0</option>
+					<option value=3D"@tabler/icons-webfont@3.0.0-beta.2">@tabler/icons-web=
+font@3.0.0-beta.2</option>
+					<option value=3D"@tabler/icons-webfont@3.0.0-beta">@tabler/icons-webfo=
+nt@3.0.0-beta</option>
+					<option value=3D"@tabler/icons-webfont@3.0.0-alpha.1">@tabler/icons-we=
+bfont@3.0.0-alpha.1</option>
+					<option value=3D"@tabler/icons-webfont@3.0.0-alpha.0">@tabler/icons-we=
+bfont@3.0.0-alpha.0</option>
+					<option value=3D"@tabler/icons-webfont@2.47.0">@tabler/icons-webfont@2=
+.47.0</option>
+					<option value=3D"@tabler/icons-webfont@2.46.0">@tabler/icons-webfont@2=
+.46.0</option>
+					<option value=3D"@tabler/icons-webfont@2.45.0">@tabler/icons-webfont@2=
+.45.0</option>
+					<option value=3D"@tabler/icons-webfont@2.44.0">@tabler/icons-webfont@2=
+.44.0</option>
+					<option value=3D"@tabler/icons-webfont@2.43.0">@tabler/icons-webfont@2=
+.43.0</option>
+					<option value=3D"@tabler/icons-webfont@2.42.0">@tabler/icons-webfont@2=
+.42.0</option>
+					<option value=3D"@tabler/icons-webfont@2.41.0">@tabler/icons-webfont@2=
+.41.0</option>
+					<option value=3D"@tabler/icons-webfont@2.40.0">@tabler/icons-webfont@2=
+.40.0</option>
+					<option value=3D"@tabler/icons-webfont@2.39.0">@tabler/icons-webfont@2=
+.39.0</option>
+					<option value=3D"@tabler/icons-webfont@2.38.0">@tabler/icons-webfont@2=
+.38.0</option>
+					<option value=3D"@tabler/icons-webfont@2.37.0">@tabler/icons-webfont@2=
+.37.0</option>
+					<option value=3D"@tabler/icons-webfont@2.36.0">@tabler/icons-webfont@2=
+.36.0</option>
+					<option value=3D"@tabler/icons-webfont@2.35.0">@tabler/icons-webfont@2=
+.35.0</option>
+					<option value=3D"@tabler/icons-webfont@2.34.0">@tabler/icons-webfont@2=
+.34.0</option>
+					<option value=3D"@tabler/icons-webfont@2.33.0">@tabler/icons-webfont@2=
+.33.0</option>
+					<option value=3D"@tabler/icons-webfont@2.32.0">@tabler/icons-webfont@2=
+.32.0</option>
+					<option value=3D"@tabler/icons-webfont@2.31.0">@tabler/icons-webfont@2=
+.31.0</option>
+					<option value=3D"@tabler/icons-webfont@2.30.0">@tabler/icons-webfont@2=
+.30.0</option>
+					<option value=3D"@tabler/icons-webfont@2.29.0">@tabler/icons-webfont@2=
+.29.0</option>
+					<option value=3D"@tabler/icons-webfont@2.28.0">@tabler/icons-webfont@2=
+.28.0</option>
+					<option value=3D"@tabler/icons-webfont@2.27.0">@tabler/icons-webfont@2=
+.27.0</option>
+					<option value=3D"@tabler/icons-webfont@2.26.0">@tabler/icons-webfont@2=
+.26.0</option>
+					<option value=3D"@tabler/icons-webfont@2.25.0">@tabler/icons-webfont@2=
+.25.0</option>
+					<option value=3D"@tabler/icons-webfont@2.24.0">@tabler/icons-webfont@2=
+.24.0</option>
+					<option value=3D"@tabler/icons-webfont@2.23.0">@tabler/icons-webfont@2=
+.23.0</option>
+					<option value=3D"@tabler/icons-webfont@2.22.0">@tabler/icons-webfont@2=
+.22.0</option>
+					<option value=3D"@tabler/icons-webfont@2.21.0">@tabler/icons-webfont@2=
+.21.0</option>
+					<option value=3D"@tabler/icons-webfont@2.20.0">@tabler/icons-webfont@2=
+.20.0</option>
+					<option value=3D"@tabler/icons-webfont@2.19.0">@tabler/icons-webfont@2=
+.19.0</option>
+					<option value=3D"@tabler/icons-webfont@2.18.0">@tabler/icons-webfont@2=
+.18.0</option>
+					<option value=3D"@tabler/icons-webfont@2.17.0">@tabler/icons-webfont@2=
+.17.0</option>
+					<option value=3D"@tabler/icons-webfont@2.16.0">@tabler/icons-webfont@2=
+.16.0</option>
+					<option value=3D"@tabler/icons-webfont@2.15.0">@tabler/icons-webfont@2=
+.15.0</option>
+					<option value=3D"@tabler/icons-webfont@2.14.0">@tabler/icons-webfont@2=
+.14.0</option>
+					<option value=3D"@tabler/icons-webfont@2.13.2">@tabler/icons-webfont@2=
+.13.2</option>
+					<option value=3D"@tabler/icons-webfont@2.13.1">@tabler/icons-webfont@2=
+.13.1</option>
+					<option value=3D"@tabler/icons-webfont@2.13.0">@tabler/icons-webfont@2=
+.13.0</option>
+					<option value=3D"@tabler/icons-webfont@2.12.0">@tabler/icons-webfont@2=
+.12.0</option>
+					<option value=3D"@tabler/icons-webfont@2.11.0">@tabler/icons-webfont@2=
+.11.0</option>
+					<option value=3D"@tabler/icons-webfont@2.10.0">@tabler/icons-webfont@2=
+.10.0</option>
+					<option value=3D"@tabler/icons-webfont@2.9.0">@tabler/icons-webfont@2.=
+9.0</option>
+					<option value=3D"@tabler/icons-webfont@2.8.0">@tabler/icons-webfont@2.=
+8.0</option>
+					<option value=3D"@tabler/icons-webfont@2.7.0">@tabler/icons-webfont@2.=
+7.0</option>
+					<option value=3D"@tabler/icons-webfont@2.6.0">@tabler/icons-webfont@2.=
+6.0</option>
+					<option value=3D"@tabler/icons-webfont@2.5.0">@tabler/icons-webfont@2.=
+5.0</option>
+					<option value=3D"@tabler/icons-webfont@2.4.0">@tabler/icons-webfont@2.=
+4.0</option>
+					<option value=3D"@tabler/icons-webfont@2.3.0">@tabler/icons-webfont@2.=
+3.0</option>
+					<option value=3D"@tabler/icons-webfont@2.2.0">@tabler/icons-webfont@2.=
+2.0</option>
+					<option value=3D"@tabler/icons-webfont@2.1.2">@tabler/icons-webfont@2.=
+1.2</option>
+					<option value=3D"@tabler/icons-webfont@2.1.1">@tabler/icons-webfont@2.=
+1.1</option>
+					<option value=3D"@tabler/icons-webfont@2.1.0">@tabler/icons-webfont@2.=
+1.0</option>
+					<option value=3D"@tabler/icons-webfont@2.0.0">@tabler/icons-webfont@2.=
+0.0</option>
+					<option value=3D"@tabler/icons-webfont@2.0.0-beta.2">@tabler/icons-web=
+font@2.0.0-beta.2</option>
+				</select>
+			</div>
+
+			<div class=3D"listing">
+				<table>
+					<tbody>
+					<tr>
+						<td class=3D"name level-up" colspan=3D"2"><a href=3D"https://cdn.jsde=
+livr.net/npm/@tabler/icons-webfont@3.10.0/dist/">...</a></td>
+					</tr>
+
+					<tr>
+						<td class=3D"name">
+							<svg width=3D"20" height=3D"20" viewBox=3D"0 0 20 20" fill=3D"none" =
+xmlns=3D"http://www.w3.org/2000/svg"><path d=3D"M4 4C4 2.89543 4.89543 2 6 =
+2H11L16 7V16C16 17.1046 15.1046 18 14 18H6C4.89543 18 4 17.1046 4 16V4Z" st=
+roke=3D"#5C667A" stroke-width=3D"1.5" stroke-linecap=3D"round" stroke-linej=
+oin=3D"round"></path></svg>
+							<a rel=3D"nofollow" href=3D"https://cdn.jsdelivr.net/npm/@tabler/ico=
+ns-webfont@3.10.0/dist/fonts/tabler-icons.ttf">tabler-icons.ttf</a>
+						</td>
+						<td class=3D"size">2.24 MB</td>
+					</tr>
+					<tr>
+						<td class=3D"name">
+							<svg width=3D"20" height=3D"20" viewBox=3D"0 0 20 20" fill=3D"none" =
+xmlns=3D"http://www.w3.org/2000/svg"><path d=3D"M4 4C4 2.89543 4.89543 2 6 =
+2H11L16 7V16C16 17.1046 15.1046 18 14 18H6C4.89543 18 4 17.1046 4 16V4Z" st=
+roke=3D"#5C667A" stroke-width=3D"1.5" stroke-linecap=3D"round" stroke-linej=
+oin=3D"round"></path></svg>
+							<a rel=3D"nofollow" href=3D"https://cdn.jsdelivr.net/npm/@tabler/ico=
+ns-webfont@3.10.0/dist/fonts/tabler-icons.woff">tabler-icons.woff</a>
+						</td>
+						<td class=3D"size">1.13 MB</td>
+					</tr>
+					<tr>
+						<td class=3D"name">
+							<svg width=3D"20" height=3D"20" viewBox=3D"0 0 20 20" fill=3D"none" =
+xmlns=3D"http://www.w3.org/2000/svg"><path d=3D"M4 4C4 2.89543 4.89543 2 6 =
+2H11L16 7V16C16 17.1046 15.1046 18 14 18H6C4.89543 18 4 17.1046 4 16V4Z" st=
+roke=3D"#5C667A" stroke-width=3D"1.5" stroke-linecap=3D"round" stroke-linej=
+oin=3D"round"></path></svg>
+							<a rel=3D"nofollow" href=3D"https://cdn.jsdelivr.net/npm/@tabler/ico=
+ns-webfont@3.10.0/dist/fonts/tabler-icons.woff2">tabler-icons.woff2</a>
+						</td>
+						<td class=3D"size">817.81 KB</td>
+					</tr>
+					<tr>
+						<td class=3D"name">
+							<svg width=3D"20" height=3D"20" viewBox=3D"0 0 20 20" fill=3D"none" =
+xmlns=3D"http://www.w3.org/2000/svg"><path d=3D"M4 4C4 2.89543 4.89543 2 6 =
+2H11L16 7V16C16 17.1046 15.1046 18 14 18H6C4.89543 18 4 17.1046 4 16V4Z" st=
+roke=3D"#5C667A" stroke-width=3D"1.5" stroke-linecap=3D"round" stroke-linej=
+oin=3D"round"></path></svg>
+							<a rel=3D"nofollow" href=3D"https://cdn.jsdelivr.net/npm/@tabler/ico=
+ns-webfont@3.10.0/dist/fonts/tabler-icons-filled.ttf">tabler-icons-filled.t=
+tf</a>
+						</td>
+						<td class=3D"size">223.87 KB</td>
+					</tr>
+					<tr>
+						<td class=3D"name">
+							<svg width=3D"20" height=3D"20" viewBox=3D"0 0 20 20" fill=3D"none" =
+xmlns=3D"http://www.w3.org/2000/svg"><path d=3D"M4 4C4 2.89543 4.89543 2 6 =
+2H11L16 7V16C16 17.1046 15.1046 18 14 18H6C4.89543 18 4 17.1046 4 16V4Z" st=
+roke=3D"#5C667A" stroke-width=3D"1.5" stroke-linecap=3D"round" stroke-linej=
+oin=3D"round"></path></svg>
+							<a rel=3D"nofollow" href=3D"https://cdn.jsdelivr.net/npm/@tabler/ico=
+ns-webfont@3.10.0/dist/fonts/tabler-icons-filled.woff">tabler-icons-filled.=
+woff</a>
+						</td>
+						<td class=3D"size">110.66 KB</td>
+					</tr>
+					<tr>
+						<td class=3D"name">
+							<svg width=3D"20" height=3D"20" viewBox=3D"0 0 20 20" fill=3D"none" =
+xmlns=3D"http://www.w3.org/2000/svg"><path d=3D"M4 4C4 2.89543 4.89543 2 6 =
+2H11L16 7V16C16 17.1046 15.1046 18 14 18H6C4.89543 18 4 17.1046 4 16V4Z" st=
+roke=3D"#5C667A" stroke-width=3D"1.5" stroke-linecap=3D"round" stroke-linej=
+oin=3D"round"></path></svg>
+							<a rel=3D"nofollow" href=3D"https://cdn.jsdelivr.net/npm/@tabler/ico=
+ns-webfont@3.10.0/dist/fonts/tabler-icons-filled.woff2">tabler-icons-filled=
+.woff2</a>
+						</td>
+						<td class=3D"size">88.42 KB</td>
+					</tr>
+					<tr>
+						<td class=3D"name">
+							<svg width=3D"20" height=3D"20" viewBox=3D"0 0 20 20" fill=3D"none" =
+xmlns=3D"http://www.w3.org/2000/svg"><path d=3D"M4 4C4 2.89543 4.89543 2 6 =
+2H11L16 7V16C16 17.1046 15.1046 18 14 18H6C4.89543 18 4 17.1046 4 16V4Z" st=
+roke=3D"#5C667A" stroke-width=3D"1.5" stroke-linecap=3D"round" stroke-linej=
+oin=3D"round"></path></svg>
+							<a rel=3D"nofollow" href=3D"https://cdn.jsdelivr.net/npm/@tabler/ico=
+ns-webfont@3.10.0/dist/fonts/tabler-icons-outline.ttf">tabler-icons-outline=
+.ttf</a>
+						</td>
+						<td class=3D"size">2.01 MB</td>
+					</tr>
+					<tr>
+						<td class=3D"name">
+							<svg width=3D"20" height=3D"20" viewBox=3D"0 0 20 20" fill=3D"none" =
+xmlns=3D"http://www.w3.org/2000/svg"><path d=3D"M4 4C4 2.89543 4.89543 2 6 =
+2H11L16 7V16C16 17.1046 15.1046 18 14 18H6C4.89543 18 4 17.1046 4 16V4Z" st=
+roke=3D"#5C667A" stroke-width=3D"1.5" stroke-linecap=3D"round" stroke-linej=
+oin=3D"round"></path></svg>
+							<a rel=3D"nofollow" href=3D"https://cdn.jsdelivr.net/npm/@tabler/ico=
+ns-webfont@3.10.0/dist/fonts/tabler-icons-outline.woff">tabler-icons-outlin=
+e.woff</a>
+						</td>
+						<td class=3D"size">1.02 MB</td>
+					</tr>
+					<tr>
+						<td class=3D"name">
+							<svg width=3D"20" height=3D"20" viewBox=3D"0 0 20 20" fill=3D"none" =
+xmlns=3D"http://www.w3.org/2000/svg"><path d=3D"M4 4C4 2.89543 4.89543 2 6 =
+2H11L16 7V16C16 17.1046 15.1046 18 14 18H6C4.89543 18 4 17.1046 4 16V4Z" st=
+roke=3D"#5C667A" stroke-width=3D"1.5" stroke-linecap=3D"round" stroke-linej=
+oin=3D"round"></path></svg>
+							<a rel=3D"nofollow" href=3D"https://cdn.jsdelivr.net/npm/@tabler/ico=
+ns-webfont@3.10.0/dist/fonts/tabler-icons-outline.woff2">tabler-icons-outli=
+ne.woff2</a>
+						</td>
+						<td class=3D"size">735.4 KB</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class=3D"landing">
+				<p class=3D"left">Free Open Source CDN for <strong>@tabler/icons-webfon=
+t</strong></p>
+
+				<p class=3D"right">
+					Looking for a nice landing page for your package?
+					<a href=3D"https://www.jsdelivr.com/package/npm/@tabler/icons-webfont"=
+>https://www.jsdelivr.com/package/npm/@tabler/icons-webfont</a>
+				</p>
+			</div>
+		</div>
+
+		<footer>
+			<div class=3D"footer-left">
+				<svg class=3D"logo" viewBox=3D"0 0 140 34" xmlns=3D"http://www.w3.org/2=
+000/svg">
+					<g fill=3D"#1e3b45">
+						<path d=3D"m43.616 19.576c0 4.005-1.389 6.008-4.168 6.008-.432 0-.853=
+-.059-1.261-.174v-1.112c.455.154.883.232 1.285.232 1.065 0 1.833-.404 2.304=
+-1.209.471-.807.706-2.063.706-3.769v-10.859h1.134z"></path>
+						<path d=3D"m47.065 24.705v-1.309c1.188.756 2.393 1.135 3.612 1.135 1.=
+296 0 2.28-.268 2.952-.805.671-.537 1.007-1.288 1.007-2.251 0-.85-.226-1.52=
+8-.678-2.032-.451-.506-1.429-1.194-2.935-2.067-1.682-.979-2.747-1.799-3.195=
+-2.46-.447-.66-.671-1.422-.671-2.286 0-1.172.455-2.169 1.366-2.988.911-.817=
+ 2.126-1.227 3.647-1.227.988 0 1.975.166 2.963.498v1.204c-.972-.44-2.011-.6=
+6-3.113-.66-1.127 0-2.02.287-2.681.858-.659.571-.99 1.297-.99 2.177 0 .848.=
+226 1.524.677 2.026.452.5 1.426 1.184 2.923 2.048 1.551.881 2.584 1.663 3.0=
+97 2.345.514.684.77 1.469.77 2.356 0 1.274-.442 2.311-1.325 3.114-.884.803-=
+2.133 1.204-3.746 1.204-.572 0-1.229-.09-1.973-.266-.745-.178-1.313-.383-1.=
+707-.614z"></path>
+						<path d=3D"m59.104 25.295v-16.602h5.881c5.895 0 8.844 2.698 8.844 8.0=
+93 0 2.585-.805 4.65-2.413 6.194-1.61 1.543-3.753 2.315-6.431 2.315zm3.74-1=
+3.556v10.522h1.852c1.621 0 2.892-.485 3.814-1.458s1.383-2.296 1.383-3.97c0-=
+1.583-.457-2.827-1.372-3.734-.914-.907-2.199-1.36-3.85-1.36z"></path>
+						<path d=3D"m86.841 25.295h-9.957v-16.602h9.574v3.046h-5.834v3.693h5.4=
+3v3.032h-5.43v3.796h6.217z"></path>
+						<path d=3D"m99.893 25.295h-9.887v-16.602h3.74v13.568h6.147z"></path>
+						<path d=3D"m105.989 8.693v16.602h-3.74v-16.602z"></path>
+						<path d=3D"m123.834 8.693-5.719 16.602h-4.236l-5.651-16.602h4.029l3.4=
+62 11.553c.186.625.297 1.178.336 1.657h.068c.055-.518.174-1.084.36-1.702l3.=
+439-11.508z"></path>
+						<path d=3D"m140 25.295h-4.295l-2.581-4.273c-.193-.322-.379-.613-.555-=
+.868-.178-.254-.358-.473-.539-.654-.182-.18-.369-.321-.567-.416-.197-.096-.=
+41-.145-.643-.145h-1.006v6.356h-3.74v-16.602h5.926c4.029 0 6.043 1.506 6.04=
+3 4.515 0 .578-.088 1.114-.266 1.604s-.428.932-.752 1.325c-.324.395-.717.73=
+3-1.176 1.02-.459.285-.969.508-1.534.67v.047c.248.076.486.203.719.375.231.1=
+74.455.377.67.61.217.231.424.479.619.746.197.266.377.526.539.782zm-10.185-1=
+3.8v4.619h1.62c.803 0 1.448-.231 1.932-.694.494-.471.742-1.053.742-1.749 0-=
+1.45-.87-2.177-2.605-2.177h-1.689z"></path>
+					</g>
+					<path d=3D"m15.386.338-3.106 11.038v.104 11.039l3.106 11.143 3.194-11.=
+143v-11.039-.104z" fill=3D"#bd483b"></path>
+					<path d=3D"m15.386.338-15.386 5.542 2.186 20.492 13.2 7.29" fill=3D"#e=
+64e3d"></path>
+					<path d=3D"m15.386 33.662 13.268-7.365 2.483-20.49-15.751-5.469" fill=
+=3D"#bd483b"></path>
+					<path d=3D"m12.594 25.088c-1.514-.473-2.864-1.317-3.94-2.431l-.003-.00=
+2c-.131-.137-.257-.274-.381-.418-.838-.979-1.478-2.13-1.857-3.396.251.233.5=
+18.447.796.647.003.008.008.016.011.027-.003-.012-.008-.02-.011-.027.398.279=
+.822.526 1.269.737.141.064.282.125.427.186.177.07.36.135.542.195.011.006.02=
+4.006.035.01.032.012.065.023.097.033.074.756.649 1.372 1.39 1.504.287 1.157=
+.833 2.146 1.625 2.935z" fill=3D"#fec82f"></path>
+					<path d=3D"m13.174 11.794c0 .324.088.627.243.883-1.25 1.753-2.108 3.65=
+6-2.479 5.539-.041.209-.077.416-.105.619-.429.113-.79.393-1.016.762-.013 0-=
+.024-.004-.035-.01-.023-.006-.04-.014-.061-.021-.142-.045-.281-.098-.417-.1=
+52-.204-.08-.403-.174-.598-.272-.663-.338-1.26-.772-1.781-1.291-.11-.111-.2=
+13-.219-.311-.332l-.041-.049c-.038-.045-.078-.092-.115-.137-.017-.021-.032-=
+.039-.047-.059-.014-.018-.024-.031-.037-.045-.005-.01-.013-.016-.017-.023-.=
+02-.022-.037-.047-.053-.068-.008-.012-.017-.022-.023-.029-.001-.004-.002-.0=
+04-.004-.008-.013-.014-.024-.033-.037-.049-.055-.072-.107-.149-.157-.225-.0=
+09-.012-.019-.024-.025-.039-.006-.006-.015-.018-.02-.027-.014-.203-.02-.408=
+-.02-.617 0-1.882.557-3.636 1.512-5.105.113-.176.235-.348.361-.514.12-.16.2=
+45-.319.374-.467 1.126-1.317 2.61-2.315 4.299-2.847.026.182.059.367.095.553=
+.192.967.513 1.942.949 2.898-.271.3-.434.698-.434 1.132z" fill=3D"#fec82f">=
+</path>
+					<path d=3D"m12.176 20.479c0 .221-.079.424-.212.58-.029.037-.061.068-.0=
+96.1-.161.141-.368.225-.596.225-.173 0-.335-.049-.472-.135-.147-.09-.265-.2=
+19-.342-.375-.058-.121-.089-.252-.089-.395 0-.26.11-.494.286-.658.029-.027.=
+06-.051.091-.074.148-.107.331-.17.526-.17.206 0 .395.068.546.186.085.063.15=
+5.139.213.229.094.137.145.307.145.487z" fill=3D"#fec82f"></path>
+					<path d=3D"m15.777 11.794c0 .147-.032.281-.094.403-.148.299-.456.502-.=
+808.502-.044 0-.087-.002-.128-.006-.008-.004-.016-.004-.025-.006-.383-.066-=
+.684-.369-.741-.756-.007-.043-.01-.09-.01-.137 0-.102.017-.201.05-.295.123-=
+.354.46-.606.854-.606h.002.036c.392.018.72.285.827.645.025.082.037.168.037.=
+256z" fill=3D"#fec82f"></path>
+					<path d=3D"m24.752 16.143c0 .907-.129 1.782-.368 2.61-.799-.211-1.606-=
+.52-2.4-.914.022-.109.033-.221.033-.336 0-.225-.044-.442-.125-.639.031-.029=
+.064-.061.095-.094.957-.977 1.763-2.055 2.404-3.212.234.821.361 1.69.361 2.=
+585z" fill=3D"#df9c26"></path>
+					<path d=3D"m23.881 12.196c-.063.139-.131.277-.201.416-.627 1.235-1.455=
+ 2.382-2.459 3.407-.009.01-.02.02-.028.027-.255-.156-.557-.244-.879-.244-.3=
+75 0-.722.123-1.004.328-.514-.404-1.011-.848-1.49-1.327-.608-.604-1.157-1.2=
+47-1.647-1.909.252-.297.405-.68.405-1.102 0-.313-.087-.61-.237-.862 1.21-1.=
+163 2.547-2.106 3.917-2.788 1.572.961 2.841 2.372 3.623 4.054z" fill=3D"#df=
+9c26"></path>
+					<path d=3D"m21.217 17.503c0 .379-.23.701-.556.836-.108.045-.225.07-.34=
+8.07-.063 0-.125-.008-.185-.02-.385-.082-.681-.408-.715-.805.011-.01.021-.0=
+16.028-.022-.01-.008-.021-.014-.03-.023-.001-.012-.001-.022-.001-.037 0-.38=
+9.25-.723.601-.85.095-.033.196-.053.302-.053.09 0 .179.014.262.039.346.105.=
+606.412.64.785.002.027.002.055.002.08z" fill=3D"#df9c26"></path>
+					<path d=3D"m21.452 18.767c-.301.274-.7.44-1.139.44-.351 0-.677-.107-.9=
+49-.289-.039.025-.078.051-.115.072-1.233.781-2.538 1.352-3.864 1.698v4.824c=
+3.887 0 7.222-2.37 8.64-5.744-.859-.237-1.723-.573-2.573-1.001z" fill=3D"#d=
+f9c26"></path>
+					<path d=3D"m15.386 20.688c-.793.205-1.591.33-2.385.367-.042.002-.086.0=
+06-.128.008-.151.41-.454.744-.839.94.245.909.688 1.698 1.319 2.327.524.524 =
+1.162.92 1.891 1.18.046 0 .093.002.142.002z" fill=3D"#fec82f"></path>
+					<path d=3D"m18.612 17.503c0-.172.026-.34.074-.498-.562-.44-1.106-.92-1=
+.625-1.442-.614-.614-1.172-1.262-1.675-1.934v5.946c1.124-.324 2.235-.823 3.=
+291-1.489.009-.006.02-.014.03-.022-.061-.174-.095-.364-.095-.561z" fill=3D"=
+#df9c26"></path>
+					<path d=3D"m15.386 13.629c-.045-.059-.091-.113-.132-.174-.123.029-.249=
+.043-.378.043-.227 0-.441-.045-.637-.123-1.134 1.606-1.912 3.341-2.25 5.049=
+-.032.162-.059.32-.083.475.477.195.848.596.996 1.092.016-.004.029-.004.046-=
+.004.809-.039 1.627-.18 2.438-.412z" fill=3D"#fec82f"></path>
+					<path d=3D"m15.386 6.778v3.394c.048.016.098.033.145.055 1.106-1.073 2.=
+316-1.979 3.573-2.681-1.14-.496-2.399-.768-3.718-.768z" fill=3D"#df9c26"></=
+path>
+					<path d=3D"m15.386 6.778c-.608 0-1.201.055-1.773.168.025.197.06.404.10=
+1.606.168.86.449 1.725.829 2.575.106-.02.219-.033.333-.033.178 0 .347.027.5=
+1.078z" fill=3D"#fec82f"></path>
+				</svg>
+
+				<p class=3D"copyright">=C2=A9 jsdelivr.com, 2012 - 2026</p>
+			</div>
+
+			<div class=3D"footer-right">
+				<a href=3D"https://github.com/jsdelivr/jsdelivr">
+					<span class=3D"gh-icon">
+						<svg version=3D"1.1" id=3D"Layer_1" xmlns=3D"http://www.w3.org/2000/s=
+vg" xmlns:xlink=3D"http://www.w3.org/1999/xlink" width=3D"12" height=3D"12"=
+ viewBox=3D"0 0 16 16" xml:space=3D"preserve">
+						<path id=3D"XMLID_1_" fill=3D"#ff5627" d=3D"M8,0.2c-4.4,0-8,3.6-8,8c0=
+,3.5,2.3,6.5,5.5,7.6C5.9,15.9,6,15.6,6,15.4c0-0.2,0-0.7,0-1.4
+							C3.8,14.5,3.3,13,3.3,13c-0.4-0.9-0.9-1.2-0.9-1.2c-0.7-0.5,0.1-0.5,0.=
+1-0.5c0.8,0.1,1.2,0.8,1.2,0.8C4.4,13.4,5.6,13,6,12.8
+							c0.1-0.5,0.3-0.9,0.5-1.1c-1.8-0.2-3.6-0.9-3.6-4c0-0.9,0.3-1.6,0.8-2.=
+1c-0.1-0.2-0.4-1,0.1-2.1c0,0,0.7-0.2,2.2,0.8
+							c0.6-0.2,1.3-0.3,2-0.3c0.7,0,1.4,0.1,2,0.3c1.5-1,2.2-0.8,2.2-0.8c0.4=
+,1.1,0.2,1.9,0.1,2.1c0.5,0.6,0.8,1.3,0.8,2.1
+							c0,3.1-1.9,3.7-3.7,3.9C9.7,12,10,12.5,10,13.2c0,1.1,0,1.9,0,2.2c0,0.=
+2,0.1,0.5,0.6,0.4c3.2-1.1,5.5-4.1,5.5-7.6
+							C16,3.8,12.4,0.2,8,0.2z"></path>
+						</svg>
+					</span>
+					Documentation
+				</a>
+
+				<a href=3D"https://www.jsdelivr.com/features">Learn more about jsDelivr=
+</a>
+			</div>
+		</footer>
+
+	=09
+=09
+</body></html>
+------MultipartBoundary--mbrwATKM2LXDG2PTv8dCohJZcAKPsaeb1jpUzrVG6R----
+Content-Type: text/css
+Content-Transfer-Encoding: quoted-printable
+Content-Location: cid:css-379746b4-eaa7-4103-9903-e58b612e843d@mhtml.blink
+
+@charset "utf-8";
+
+body { font: 15px / 1.4em Arial, "Helvetica Neue", Helvetica, sans-serif; m=
+argin: 0px; padding: 20px 20px 30px; background-color: rgb(255, 255, 255); =
+}
+
+.container { max-width: 960px; margin: 0px auto; padding: 10px 0px; backgro=
+und-color: rgb(255, 255, 255); }
+
+.header { display: flex; -webkit-box-align: center; align-items: center; -w=
+ebkit-box-pack: justify; justify-content: space-between; flex-wrap: wrap; }
+
+h1 { font-size: 28px; line-height: 38px; margin: 0px 0px 15px; }
+
+h2 { font-size: 18px; font-weight: 400; margin: 0px; }
+
+.versions { max-width: 400px; padding: 2px 12px 2px 6px; }
+
+.description { margin: 10px 0px; font-size: 16px; color: rgb(102, 102, 102)=
+; }
+
+.path { display: flex; -webkit-box-align: center; align-items: center; -web=
+kit-box-pack: justify; justify-content: space-between; flex-wrap: wrap; mar=
+gin: 15px 0px 0px; padding: 15px 0px 30px; border-top: 1px solid rgb(229, 2=
+29, 229); }
+
+.path .versions, .path ol { margin: 15px 0px 0px; }
+
+.path ol { padding: 0px; list-style: none; font-size: 18px; font-weight: 40=
+0; }
+
+.path ol li { display: inline; }
+
+.listing { border: 1px solid rgb(223, 227, 231); border-radius: 6px; box-sh=
+adow: rgb(223, 227, 231) 0px 5px 10px -5px; }
+
+table { width: 100%; border-spacing: 0px; }
+
+th, td { padding: 8px 20px; border-bottom: 1px solid rgb(223, 227, 231); }
+
+tr:last-child td { border-bottom: 0px; }
+
+.name.level-up { border-bottom: 1px solid rgb(223, 227, 231); }
+
+.name.level-up a { padding-left: 0px; }
+
+.name { width: auto; text-align: left; padding-right: 20px; }
+
+.name a { color: rgb(23, 35, 59); padding-left: 5px; position: relative; }
+
+.name svg { display: inline-block; margin-bottom: -4px; }
+
+.size { max-width: 80px; text-align: right; color: rgb(68, 68, 68); }
+
+th.name, th.size { color: rgb(153, 153, 153); text-transform: uppercase; fo=
+nt-size: 12px; letter-spacing: 1px; }
+
+a { color: rgb(255, 86, 39); text-decoration: none; }
+
+a:hover, a:focus { color: rgb(255, 86, 39); text-decoration: underline; }
+
+.landing { margin-top: 30px; text-align: center; }
+
+.landing p { margin: 0px 0px 15px; }
+
+.landing a { display: block; text-overflow: ellipsis; overflow: hidden; }
+
+footer { max-width: 960px; display: flex; -webkit-box-orient: vertical; -we=
+bkit-box-direction: normal; flex-direction: column; -webkit-box-pack: justi=
+fy; justify-content: space-between; margin: 0px auto; padding: 20px 0px 0px=
+; text-align: center; font-size: 14px; color: rgb(102, 102, 102); border-to=
+p: 1px solid rgb(237, 240, 242); }
+
+.footer-left, .footer-right { display: flex; -webkit-box-orient: vertical; =
+-webkit-box-direction: normal; flex-direction: column; -webkit-box-align: c=
+enter; align-items: center; margin-bottom: 20px; }
+
+.logo { width: 115px; }
+
+.copyright { color: rgb(121, 132, 154); margin: 0px; }
+
+@media (min-width: 576px) {
+  .footer-left, .footer-right { justify-content: space-around; -webkit-box-=
+orient: horizontal; -webkit-box-direction: normal; flex-direction: row; }
+}
+
+@media (min-width: 768px) {
+  body { padding-top: 40px; }
+  footer { -webkit-box-orient: horizontal; -webkit-box-direction: normal; f=
+lex-direction: row; padding-top: 30px; }
+  .container { padding-bottom: 20px; }
+  .footer-right a:first-child, .logo { margin-right: 20px; }
+  .landing { display: flex; -webkit-box-align: start; align-items: flex-sta=
+rt; -webkit-box-pack: justify; justify-content: space-between; margin-top: =
+40px; }
+  .landing .right { text-align: right; }
+}
+
+.select-css { display: block; padding: 8px 20px 8px 12px; box-sizing: borde=
+r-box; margin: 0px; border: 1px solid rgb(170, 170, 170); border-radius: 0.=
+5em; appearance: none; background-color: rgb(255, 255, 255); background-ima=
+ge: url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/icons/caret-dow=
+n-fill.svg"); background-repeat: no-repeat, repeat; background-position: ri=
+ght 8px top 50%, 0px 0px; background-size: 10px, 100%; outline: none; }
+
+.select-css:hover { border-color: rgb(136, 136, 136); }
+
+.select-css option { font-weight: normal; }
+------MultipartBoundary--mbrwATKM2LXDG2PTv8dCohJZcAKPsaeb1jpUzrVG6R----
+Content-Type: image/svg+xml
+Content-Transfer-Encoding: quoted-printable
+Content-Location: https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/icons/caret-down-fill.svg
+
+<svg xmlns=3D"http://www.w3.org/2000/svg" width=3D"16" height=3D"16" fill=
+=3D"currentColor" class=3D"bi bi-caret-down-fill" viewBox=3D"0 0 16 16">
+  <path d=3D"M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1=
+ 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+</svg>
+------MultipartBoundary--mbrwATKM2LXDG2PTv8dCohJZcAKPsaeb1jpUzrVG6R----
+Content-Type: image/svg+xml
+Content-Transfer-Encoding: quoted-printable
+Content-Location: https://data.jsdelivr.com/v1/package/npm/@tabler/icons-webfont/badge
+
+<svg xmlns=3D"http://www.w3.org/2000/svg" width=3D"156" height=3D"20" role=
+=3D"img" aria-label=3D"jsDelivr: 200M hits/month"><title>jsDelivr: 200M hit=
+s/month</title><g shape-rendering=3D"crispEdges"><rect width=3D"51" height=
+=3D"20" fill=3D"#555"/><rect x=3D"51" width=3D"105" height=3D"20" fill=3D"#=
+ff5627"/></g><g fill=3D"#fff" text-anchor=3D"middle" font-family=3D"Verdana=
+,Geneva,DejaVu Sans,sans-serif" text-rendering=3D"geometricPrecision" font-=
+size=3D"110"><text x=3D"265" y=3D"140" transform=3D"scale(.1)" fill=3D"#fff=
+" textLength=3D"410">jsDelivr</text><text x=3D"1025" y=3D"140" transform=3D=
+"scale(.1)" fill=3D"#fff" textLength=3D"950">200M hits/month</text></g></sv=
+g>
+------MultipartBoundary--mbrwATKM2LXDG2PTv8dCohJZcAKPsaeb1jpUzrVG6R------
