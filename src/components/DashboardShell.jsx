@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useClients } from '../hooks/useClients'
 import ClientsPage from './ClientsPage'
 
-const LOGO = '/logo.png'
+const LOGO = 'data:image/png;base64,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'
 
 const NAV_GROUPS = [
   { label:'Overview', items:[
@@ -94,21 +94,67 @@ export default function DashboardShell({ session, subscription }) {
 
   // Listen for RF_APP_READY — rankforge3 sends this when fully initialised
   useEffect(() => {
-    const handler = (e) => {
+    const handler = async (e) => {
       if (e.data?.type === 'RF_APP_READY') {
+        const iWin = iframeRef.current?.contentWindow
+        if (!iWin) return
+
+        // 1. Load settings + client data from Supabase and inject into rankforge3
+        try {
+          const [settingsRes, clientRes] = await Promise.all([
+            supabase.from('settings').select('*').eq('user_id', session.user.id).single(),
+            activeId ? supabase.from('client_data').select('*').eq('client_id', activeId).single() : Promise.resolve({ data: null })
+          ])
+
+          const s = settingsRes.data || {}
+          const c = clientRes.data || {}
+
+          iWin.postMessage({
+            type: 'LOAD_DATA',
+            payload: {
+              keys: {
+                anthropic:    s.anthropic_key   || '',
+                google:       s.google_key       || '',
+                indexnow:     s.indexnow_key     || '',
+                yext:         s.yext_key         || '',
+                yextAccount:  s.yext_account     || '',
+                openai:       s.openai_key       || '',
+                gemini:       s.gemini_key       || '',
+                mozId:        s.moz_id           || '',
+                mozSecret:    s.moz_secret       || '',
+                brightlocalKey: s.brightlocal_key || '',
+                brightlocalCid: s.brightlocal_cid || '',
+                gmailToken:   s.gmail_token      || '',
+              },
+              profile: {
+                bizName:    c.biz_name    || '',
+                bizCat:     c.biz_cat     || '',
+                bizAddr:    c.biz_addr    || '',
+                bizCity:    c.biz_city    || '',
+                bizState:   c.biz_state   || '',
+                bizZip:     c.biz_zip     || '',
+                bizPhone:   c.biz_phone   || '',
+                bizWebsite: c.biz_website || '',
+                bizDesc:    c.biz_desc    || '',
+                bizKw:      c.biz_kw      || '',
+              }
+            }
+          }, '*')
+        } catch (err) {
+          console.error('LOAD_DATA error:', err)
+        }
+
+        // 2. Switch to pending tab if any
         const tab = pendingTabRef.current
         if (tab && tab !== 'clients' && tab !== 'dash') {
           pendingTabRef.current = null
-          // Send postMessage — rankforge3 handles it internally (no contentDocument needed)
-          iframeRef.current?.contentWindow?.postMessage(
-            { type: 'SWITCH_TAB', payload: { tab } }, '*'
-          )
+          iWin.postMessage({ type: 'SWITCH_TAB', payload: { tab } }, '*')
         }
       }
     }
     window.addEventListener('message', handler)
     return () => window.removeEventListener('message', handler)
-  }, [])
+  }, [activeId, session.user.id]) // eslint-disable-line
 
   // When tab changes, send postMessage to rankforge3
   useEffect(() => {
@@ -136,7 +182,7 @@ export default function DashboardShell({ session, subscription }) {
 
       {/* ══ SIDEBAR ══ */}
       <div style={{
-        width: (sidebarOpen && !isToolTab) ? 228 : 0, minWidth: (sidebarOpen && !isToolTab) ? 228 : 0,
+        width: sidebarOpen ? 228 : 0, minWidth: sidebarOpen ? 228 : 0,
         background:'#080f1e', borderRight:'1px solid #0f2040',
         display:'flex', flexDirection:'column',
         overflow:'hidden', transition:'width .2s,min-width .2s', flexShrink:0,
@@ -250,13 +296,13 @@ export default function DashboardShell({ session, subscription }) {
       </div>
 
       {/* ══ MAIN ══ */}
-      <div style={{ flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0,minHeight:0 }}>
+      <div style={{ flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0 }}>
 
         {/* Topbar */}
         <div style={{ height:50,flexShrink:0,background:'#080f1e',borderBottom:'1px solid #0f2040',
           display:'flex',alignItems:'center',padding:'0 14px',gap:10 }}>
           <button onClick={()=>setSidebarOpen(o=>!o)}
-            style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20,padding:'4px',borderRadius:6,lineHeight:1,flexShrink:0,display:isToolTab?'none':'block' }}>
+            style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20,padding:'4px',borderRadius:6,lineHeight:1,flexShrink:0 }}>
             ☰
           </button>
           <div style={{ flex:1,display:'flex',alignItems:'center',gap:8,minWidth:0,overflow:'hidden' }}>
@@ -352,8 +398,7 @@ export default function DashboardShell({ session, subscription }) {
                 onLoad={onIframeLoad}
                 onError={()=>setIframeReady(true)}
                 title="RankForged AI"
-                style={{ position:'absolute',inset:0,width:'100%',height:'100%',
-                  border:'none',display:'block',
+                style={{ width:'100%',height:'100%',border:'none',display:'block',
                   opacity:iframeReady?1:0,transition:'opacity .3s' }}
                 allow="clipboard-read; clipboard-write"
               />
