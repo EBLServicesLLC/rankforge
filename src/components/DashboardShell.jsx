@@ -1,5 +1,5 @@
 // src/components/DashboardShell.jsx
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useClients } from '../hooks/useClients'
 import ClientsPage from './ClientsPage'
@@ -58,123 +58,23 @@ export default function DashboardShell({ session, subscription }) {
   const [activeTab, setActiveTab]     = useState('clients')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [iframeReady, setIframeReady] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [iframeSrc, setIframeSrc]     = useState('')
-  const iframeRef = useRef(null)
-  const pendingTabRef = useRef(null)
 
   const { clients, activeId, setActiveId, createClient, deleteClient, updateClientMeta } = useClients(session.user.id)
   const activeClient = clients.find(c => c.id === activeId)
   const plan = subscription?.plan || 'solopreneur'
   const maxClients = subscription?.max_clients || 1
 
-  // ── Load iframe when client selected ─────────────────
-  useEffect(() => {
-    if (!activeId) return
-    setIframeReady(false)
-    setIframeSrc('/rankforge3.html?client=' + activeId + '&t=' + Date.now())
-  }, [activeId]) // eslint-disable-line
 
-  // ── Switch tab by clicking the real button inside iframe ──
-  const switchTab = useCallback((tabId) => {
-    setActiveTab(tabId)
-    // postMessage only — contentDocument is inaccessible (confirmed null)
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: 'SWITCH_TAB', payload: { tab: tabId } }, '*'
-    )
-  }, [])
-
-  // ── After iframe loads: inject CSS + switch to active tab ─
-  const onIframeLoad = useCallback(() => {
-    setIframeReady(true)
-    // rankforge3 detects it's in an iframe and hides its own sidebar automatically
-    // Tab switching happens via postMessage when RF_APP_READY fires
-  }, [])
-
-  // Listen for RF_APP_READY — rankforge3 sends this when fully initialised
-  useEffect(() => {
-    const handler = async (e) => {
-      if (e.data?.type === 'RF_APP_READY') {
-        const iWin = iframeRef.current?.contentWindow
-        if (!iWin) return
-
-        // 1. Load settings + client data from Supabase and inject into rankforge3
-        try {
-          const [settingsRes, clientRes] = await Promise.all([
-            supabase.from('settings').select('*').eq('user_id', session.user.id).single(),
-            activeId ? supabase.from('client_data').select('*').eq('client_id', activeId).single() : Promise.resolve({ data: null })
-          ])
-
-          const s = settingsRes.data || {}
-          const c = clientRes.data || {}
-
-          iWin.postMessage({
-            type: 'LOAD_DATA',
-            payload: {
-              keys: {
-                anthropic:      s.anthropic_key    || '',
-                google:         s.google_key        || '',
-                indexnow:       s.indexnow_key      || '',
-                yext:           s.yext_key          || '',
-                yextAccount:    s.yext_account      || '',
-                openai:         s.openai_key        || '',
-                gemini:         s.gemini_key        || '',
-                mozId:          s.moz_id            || '',
-                mozSecret:      s.moz_secret        || '',
-                brightlocalKey: s.brightlocal_key   || '',
-                brightlocalCid: s.brightlocal_cid   || '',
-                gmailToken:     s.gmail_token       || '',
-                fbToken:        s.fb_token          || '',
-                fbPageId:       s.fb_page_id        || '',
-                linkedinToken:  s.linkedin_token    || '',
-              },
-              profile: {
-                bizName:    c.biz_name    || '',
-                bizCat:     c.biz_cat     || '',
-                bizAddr:    c.biz_addr    || '',
-                bizCity:    c.biz_city    || '',
-                bizState:   c.biz_state   || '',
-                bizZip:     c.biz_zip     || '',
-                bizPhone:   c.biz_phone   || '',
-                bizWebsite: c.biz_website || '',
-                bizDesc:    c.biz_desc    || '',
-                bizKw:      c.biz_kw      || '',
-                agencyName: s.agency_name  || '',
-                brandColor: s.brand_color  || '',
-              }
-            }
-          }, '*')
-        } catch (err) {
-          console.error('LOAD_DATA error:', err)
-        }
-
-        // 2. Switch to pending tab if any
-        const tab = pendingTabRef.current
-        if (tab && tab !== 'clients' && tab !== 'dash') {
-          pendingTabRef.current = null
-          iWin.postMessage({ type: 'SWITCH_TAB', payload: { tab } }, '*')
-        }
-      }
-    }
-    window.addEventListener('message', handler)
-    return () => window.removeEventListener('message', handler)
-  }, [activeId, session.user.id]) // eslint-disable-line
-
-  // When tab changes, send postMessage to rankforge3
-  useEffect(() => {
-    if (!activeId || activeTab === 'clients' || activeTab === 'dash') return
-    pendingTabRef.current = activeTab
-    // postMessage is the ONLY way — contentDocument is null (cross-origin restriction)
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: 'SWITCH_TAB', payload: { tab: activeTab } }, '*'
-    )
-  }, [activeTab]) // eslint-disable-line
 
   const handleNavClick = (tabId) => {
     if (tabId === 'clients') { setActiveTab('clients'); return }
     if (!activeId) { setActiveTab('clients'); return }
-    switchTab(tabId)
+    // Navigate directly to rankforge3 - it has its own sidebar nav
+    sessionStorage.setItem('rf_client', activeId)
+    sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL || '')
+    sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+    window.location.href = '/rankforge3.html?client=' + activeId
   }
 
   const signOut = () => supabase.auth.signOut()
@@ -358,9 +258,10 @@ export default function DashboardShell({ session, subscription }) {
           <ClientsPage
             clients={clients} activeId={activeId} maxClients={maxClients} plan={plan}
             onSelect={(id)=>{ 
-                  const sbUrl = encodeURIComponent(import.meta.env.VITE_SUPABASE_URL || '')
-                  const sbKey = encodeURIComponent(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
-                  window.location.href = '/rankforge3.html?client=' + id + '&sb_url=' + sbUrl + '&sb_key=' + sbKey
+                  sessionStorage.setItem('rf_client', id)
+                  sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL || '')
+                  sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+                  window.location.href = '/rankforge3.html?client=' + id
                 }}
             onAdd={()=>setShowAddModal(true)}
             onDelete={deleteClient}
@@ -369,47 +270,6 @@ export default function DashboardShell({ session, subscription }) {
           />
         )}
 
-        {/* Tool iframe - full screen when client selected */}
-        {activeTab!=='clients' && (
-          <div style={{ position:'fixed',inset:0,zIndex:100,background:'#f5f5f7',display:'flex',flexDirection:'column' }}>
-            {/* No client */}
-            {!activeId && (
-              <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',
-                alignItems:'center',justifyContent:'center',gap:16,background:'#060d1a',zIndex:5 }}>
-                <div style={{ fontSize:48 }}>🏢</div>
-                <div style={{ fontSize:16,fontWeight:700,color:'#e2e8f0' }}>No business selected</div>
-                <button onClick={()=>setActiveTab('clients')}
-                  style={{ padding:'10px 24px',background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-                    color:'#fff',border:'none',borderRadius:10,fontSize:14,fontWeight:700,cursor:'pointer' }}>
-                  Go to My Businesses
-                </button>
-              </div>
-            )}
-            {/* Loading spinner */}
-            {activeId && !iframeReady && (
-              <div style={{ position:'absolute',inset:0,zIndex:10,background:'#060d1a',
-                display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14 }}>
-                <div style={{ width:36,height:36,border:'3px solid #0f2040',borderTopColor:'#3b82f6',
-                  borderRadius:'50%',animation:'spin 1s linear infinite' }} />
-                <div style={{ fontSize:13,color:'#3a5080' }}>Loading {activeClient?.name||'tool'}...</div>
-                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-              </div>
-            )}
-            {/* iframe */}
-            {activeId && iframeSrc && (
-              <iframe
-                ref={iframeRef}
-                src={iframeSrc}
-                onLoad={onIframeLoad}
-                onError={()=>setIframeReady(true)}
-                title="RankForged AI"
-                style={{ position:'fixed',inset:0,width:'100vw',height:'100vh',
-                  border:'none',display:'block',zIndex:101 }}
-                allow="clipboard-read; clipboard-write"
-              />
-            )}
-          </div>
-        )}
       </div>
 
       {/* Add Business Modal */}
@@ -420,9 +280,10 @@ export default function DashboardShell({ session, subscription }) {
             const client = await createClient(data.name)
             if (client) {
               if (data.city||data.category) await updateClientMeta(client.id,{city:data.city,category:data.category})
-              const sbUrl2 = encodeURIComponent(import.meta.env.VITE_SUPABASE_URL || '')
-              const sbKey2 = encodeURIComponent(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
-              window.location.href = '/rankforge3.html?client=' + client.id + '&sb_url=' + sbUrl2 + '&sb_key=' + sbKey2
+              sessionStorage.setItem('rf_client', client.id)
+              sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL || '')
+              sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+              window.location.href = '/rankforge3.html?client=' + client.id
             }
             setShowAddModal(false)
           }}
