@@ -261,6 +261,8 @@ export default function DashboardShell({ session, subscription }) {
                   sessionStorage.setItem('rf_client', id)
                   sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL || '')
                   sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+                  // Also pass user_id so rankforge3 can filter data correctly
+                  sessionStorage.setItem('rf_user_id', session.user.id)
                   window.location.href = '/rankforge3.html?client=' + id
                 }}
             onAdd={()=>setShowAddModal(true)}
