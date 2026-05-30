@@ -357,7 +357,7 @@ export default function DashboardShell({ session, subscription }) {
         {activeTab==='clients' && (
           <ClientsPage
             clients={clients} activeId={activeId} maxClients={maxClients} plan={plan}
-            onSelect={(id)=>{ setActiveId(id); setActiveTab('dash') }}
+            onSelect={(id)=>{ window.location.href = '/rankforge3.html?client=' + id }}
             onAdd={()=>setShowAddModal(true)}
             onDelete={deleteClient}
             onUpdateMeta={updateClientMeta}
@@ -367,7 +367,7 @@ export default function DashboardShell({ session, subscription }) {
 
         {/* Tool iframe - full screen when client selected */}
         {activeTab!=='clients' && (
-          <div style={{ position:'fixed',inset:0,zIndex:100,background:'#f5f5f7' }}>
+          <div style={{ position:'fixed',inset:0,zIndex:100,background:'#f5f5f7',display:'flex',flexDirection:'column' }}>
             {/* No client */}
             {!activeId && (
               <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',
@@ -399,8 +399,8 @@ export default function DashboardShell({ session, subscription }) {
                 onLoad={onIframeLoad}
                 onError={()=>setIframeReady(true)}
                 title="RankForged AI"
-                style={{ width:'100%',height:'100%',border:'none',display:'block',
-                  opacity:1 }}
+                style={{ position:'fixed',inset:0,width:'100vw',height:'100vh',
+                  border:'none',display:'block',zIndex:101 }}
                 allow="clipboard-read; clipboard-write"
               />
             )}
@@ -416,8 +416,7 @@ export default function DashboardShell({ session, subscription }) {
             const client = await createClient(data.name)
             if (client) {
               if (data.city||data.category) await updateClientMeta(client.id,{city:data.city,category:data.category})
-              setActiveId(client.id)
-              setActiveTab('dash')
+              window.location.href = '/rankforge3.html?client=' + client.id
             }
             setShowAddModal(false)
           }}
