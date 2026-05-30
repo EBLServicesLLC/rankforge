@@ -365,9 +365,9 @@ export default function DashboardShell({ session, subscription }) {
           />
         )}
 
-        {/* Tool iframe */}
+        {/* Tool iframe - full screen when client selected */}
         {activeTab!=='clients' && (
-          <div style={{ flex:1,position:'relative',overflow:'hidden' }}>
+          <div style={{ position:'fixed',inset:0,zIndex:100,background:'#f5f5f7' }}>
             {/* No client */}
             {!activeId && (
               <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',
