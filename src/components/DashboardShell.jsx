@@ -357,7 +357,11 @@ export default function DashboardShell({ session, subscription }) {
         {activeTab==='clients' && (
           <ClientsPage
             clients={clients} activeId={activeId} maxClients={maxClients} plan={plan}
-            onSelect={(id)=>{ window.location.href = '/rankforge3.html?client=' + id }}
+            onSelect={(id)=>{ 
+                  const sbUrl = encodeURIComponent(import.meta.env.VITE_SUPABASE_URL || '')
+                  const sbKey = encodeURIComponent(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+                  window.location.href = '/rankforge3.html?client=' + id + '&sb_url=' + sbUrl + '&sb_key=' + sbKey
+                }}
             onAdd={()=>setShowAddModal(true)}
             onDelete={deleteClient}
             onUpdateMeta={updateClientMeta}
@@ -416,7 +420,9 @@ export default function DashboardShell({ session, subscription }) {
             const client = await createClient(data.name)
             if (client) {
               if (data.city||data.category) await updateClientMeta(client.id,{city:data.city,category:data.category})
-              window.location.href = '/rankforge3.html?client=' + client.id
+              const sbUrl2 = encodeURIComponent(import.meta.env.VITE_SUPABASE_URL || '')
+              const sbKey2 = encodeURIComponent(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+              window.location.href = '/rankforge3.html?client=' + client.id + '&sb_url=' + sbUrl2 + '&sb_key=' + sbKey2
             }
             setShowAddModal(false)
           }}
