@@ -46,7 +46,19 @@ i.ti { min-width: 14px; min-height: 14px; display: inline-block; }
 .ef-tab-icon { margin-right: 6px; }
 </style>
 </head>
-<body> <div class="ef-app" id="ef-app"> <aside class="ef-sidebar"> <div class="ef-sidebar-logo">
+<body>
+<script>
+// Inject Supabase credentials passed via URL params from React shell
+(function(){
+  try {
+    var p = new URLSearchParams(window.location.search);
+    var u = p.get('sb_url'); var k = p.get('sb_key');
+    if (u) window._SB_URL = decodeURIComponent(u);
+    if (k) window._SB_KEY = decodeURIComponent(k);
+  } catch(e) {}
+})();
+</script>
+<div class="ef-app" id="ef-app"> <aside class="ef-sidebar"> <div class="ef-sidebar-logo">
   <a href="/" style="display:block;text-align:center;padding:6px 8px;margin:4px 8px 0;
     background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:8px;
     color:#60a5fa;font-size:11.5px;font-weight:700;text-decoration:none;
@@ -1061,6 +1073,71 @@ function efAppInit(){
   try{var e=JSON.parse(localStorage.getItem("ef2_sv")||"{}");e.keys&&Object.assign(S.keys,e.keys),e.dSt&&(S.dSt=e.dSt),e.blSt&&(S.blSt=e.blSt),e.w2St&&(S.w2St=e.w2St),e.chk&&(S.chk=e.chk),e.dSel&&Array.isArray(e.dSel)&&(S.dSel=new Set(e.dSel)),e.w2Sel&&Array.isArray(e.w2Sel)&&(S.w2Sel=new Set(e.w2Sel)),e.gbpPosts&&Array.isArray(e.gbpPosts)&&(S.gbpPosts=e.gbpPosts),e.reviewRequests&&Array.isArray(e.reviewRequests)&&(S.reviewRequests=e.reviewRequests),e.serviceCities&&Array.isArray(e.serviceCities)&&(S.serviceCities=e.serviceCities),e.locations&&Array.isArray(e.locations)&&(S.locations=e.locations),e.lpPages&&"object"==typeof e.lpPages&&(S.lpPages=e.lpPages),e.kwMatrix&&Array.isArray(e.kwMatrix)&&(S.kwMatrix=e.kwMatrix),e.form&&["biz-name","biz-cat","biz-addr","biz-city","biz-state","biz-zip","biz-phone","biz-website","biz-desc","biz-kw","w2-kw"].forEach(function(t){var n=document.getElementById(t);n&&e.form[t]&&(n.value=e.form[t])})}catch(e){}Object.keys(S.keys).forEach(function(e){S.keys[e]&&updateKeyUI(e,!0)}),updateAIStatus();
 var t,n=localStorage.getItem("ef2_lr"),a=document.getElementById("ef-lr-label");n&&a&&(a.textContent="Last run: "+n),S.keys.anthropic&&(t=document.getElementById("k-anthropic"))&&(t.value="••••••••••••••••"),S.keys.yext&&(t=document.getElementById("k-yext"))&&(t.value="••••••••••••••••"),S.keys.yextAccount&&(t=document.getElementById("k-yext-account"))&&(t.value=S.keys.yextAccount),S.keys.google&&(t=document.getElementById("k-google"))&&(t.value=S.keys.google),S.keys.indexnow&&(t=document.getElementById("k-indexnow"))&&(t.value=S.keys.indexnow),S.keys.openai&&(t=document.getElementById("k-openai"))&&(t.value="••••••••••••••••"),S.keys.mozSecret&&(t=document.getElementById("k-moz-secret"))&&(t.value="••••••••••••••••"),S.keys.gemini&&(t=document.getElementById("k-gemini"))&&(t.value="••••••••••••••••"),0===Object.keys(S.dSt).length&&DIRS.filter(function(e){return"free"===e.cost}).sort(function(e,t){return t.da-e.da}).slice(0,20).forEach(function(e){S.dSel.add(e.id)});
 var i=document.getElementById("ef-app");i&&i.querySelectorAll(".ef-tab").forEach(function(e){e.addEventListener("click",function(){efTab(e.dataset.tab,e)})}),i&&i.querySelectorAll(".ef-panel").forEach(function(e){e.style.display=e.classList.contains("active")?"block":"none"}),renderKeyStatus(),renderDirs(),renderBL(),renderW2(),renderScoreHistory("sidebar-score-chart",!0),renderServiceCities();
+  // Load data from Supabase if client ID in URL
+  try {
+    var _urlP = new URLSearchParams(window.location.search);
+    var _clientId = _urlP.get('client');
+    if (_clientId && window._SB_URL && window._SB_KEY) {
+      var _headers = {
+        'apikey': window._SB_KEY,
+        'Authorization': 'Bearer ' + window._SB_KEY,
+        'Content-Type': 'application/json'
+      };
+      // Load settings
+      fetch(window._SB_URL + '/rest/v1/settings?select=*&limit=1', { headers: _headers })
+        .then(function(r){ return r.json(); })
+        .then(function(rows) {
+          var s = rows[0] || {};
+          // Inject API keys
+          var keyMap2 = {
+            anthropic_key:'anthropic', google_key:'google',
+            indexnow_key:'indexnow', yext_key:'yext',
+            yext_account:'yext-account', openai_key:'openai',
+            gemini_key:'gemini', moz_id:'moz-id',
+            moz_secret:'moz-secret', brightlocal_key:'brightlocal',
+            brightlocal_cid:'brightlocal-cid', gmail_token:'gmail'
+          };
+          Object.keys(keyMap2).forEach(function(col) {
+            if (!s[col]) return;
+            var kmKey = keyMap2[col];
+            var km = KEY_MAP[kmKey] || Object.values(KEY_MAP).find(function(m){ return m.sk === kmKey; });
+            if (km) {
+              S.keys[km.sk] = s[col];
+              var inp = document.getElementById(km.inputId);
+              if (inp) inp.value = s[col];
+              var ind = km.indId && document.getElementById(km.indId);
+              if (ind) { ind.textContent = s[col].slice(0,6)+'...'; ind.style.color='var(--green)'; }
+            }
+          });
+          if (typeof renderKeyStatus === 'function') renderKeyStatus();
+        }).catch(function(){});
+      // Load client data
+      fetch(window._SB_URL + '/rest/v1/client_data?client_id=eq.' + _clientId + '&select=*&limit=1', { headers: _headers })
+        .then(function(r){ return r.json(); })
+        .then(function(rows) {
+          var c = rows[0] || {};
+          var fieldMap2 = {
+            biz_name:'biz-name', biz_cat:'biz-cat',
+            biz_addr:'biz-addr', biz_city:'biz-city',
+            biz_state:'biz-state', biz_zip:'biz-zip',
+            biz_phone:'biz-phone', biz_website:'biz-website',
+            biz_desc:'biz-desc', biz_kw:'biz-kw'
+          };
+          Object.keys(fieldMap2).forEach(function(col) {
+            if (!c[col]) return;
+            var el = document.getElementById(fieldMap2[col]);
+            if (el) el.value = c[col];
+          });
+          persist();
+          if (typeof renderDirs === 'function') renderDirs();
+          if (typeof renderBL === 'function') renderBL();
+          if (typeof renderW2 === 'function') renderW2();
+          if (typeof renderDashboard === 'function') renderDashboard();
+          if (typeof renderServiceCities === 'function') renderServiceCities();
+        }).catch(function(){});
+    }
+  } catch(e) {}
+
   // App is fully initialised
   _rfAppReady = true;
   // Process any tab that arrived before we were ready
