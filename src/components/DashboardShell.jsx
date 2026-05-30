@@ -113,18 +113,21 @@ export default function DashboardShell({ session, subscription }) {
             type: 'LOAD_DATA',
             payload: {
               keys: {
-                anthropic:    s.anthropic_key   || '',
-                google:       s.google_key       || '',
-                indexnow:     s.indexnow_key     || '',
-                yext:         s.yext_key         || '',
-                yextAccount:  s.yext_account     || '',
-                openai:       s.openai_key       || '',
-                gemini:       s.gemini_key       || '',
-                mozId:        s.moz_id           || '',
-                mozSecret:    s.moz_secret       || '',
-                brightlocalKey: s.brightlocal_key || '',
-                brightlocalCid: s.brightlocal_cid || '',
-                gmailToken:   s.gmail_token      || '',
+                anthropic:      s.anthropic_key    || '',
+                google:         s.google_key        || '',
+                indexnow:       s.indexnow_key      || '',
+                yext:           s.yext_key          || '',
+                yextAccount:    s.yext_account      || '',
+                openai:         s.openai_key        || '',
+                gemini:         s.gemini_key        || '',
+                mozId:          s.moz_id            || '',
+                mozSecret:      s.moz_secret        || '',
+                brightlocalKey: s.brightlocal_key   || '',
+                brightlocalCid: s.brightlocal_cid   || '',
+                gmailToken:     s.gmail_token       || '',
+                fbToken:        s.fb_token          || '',
+                fbPageId:       s.fb_page_id        || '',
+                linkedinToken:  s.linkedin_token    || '',
               },
               profile: {
                 bizName:    c.biz_name    || '',
@@ -137,6 +140,8 @@ export default function DashboardShell({ session, subscription }) {
                 bizWebsite: c.biz_website || '',
                 bizDesc:    c.biz_desc    || '',
                 bizKw:      c.biz_kw      || '',
+                agencyName: s.agency_name  || '',
+                brandColor: s.brand_color  || '',
               }
             }
           }, '*')
