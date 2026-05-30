@@ -400,7 +400,7 @@ export default function DashboardShell({ session, subscription }) {
                 onError={()=>setIframeReady(true)}
                 title="RankForged AI"
                 style={{ width:'100%',height:'100%',border:'none',display:'block',
-                  opacity:iframeReady?1:0,transition:'opacity .3s' }}
+                  opacity:1 }}
                 allow="clipboard-read; clipboard-write"
               />
             )}
