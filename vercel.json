@@ -1,7 +1,5 @@
 {
-  "routes": [
-    { "src": "/rankforge3.html", "dest": "/rankforge3.html" },
-    { "src": "/assets/(.*)", "dest": "/assets/" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/((?!rankforge3.html).*)", "destination": "/index.html" }
   ]
 }
