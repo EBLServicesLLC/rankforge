@@ -182,6 +182,8 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
       if (step === 0) {
         await supabase.from('activation_keys').update({ used:true, used_by:userId, used_at:new Date().toISOString() }).eq('key', keyData.key)
         await supabase.from('subscriptions').upsert({ user_id:userId, plan:keyData.plan, max_clients:keyData.max_clients, seo_types:PLANS[keyData.plan]?.types||['local'], activation_key:keyData.key, onboarding_step:1, status:'active' }, { onConflict:'user_id' })
+        // Ensure settings row exists so keys can be saved later
+        await supabase.from('settings').upsert({ user_id:userId }, { onConflict:'user_id' })
       }
       if (step === 1) {
         await supabase.from('settings').upsert({ user_id:userId, agency_name:branding.agencyName||profile.bizName }, { onConflict:'user_id' })
@@ -194,10 +196,12 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
         await supabase.from('settings').upsert({
           user_id:userId,
           anthropic_key:apiKeys.anthropic, google_key:apiKeys.google,
+          openai_key:apiKeys.openai,        gemini_key:apiKeys.gemini,
           indexnow_key:apiKeys.indexnow,   yext_key:apiKeys.yext,
           yext_account:apiKeys.yextAccount, moz_id:apiKeys.moz,
           moz_secret:apiKeys.mozSecret,    brightlocal_key:apiKeys.brightlocal,
           brightlocal_cid:apiKeys.brightlocalCid, gmail_token:apiKeys.gmail,
+          fb_token:apiKeys.fb,              linkedin_token:apiKeys.linkedin,
         }, { onConflict:'user_id' })
         await supabase.from('subscriptions').update({ onboarding_step:4 }).eq('user_id', userId)
       }
