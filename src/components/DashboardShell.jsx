@@ -1,5 +1,5 @@
 // src/components/DashboardShell.jsx
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useClients } from '../hooks/useClients'
 import ClientsPage from './ClientsPage'
@@ -54,127 +54,67 @@ const PLAN_COLORS = {
   pro:'#06b6d4', agency:'#10b981'
 }
 
+// ── Sync helpers: read/write the same localStorage as rankforge3 ──────────
+function cmReadClients() {
+  try { return JSON.parse(localStorage.getItem('rf_clients') || '[]'); } catch(e) { return []; }
+}
+function cmWriteClients(clients) {
+  try { localStorage.setItem('rf_clients', JSON.stringify(clients)); } catch(e) {}
+}
+function cmReadActiveId() {
+  return localStorage.getItem('rf_active_client') || null;
+}
+function cmWriteActiveId(id) {
+  try { localStorage.setItem('rf_active_client', id); } catch(e) {}
+}
+
 export default function DashboardShell({ session, subscription }) {
   const [activeTab, setActiveTab]     = useState('clients')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [iframeReady, setIframeReady] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [iframeSrc, setIframeSrc]     = useState('')
-  const iframeRef = useRef(null)
-  const pendingTabRef = useRef(null)
 
   const { clients, activeId, setActiveId, createClient, deleteClient, updateClientMeta } = useClients(session.user.id)
+
+  // Sync Supabase clients → localStorage so rankforge3 can read them
+  useEffect(() => {
+    if (!clients.length) return
+    const existing = cmReadClients()
+    const existingIds = new Set(existing.map(c => c.id))
+    const merged = clients.map(c => {
+      const prev = existing.find(e => e.id === c.id) || {}
+      return {
+        ...prev,
+        id: c.id,
+        name: c.name || prev.name || '',
+        city: c.city || prev.city || '',
+        cat: c.category || prev.cat || '',
+        color: c.color || prev.color || '#1A6FBF',
+        score: c.seo_score || prev.score || 0,
+        updatedAt: c.updated_at || prev.updatedAt || new Date().toISOString(),
+      }
+    })
+    cmWriteClients(merged)
+    if (activeId) cmWriteActiveId(activeId)
+  }, [clients, activeId])
   const activeClient = clients.find(c => c.id === activeId)
   const plan = subscription?.plan || 'solopreneur'
   const maxClients = subscription?.max_clients || 1
 
-  // ── Load iframe when client selected ─────────────────
-  useEffect(() => {
-    if (!activeId) return
-    setIframeReady(false)
-    setIframeSrc('/rankforge3.html?client=' + activeId + '&t=' + Date.now())
-  }, [activeId]) // eslint-disable-line
 
-  // ── Switch tab by clicking the real button inside iframe ──
-  const switchTab = useCallback((tabId) => {
-    setActiveTab(tabId)
-    // postMessage only — contentDocument is inaccessible (confirmed null)
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: 'SWITCH_TAB', payload: { tab: tabId } }, '*'
-    )
-  }, [])
-
-  // ── After iframe loads: inject CSS + switch to active tab ─
-  const onIframeLoad = useCallback(() => {
-    setIframeReady(true)
-    // rankforge3 detects it's in an iframe and hides its own sidebar automatically
-    // Tab switching happens via postMessage when RF_APP_READY fires
-  }, [])
-
-  // Listen for RF_APP_READY — rankforge3 sends this when fully initialised
-  useEffect(() => {
-    const handler = async (e) => {
-      if (e.data?.type === 'RF_APP_READY') {
-        const iWin = iframeRef.current?.contentWindow
-        if (!iWin) return
-
-        // 1. Load settings + client data from Supabase and inject into rankforge3
-        try {
-          const [settingsRes, clientRes] = await Promise.all([
-            supabase.from('settings').select('*').eq('user_id', session.user.id).single(),
-            activeId ? supabase.from('client_data').select('*').eq('client_id', activeId).single() : Promise.resolve({ data: null })
-          ])
-
-          const s = settingsRes.data || {}
-          const c = clientRes.data || {}
-
-          iWin.postMessage({
-            type: 'LOAD_DATA',
-            payload: {
-              keys: {
-                anthropic:      s.anthropic_key    || '',
-                google:         s.google_key        || '',
-                indexnow:       s.indexnow_key      || '',
-                yext:           s.yext_key          || '',
-                yextAccount:    s.yext_account      || '',
-                openai:         s.openai_key        || '',
-                gemini:         s.gemini_key        || '',
-                mozId:          s.moz_id            || '',
-                mozSecret:      s.moz_secret        || '',
-                brightlocalKey: s.brightlocal_key   || '',
-                brightlocalCid: s.brightlocal_cid   || '',
-                gmailToken:     s.gmail_token       || '',
-                fbToken:        s.fb_token          || '',
-                fbPageId:       s.fb_page_id        || '',
-                linkedinToken:  s.linkedin_token    || '',
-              },
-              profile: {
-                bizName:    c.biz_name    || '',
-                bizCat:     c.biz_cat     || '',
-                bizAddr:    c.biz_addr    || '',
-                bizCity:    c.biz_city    || '',
-                bizState:   c.biz_state   || '',
-                bizZip:     c.biz_zip     || '',
-                bizPhone:   c.biz_phone   || '',
-                bizWebsite: c.biz_website || '',
-                bizDesc:    c.biz_desc    || '',
-                bizKw:      c.biz_kw      || '',
-                agencyName: s.agency_name  || '',
-                brandColor: s.brand_color  || '',
-              }
-            }
-          }, '*')
-        } catch (err) {
-          console.error('LOAD_DATA error:', err)
-        }
-
-        // 2. Switch to pending tab if any
-        const tab = pendingTabRef.current
-        if (tab && tab !== 'clients' && tab !== 'dash') {
-          pendingTabRef.current = null
-          iWin.postMessage({ type: 'SWITCH_TAB', payload: { tab } }, '*')
-        }
-      }
-    }
-    window.addEventListener('message', handler)
-    return () => window.removeEventListener('message', handler)
-  }, [activeId, session.user.id]) // eslint-disable-line
-
-  // When tab changes, send postMessage to rankforge3
-  useEffect(() => {
-    if (!activeId || activeTab === 'clients' || activeTab === 'dash') return
-    pendingTabRef.current = activeTab
-    // postMessage is the ONLY way — contentDocument is null (cross-origin restriction)
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: 'SWITCH_TAB', payload: { tab: activeTab } }, '*'
-    )
-  }, [activeTab]) // eslint-disable-line
 
   const handleNavClick = (tabId) => {
     if (tabId === 'clients') { setActiveTab('clients'); return }
     if (!activeId) { setActiveTab('clients'); return }
-    switchTab(tabId)
+    // Navigate directly to rankforge3 - it has its own sidebar nav
+    sessionStorage.setItem('rf_client', activeId)
+    sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL || '')
+    sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+    sessionStorage.setItem('rf_user_id', session.user.id)
+    sessionStorage.setItem('rf_origin', window.location.origin)
+    sessionStorage.setItem('rf_plan', plan)
+    sessionStorage.setItem('rf_user_email', session.user.email || '')
+    window.location.href = '/rankforge3.html?client=' + activeId
   }
 
   const signOut = () => supabase.auth.signOut()
@@ -357,7 +297,16 @@ export default function DashboardShell({ session, subscription }) {
         {activeTab==='clients' && (
           <ClientsPage
             clients={clients} activeId={activeId} maxClients={maxClients} plan={plan}
-            onSelect={(id)=>{ setActiveId(id); setActiveTab('dash') }}
+            onSelect={(id)=>{ 
+                  sessionStorage.setItem('rf_client', id)
+                  sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL || '')
+                  sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+                  sessionStorage.setItem('rf_user_id', session.user.id)
+                  sessionStorage.setItem('rf_origin', window.location.origin)
+                  sessionStorage.setItem('rf_plan', plan)
+                  sessionStorage.setItem('rf_user_email', session.user.email || '')
+                  window.location.href = '/rankforge3.html?client=' + id
+                }}
             onAdd={()=>setShowAddModal(true)}
             onDelete={deleteClient}
             onUpdateMeta={updateClientMeta}
@@ -365,47 +314,6 @@ export default function DashboardShell({ session, subscription }) {
           />
         )}
 
-        {/* Tool iframe */}
-        {activeTab!=='clients' && (
-          <div style={{ flex:1,position:'relative',overflow:'hidden' }}>
-            {/* No client */}
-            {!activeId && (
-              <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',
-                alignItems:'center',justifyContent:'center',gap:16,background:'#060d1a',zIndex:5 }}>
-                <div style={{ fontSize:48 }}>🏢</div>
-                <div style={{ fontSize:16,fontWeight:700,color:'#e2e8f0' }}>No business selected</div>
-                <button onClick={()=>setActiveTab('clients')}
-                  style={{ padding:'10px 24px',background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-                    color:'#fff',border:'none',borderRadius:10,fontSize:14,fontWeight:700,cursor:'pointer' }}>
-                  Go to My Businesses
-                </button>
-              </div>
-            )}
-            {/* Loading spinner */}
-            {activeId && !iframeReady && (
-              <div style={{ position:'absolute',inset:0,zIndex:10,background:'#060d1a',
-                display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14 }}>
-                <div style={{ width:36,height:36,border:'3px solid #0f2040',borderTopColor:'#3b82f6',
-                  borderRadius:'50%',animation:'spin 1s linear infinite' }} />
-                <div style={{ fontSize:13,color:'#3a5080' }}>Loading {activeClient?.name||'tool'}...</div>
-                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-              </div>
-            )}
-            {/* iframe */}
-            {activeId && iframeSrc && (
-              <iframe
-                ref={iframeRef}
-                src={iframeSrc}
-                onLoad={onIframeLoad}
-                onError={()=>setIframeReady(true)}
-                title="RankForged AI"
-                style={{ width:'100%',height:'100%',border:'none',display:'block',
-                  opacity:iframeReady?1:0,transition:'opacity .3s' }}
-                allow="clipboard-read; clipboard-write"
-              />
-            )}
-          </div>
-        )}
       </div>
 
       {/* Add Business Modal */}
@@ -415,9 +323,32 @@ export default function DashboardShell({ session, subscription }) {
           onCreate={async(data)=>{
             const client = await createClient(data.name)
             if (client) {
-              if (data.city||data.category) await updateClientMeta(client.id,{city:data.city,category:data.category})
-              setActiveId(client.id)
-              setActiveTab('dash')
+              // Save city/category to clients table meta
+              if (data.city||data.category)
+                await updateClientMeta(client.id, { city:data.city, category:data.category })
+              // Save full business profile to client_data table
+              const { error } = await supabase.from('client_data').upsert({
+                client_id: client.id,
+                user_id:   session.user.id,
+                biz_name:    data.name,
+                biz_city:    data.city,
+                biz_state:   data.state,
+                biz_cat:     data.category,
+                biz_phone:   data.phone,
+                biz_website: data.website,
+                biz_desc:    data.desc,
+                biz_kw:      data.keywords,
+              }, { onConflict: 'client_id' })
+              if (error) console.warn('client_data save error:', error)
+              // Navigate to rankforge3 with credentials
+              sessionStorage.setItem('rf_client', client.id)
+              sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL || '')
+              sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+              sessionStorage.setItem('rf_user_id', session.user.id)
+              sessionStorage.setItem('rf_origin', window.location.origin)
+              sessionStorage.setItem('rf_plan', plan)
+              sessionStorage.setItem('rf_user_email', session.user.email || '')
+              window.location.href = '/rankforge3.html?client=' + client.id
             }
             setShowAddModal(false)
           }}
@@ -430,46 +361,96 @@ export default function DashboardShell({ session, subscription }) {
 }
 
 function AddModal({ onClose, onCreate, remaining, plan }) {
-  const [name,setName]=useState(''); const [city,setCity]=useState('');
-  const [cat,setCat]=useState(''); const [saving,setSaving]=useState(false)
-  const inp = { width:'100%',padding:'9px 12px',background:'#07111f',color:'#e2e8f0',
-    border:'1.5px solid #1a3560',borderRadius:7,fontSize:13.5,outline:'none',boxSizing:'border-box' }
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    name:'', city:'', state:'', category:'', phone:'', website:'', desc:'', keywords:''
+  })
+  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const inp = {
+    width:'100%', padding:'9px 12px', background:'#07111f', color:'#e2e8f0',
+    border:'1.5px solid #1a3560', borderRadius:7, fontSize:13.5, outline:'none',
+    boxSizing:'border-box', fontFamily:'inherit',
+  }
+  const lbl = { fontSize:12, fontWeight:600, color:'#60a5fa', marginBottom:4, display:'block' }
+  const row = { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 12px' }
+
+  const fields = [
+    { label:'Business Name *', key:'name', placeholder:'e.g. Austin Plumbing Pros', full:true, required:true },
+    { label:'City',            key:'city',     placeholder:'e.g. Austin' },
+    { label:'State',           key:'state',    placeholder:'e.g. TX' },
+    { label:'Business Category', key:'category', placeholder:'e.g. Plumber, HVAC, Dentist' },
+    { label:'Phone Number',    key:'phone',    placeholder:'(555) 123-4567' },
+    { label:'Website URL',     key:'website',  placeholder:'https://yourbusiness.com', full:true },
+    { label:'Services / Keywords', key:'keywords', placeholder:'plumber, drain cleaning, water heater repair', full:true },
+    { label:'Business Description', key:'desc', placeholder:'Describe your business...', full:true, textarea:true },
+  ]
+
   return (
-    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:1000,
-      display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:1000,
+      display:'flex', alignItems:'center', justifyContent:'center', padding:16, overflowY:'auto' }}
       onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{ background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:16,
-        padding:'28px 32px',width:'100%',maxWidth:400,boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
-        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16 }}>
-          <div style={{ fontSize:17,fontWeight:800,color:'#e2e8f0' }}>➕ Add New Business</div>
-          <button onClick={onClose} style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20 }}>×</button>
+      <div style={{ background:'#0d1f3c', border:'1px solid #1a3560', borderRadius:16,
+        padding:'28px 32px', width:'100%', maxWidth:520, boxShadow:'0 20px 60px rgba(0,0,0,.6)',
+        margin:'auto' }}>
+
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+          <div style={{ fontSize:17, fontWeight:800, color:'#e2e8f0' }}>➕ Add New Business</div>
+          <button onClick={onClose} style={{ background:'transparent', border:'none', color:'#3a5080', cursor:'pointer', fontSize:20 }}>×</button>
         </div>
-        <div style={{ background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)',borderRadius:8,
-          padding:'8px 12px',marginBottom:18,fontSize:12,color:'#60a5fa' }}>
-          {remaining>0?`${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`:`All slots used — upgrade for more`}
+
+        <div style={{ background:'rgba(59,130,246,.08)', border:'1px solid rgba(59,130,246,.2)',
+          borderRadius:8, padding:'8px 12px', marginBottom:18, fontSize:12, color:'#60a5fa' }}>
+          {remaining>0
+            ? `${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`
+            : `All slots used — upgrade for more`}
         </div>
-        {[{l:'Business Name *',v:name,s:setName,p:'e.g. Austin Plumbing Pros',r:true},
-          {l:'City / State',v:city,s:setCity,p:'e.g. Austin, TX'},
-          {l:'Business Type',v:cat,s:setCat,p:'e.g. Plumber, HVAC, Dentist'}
-        ].map(f=>(
-          <div key={f.l} style={{ marginBottom:12 }}>
-            <label style={{ fontSize:12,fontWeight:600,color:'#60a5fa',marginBottom:4,display:'block' }}>{f.l}</label>
-            <input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.p} required={f.r}
-              style={inp}
-              onFocus={e=>e.target.style.borderColor='#3b82f6'}
-              onBlur={e=>e.target.style.borderColor='#1a3560'} />
-          </div>
-        ))}
-        <div style={{ display:'flex',gap:10,marginTop:18 }}>
-          <button onClick={onClose} style={{ flex:1,padding:'10px 0',background:'transparent',color:'#4a6080',
-            border:'1px solid #1a3560',borderRadius:8,fontSize:13.5,fontWeight:600,cursor:'pointer' }}>Cancel</button>
-          <button onClick={async()=>{ if(!name.trim()||saving||remaining<=0)return; setSaving(true); await onCreate({name:name.trim(),city:city.trim(),category:cat.trim()}); setSaving(false) }}
-            disabled={!name.trim()||saving||remaining<=0}
-            style={{ flex:2,padding:'10px 0',
-              background:!name.trim()||saving||remaining<=0?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-              color:!name.trim()||saving||remaining<=0?'#2a4060':'#fff',border:'none',borderRadius:8,
-              fontSize:13.5,fontWeight:700,cursor:'pointer' }}>
-            {saving?'Creating...':'Create Business'}
+
+        <div style={row}>
+          {fields.map(f => (
+            <div key={f.key} style={{ gridColumn: f.full ? '1/-1' : 'auto', marginBottom:12 }}>
+              <label style={lbl}>{f.label}</label>
+              {f.textarea
+                ? <textarea value={form[f.key]} onChange={set(f.key)} placeholder={f.placeholder} rows={3}
+                    style={{ ...inp, resize:'vertical' }} />
+                : <input value={form[f.key]} onChange={set(f.key)} placeholder={f.placeholder}
+                    style={inp}
+                    onFocus={e=>e.target.style.borderColor='#3b82f6'}
+                    onBlur={e=>e.target.style.borderColor='#1a3560'} />
+              }
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display:'flex', gap:10, marginTop:8 }}>
+          <button onClick={onClose}
+            style={{ flex:1, padding:'10px 0', background:'transparent', color:'#4a6080',
+              border:'1px solid #1a3560', borderRadius:8, fontSize:13.5, fontWeight:600, cursor:'pointer' }}>
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              if (!form.name.trim() || saving || remaining <= 0) return
+              setSaving(true)
+              await onCreate({
+                name:     form.name.trim(),
+                city:     form.city.trim(),
+                state:    form.state.trim(),
+                category: form.category.trim(),
+                phone:    form.phone.trim(),
+                website:  form.website.trim(),
+                desc:     form.desc.trim(),
+                keywords: form.keywords.trim(),
+              })
+              setSaving(false)
+            }}
+            disabled={!form.name.trim() || saving || remaining <= 0}
+            style={{ flex:2, padding:'10px 0', border:'none', borderRadius:8,
+              fontSize:13.5, fontWeight:700, cursor:'pointer',
+              background: !form.name.trim()||saving||remaining<=0
+                ? '#0d1f3c' : 'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+              color: !form.name.trim()||saving||remaining<=0 ? '#2a4060' : '#fff' }}>
+            {saving ? 'Creating...' : 'Create Business'}
           </button>
         </div>
       </div>
