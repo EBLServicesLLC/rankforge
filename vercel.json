@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/rankforge3.html", "destination": "/rankforge3.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
