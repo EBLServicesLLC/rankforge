@@ -112,6 +112,8 @@ export default function DashboardShell({ session, subscription }) {
     sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
     sessionStorage.setItem('rf_user_id', session.user.id)
     sessionStorage.setItem('rf_origin', window.location.origin)
+    sessionStorage.setItem('rf_plan', plan)
+    sessionStorage.setItem('rf_user_email', session.user.email || '')
     window.location.href = '/rankforge3.html?client=' + activeId
   }
 
@@ -301,6 +303,8 @@ export default function DashboardShell({ session, subscription }) {
                   sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
                   sessionStorage.setItem('rf_user_id', session.user.id)
                   sessionStorage.setItem('rf_origin', window.location.origin)
+                  sessionStorage.setItem('rf_plan', plan)
+                  sessionStorage.setItem('rf_user_email', session.user.email || '')
                   window.location.href = '/rankforge3.html?client=' + id
                 }}
             onAdd={()=>setShowAddModal(true)}
@@ -342,6 +346,8 @@ export default function DashboardShell({ session, subscription }) {
               sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
               sessionStorage.setItem('rf_user_id', session.user.id)
               sessionStorage.setItem('rf_origin', window.location.origin)
+              sessionStorage.setItem('rf_plan', plan)
+              sessionStorage.setItem('rf_user_email', session.user.email || '')
               window.location.href = '/rankforge3.html?client=' + client.id
             }
             setShowAddModal(false)
