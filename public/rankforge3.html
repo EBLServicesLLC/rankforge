@@ -6430,7 +6430,17 @@ function rfProfileAction(action){
     });
     return;
   }
-  var h={'apikey':sbKey,'Authorization':'Bearer '+sbKey,'Content-Type':'application/json'};
+  // Use session token from Supabase auth if available (satisfies RLS)
+  var _authKey = sbKey;
+  try {
+    var _ref = sbUrl.replace('https://','').split('.')[0];
+    var _authData = localStorage.getItem('sb-'+_ref+'-auth-token');
+    if (_authData) {
+      var _token = JSON.parse(_authData).access_token;
+      if (_token) _authKey = _token;
+    }
+  } catch(e) {}
+  var h={'apikey':sbKey,'Authorization':'Bearer '+_authKey,'Content-Type':'application/json'};
   function sf(id,val){var el=document.getElementById(id);if(el&&val!=null&&val!==''){el.value=val;el.dispatchEvent(new Event('input'));el.dispatchEvent(new Event('change'));}}
   fetch(sbUrl+'/rest/v1/settings?user_id=eq.'+userId+'&limit=1',{headers:h})
     .then(function(r){return r.json();}).then(function(rows){
@@ -6472,6 +6482,34 @@ function rfProfileAction(action){
         if(typeof window.cmInit==='function')window.cmInit();
       },300);
     }).catch(function(e){console.warn('RF client_data:',e);});
+  // Fetch plan + email from Supabase if not in sessionStorage
+  if((!sessionStorage.getItem('rf_plan')||!sessionStorage.getItem('rf_user_email')) && sbUrl && _authKey) {
+    // Get email from JWT
+    try {
+      var _jwt = JSON.parse(atob(_authKey.split('.')[1]));
+      if(_jwt.email) sessionStorage.setItem('rf_user_email', _jwt.email);
+    } catch(e){}
+    // Get plan from subscriptions table
+    fetch(sbUrl+'/rest/v1/subscriptions?user_id=eq.'+userId+'&limit=1',{headers:{'apikey':sbKey,'Authorization':'Bearer '+_authKey}})
+      .then(function(r){return r.json();}).then(function(rows){
+        if(rows&&rows.length){
+          var plan=rows[0].plan||'';
+          if(plan){
+            sessionStorage.setItem('rf_plan',plan);
+            var planLabel=plan.charAt(0).toUpperCase()+plan.slice(1);
+            var pb=document.getElementById('rf-plan-badge');
+            if(pb){pb.textContent=planLabel;pb.style.display='inline-flex';}
+            var upl=document.getElementById('rf-user-plan-label');
+            if(upl)upl.textContent=planLabel+' Plan';
+          }
+        }
+      }).catch(function(e){console.warn('RF plan fetch:',e);});
+  }
+  // Expose rf_plan for topbar badge
+  var _plan=sessionStorage.getItem('rf_plan')||localStorage.getItem('rf_plan')||'';
+  if(_plan){var pb=document.getElementById('rf-plan-badge');if(pb){pb.textContent=_plan.charAt(0).toUpperCase()+_plan.slice(1);pb.style.display='inline-flex';}}
+  var _email=sessionStorage.getItem('rf_user_email')||'';
+  if(_email){var em=document.getElementById('rf-user-email');if(em)em.textContent=_email;}
   // Render clients panel once DOM is ready
   document.addEventListener('DOMContentLoaded', function(){
     var _r=0;
