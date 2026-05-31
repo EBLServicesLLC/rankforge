@@ -54,6 +54,20 @@ const PLAN_COLORS = {
   pro:'#06b6d4', agency:'#10b981'
 }
 
+// ── Sync helpers: read/write the same localStorage as rankforge3 ──────────
+function cmReadClients() {
+  try { return JSON.parse(localStorage.getItem('rf_clients') || '[]'); } catch(e) { return []; }
+}
+function cmWriteClients(clients) {
+  try { localStorage.setItem('rf_clients', JSON.stringify(clients)); } catch(e) {}
+}
+function cmReadActiveId() {
+  return localStorage.getItem('rf_active_client') || null;
+}
+function cmWriteActiveId(id) {
+  try { localStorage.setItem('rf_active_client', id); } catch(e) {}
+}
+
 export default function DashboardShell({ session, subscription }) {
   const [activeTab, setActiveTab]     = useState('clients')
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -61,6 +75,28 @@ export default function DashboardShell({ session, subscription }) {
   const [showAddModal, setShowAddModal] = useState(false)
 
   const { clients, activeId, setActiveId, createClient, deleteClient, updateClientMeta } = useClients(session.user.id)
+
+  // Sync Supabase clients → localStorage so rankforge3 can read them
+  useEffect(() => {
+    if (!clients.length) return
+    const existing = cmReadClients()
+    const existingIds = new Set(existing.map(c => c.id))
+    const merged = clients.map(c => {
+      const prev = existing.find(e => e.id === c.id) || {}
+      return {
+        ...prev,
+        id: c.id,
+        name: c.name || prev.name || '',
+        city: c.city || prev.city || '',
+        cat: c.category || prev.cat || '',
+        color: c.color || prev.color || '#1A6FBF',
+        score: c.seo_score || prev.score || 0,
+        updatedAt: c.updated_at || prev.updatedAt || new Date().toISOString(),
+      }
+    })
+    cmWriteClients(merged)
+    if (activeId) cmWriteActiveId(activeId)
+  }, [clients, activeId])
   const activeClient = clients.find(c => c.id === activeId)
   const plan = subscription?.plan || 'solopreneur'
   const maxClients = subscription?.max_clients || 1
@@ -74,6 +110,8 @@ export default function DashboardShell({ session, subscription }) {
     sessionStorage.setItem('rf_client', activeId)
     sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL || '')
     sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+    sessionStorage.setItem('rf_user_id', session.user.id)
+    sessionStorage.setItem('rf_origin', window.location.origin)
     window.location.href = '/rankforge3.html?client=' + activeId
   }
 
@@ -261,8 +299,8 @@ export default function DashboardShell({ session, subscription }) {
                   sessionStorage.setItem('rf_client', id)
                   sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL || '')
                   sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
-                  // Also pass user_id so rankforge3 can filter data correctly
                   sessionStorage.setItem('rf_user_id', session.user.id)
+                  sessionStorage.setItem('rf_origin', window.location.origin)
                   window.location.href = '/rankforge3.html?client=' + id
                 }}
             onAdd={()=>setShowAddModal(true)}
@@ -281,10 +319,29 @@ export default function DashboardShell({ session, subscription }) {
           onCreate={async(data)=>{
             const client = await createClient(data.name)
             if (client) {
-              if (data.city||data.category) await updateClientMeta(client.id,{city:data.city,category:data.category})
+              // Save city/category to clients table meta
+              if (data.city||data.category)
+                await updateClientMeta(client.id, { city:data.city, category:data.category })
+              // Save full business profile to client_data table
+              const { error } = await supabase.from('client_data').upsert({
+                client_id: client.id,
+                user_id:   session.user.id,
+                biz_name:    data.name,
+                biz_city:    data.city,
+                biz_state:   data.state,
+                biz_cat:     data.category,
+                biz_phone:   data.phone,
+                biz_website: data.website,
+                biz_desc:    data.desc,
+                biz_kw:      data.keywords,
+              }, { onConflict: 'client_id' })
+              if (error) console.warn('client_data save error:', error)
+              // Navigate to rankforge3 with credentials
               sessionStorage.setItem('rf_client', client.id)
               sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL || '')
               sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+              sessionStorage.setItem('rf_user_id', session.user.id)
+              sessionStorage.setItem('rf_origin', window.location.origin)
               window.location.href = '/rankforge3.html?client=' + client.id
             }
             setShowAddModal(false)
@@ -298,46 +355,96 @@ export default function DashboardShell({ session, subscription }) {
 }
 
 function AddModal({ onClose, onCreate, remaining, plan }) {
-  const [name,setName]=useState(''); const [city,setCity]=useState('');
-  const [cat,setCat]=useState(''); const [saving,setSaving]=useState(false)
-  const inp = { width:'100%',padding:'9px 12px',background:'#07111f',color:'#e2e8f0',
-    border:'1.5px solid #1a3560',borderRadius:7,fontSize:13.5,outline:'none',boxSizing:'border-box' }
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    name:'', city:'', state:'', category:'', phone:'', website:'', desc:'', keywords:''
+  })
+  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const inp = {
+    width:'100%', padding:'9px 12px', background:'#07111f', color:'#e2e8f0',
+    border:'1.5px solid #1a3560', borderRadius:7, fontSize:13.5, outline:'none',
+    boxSizing:'border-box', fontFamily:'inherit',
+  }
+  const lbl = { fontSize:12, fontWeight:600, color:'#60a5fa', marginBottom:4, display:'block' }
+  const row = { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 12px' }
+
+  const fields = [
+    { label:'Business Name *', key:'name', placeholder:'e.g. Austin Plumbing Pros', full:true, required:true },
+    { label:'City',            key:'city',     placeholder:'e.g. Austin' },
+    { label:'State',           key:'state',    placeholder:'e.g. TX' },
+    { label:'Business Category', key:'category', placeholder:'e.g. Plumber, HVAC, Dentist' },
+    { label:'Phone Number',    key:'phone',    placeholder:'(555) 123-4567' },
+    { label:'Website URL',     key:'website',  placeholder:'https://yourbusiness.com', full:true },
+    { label:'Services / Keywords', key:'keywords', placeholder:'plumber, drain cleaning, water heater repair', full:true },
+    { label:'Business Description', key:'desc', placeholder:'Describe your business...', full:true, textarea:true },
+  ]
+
   return (
-    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:1000,
-      display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', zIndex:1000,
+      display:'flex', alignItems:'center', justifyContent:'center', padding:16, overflowY:'auto' }}
       onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{ background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:16,
-        padding:'28px 32px',width:'100%',maxWidth:400,boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
-        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16 }}>
-          <div style={{ fontSize:17,fontWeight:800,color:'#e2e8f0' }}>➕ Add New Business</div>
-          <button onClick={onClose} style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20 }}>×</button>
+      <div style={{ background:'#0d1f3c', border:'1px solid #1a3560', borderRadius:16,
+        padding:'28px 32px', width:'100%', maxWidth:520, boxShadow:'0 20px 60px rgba(0,0,0,.6)',
+        margin:'auto' }}>
+
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+          <div style={{ fontSize:17, fontWeight:800, color:'#e2e8f0' }}>➕ Add New Business</div>
+          <button onClick={onClose} style={{ background:'transparent', border:'none', color:'#3a5080', cursor:'pointer', fontSize:20 }}>×</button>
         </div>
-        <div style={{ background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)',borderRadius:8,
-          padding:'8px 12px',marginBottom:18,fontSize:12,color:'#60a5fa' }}>
-          {remaining>0?`${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`:`All slots used — upgrade for more`}
+
+        <div style={{ background:'rgba(59,130,246,.08)', border:'1px solid rgba(59,130,246,.2)',
+          borderRadius:8, padding:'8px 12px', marginBottom:18, fontSize:12, color:'#60a5fa' }}>
+          {remaining>0
+            ? `${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`
+            : `All slots used — upgrade for more`}
         </div>
-        {[{l:'Business Name *',v:name,s:setName,p:'e.g. Austin Plumbing Pros',r:true},
-          {l:'City / State',v:city,s:setCity,p:'e.g. Austin, TX'},
-          {l:'Business Type',v:cat,s:setCat,p:'e.g. Plumber, HVAC, Dentist'}
-        ].map(f=>(
-          <div key={f.l} style={{ marginBottom:12 }}>
-            <label style={{ fontSize:12,fontWeight:600,color:'#60a5fa',marginBottom:4,display:'block' }}>{f.l}</label>
-            <input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.p} required={f.r}
-              style={inp}
-              onFocus={e=>e.target.style.borderColor='#3b82f6'}
-              onBlur={e=>e.target.style.borderColor='#1a3560'} />
-          </div>
-        ))}
-        <div style={{ display:'flex',gap:10,marginTop:18 }}>
-          <button onClick={onClose} style={{ flex:1,padding:'10px 0',background:'transparent',color:'#4a6080',
-            border:'1px solid #1a3560',borderRadius:8,fontSize:13.5,fontWeight:600,cursor:'pointer' }}>Cancel</button>
-          <button onClick={async()=>{ if(!name.trim()||saving||remaining<=0)return; setSaving(true); await onCreate({name:name.trim(),city:city.trim(),category:cat.trim()}); setSaving(false) }}
-            disabled={!name.trim()||saving||remaining<=0}
-            style={{ flex:2,padding:'10px 0',
-              background:!name.trim()||saving||remaining<=0?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-              color:!name.trim()||saving||remaining<=0?'#2a4060':'#fff',border:'none',borderRadius:8,
-              fontSize:13.5,fontWeight:700,cursor:'pointer' }}>
-            {saving?'Creating...':'Create Business'}
+
+        <div style={row}>
+          {fields.map(f => (
+            <div key={f.key} style={{ gridColumn: f.full ? '1/-1' : 'auto', marginBottom:12 }}>
+              <label style={lbl}>{f.label}</label>
+              {f.textarea
+                ? <textarea value={form[f.key]} onChange={set(f.key)} placeholder={f.placeholder} rows={3}
+                    style={{ ...inp, resize:'vertical' }} />
+                : <input value={form[f.key]} onChange={set(f.key)} placeholder={f.placeholder}
+                    style={inp}
+                    onFocus={e=>e.target.style.borderColor='#3b82f6'}
+                    onBlur={e=>e.target.style.borderColor='#1a3560'} />
+              }
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display:'flex', gap:10, marginTop:8 }}>
+          <button onClick={onClose}
+            style={{ flex:1, padding:'10px 0', background:'transparent', color:'#4a6080',
+              border:'1px solid #1a3560', borderRadius:8, fontSize:13.5, fontWeight:600, cursor:'pointer' }}>
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              if (!form.name.trim() || saving || remaining <= 0) return
+              setSaving(true)
+              await onCreate({
+                name:     form.name.trim(),
+                city:     form.city.trim(),
+                state:    form.state.trim(),
+                category: form.category.trim(),
+                phone:    form.phone.trim(),
+                website:  form.website.trim(),
+                desc:     form.desc.trim(),
+                keywords: form.keywords.trim(),
+              })
+              setSaving(false)
+            }}
+            disabled={!form.name.trim() || saving || remaining <= 0}
+            style={{ flex:2, padding:'10px 0', border:'none', borderRadius:8,
+              fontSize:13.5, fontWeight:700, cursor:'pointer',
+              background: !form.name.trim()||saving||remaining<=0
+                ? '#0d1f3c' : 'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+              color: !form.name.trim()||saving||remaining<=0 ? '#2a4060' : '#fff' }}>
+            {saving ? 'Creating...' : 'Create Business'}
           </button>
         </div>
       </div>
