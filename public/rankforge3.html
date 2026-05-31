@@ -6435,7 +6435,7 @@ function rfProfileAction(action){
   fetch(sbUrl+'/rest/v1/settings?user_id=eq.'+userId+'&limit=1',{headers:h})
     .then(function(r){return r.json();}).then(function(rows){
       if(!rows||!rows.length)return;var s=rows[0];
-      var km={anthropic_key:'k-anthropic',google_key:'k-google',indexnow_key:'k-indexnow',yext_key:'k-yext',yext_account:'k-yext-account',openai_key:'k-openai',gemini_key:'k-gemini',moz_id:'k-moz-id',moz_secret:'k-moz-secret',brightlocal_key:'k-brightlocal',brightlocal_cid:'k-brightlocal-cid',gmail_token:'k-gmail-token',fb_token:'k-fb-token',fb_page_id:'k-fb-page-id',linkedin_token:'k-li-token',brand_color:'k-brand-color',agency_name:'k-agency'};
+      var km={anthropic_key:'k-anthropic',google_key:'k-google',indexnow_key:'k-indexnow',yext_key:'k-yext',yext_account:'k-yext-account',openai_key:'k-openai',gemini_key:'k-gemini',moz_id:'k-moz-id',moz_secret:'k-moz-secret',brightlocal_key:'k-bl-key',brightlocal_cid:'k-bl-cid',gmail_token:'k-gmail-token',fb_token:'k-fb-token',fb_page_id:'k-fb-page-id',linkedin_token:'k-li-token',brand_color:'k-brand-color',agency_name:'k-agency'};
       Object.keys(km).forEach(function(col){if(s[col])sf(km[col],s[col]);});
       if(typeof updateKeyIndicators==='function')updateKeyIndicators();
       // Sync keys into S.keys so all tabs work immediately
