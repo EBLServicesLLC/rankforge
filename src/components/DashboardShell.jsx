@@ -1,4 +1,4 @@
-// src/components/DashboardShell.jsx
+﻿// src/components/DashboardShell.jsx
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useClients } from '../hooks/useClients'
@@ -8,42 +8,42 @@ const LOGO = 'data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJ
 
 const NAV_GROUPS = [
   { label:'Overview', items:[
-    { id:'dash',         label:'Dashboard',      icon:'📊' },
-    { id:'agents',       label:'AI Agents',       icon:'🤖' },
+    { id:'dash',         label:'Dashboard',      icon:'ðŸ“Š' },
+    { id:'agents',       label:'AI Agents',       icon:'ðŸ¤–' },
   ]},
   { label:'Citations & Links', items:[
-    { id:'dir',          label:'Directories',     icon:'📍' },
-    { id:'bl',           label:'Backlinks',        icon:'🔗' },
-    { id:'web2',         label:'Web 2.0',          icon:'🌐' },
-    { id:'locallinks',   label:'Local Links',      icon:'🏘️' },
+    { id:'dir',          label:'Directories',     icon:'ðŸ“' },
+    { id:'bl',           label:'Backlinks',        icon:'ðŸ”—' },
+    { id:'web2',         label:'Web 2.0',          icon:'ðŸŒ' },
+    { id:'locallinks',   label:'Local Links',      icon:'ðŸ˜ï¸' },
   ]},
   { label:'Local SEO', items:[
-    { id:'local',        label:'Local SEO',        icon:'📌' },
-    { id:'mloc',         label:'Multi-Location',   icon:'🏪' },
-    { id:'napaudit',     label:'NAP Audit',        icon:'🛡️' },
-    { id:'reputation',   label:'Reputation',       icon:'⭐' },
+    { id:'local',        label:'Local SEO',        icon:'ðŸ“Œ' },
+    { id:'mloc',         label:'Multi-Location',   icon:'ðŸª' },
+    { id:'napaudit',     label:'NAP Audit',        icon:'ðŸ›¡ï¸' },
+    { id:'reputation',   label:'Reputation',       icon:'â­' },
   ]},
   { label:'Content', items:[
-    { id:'calendar',     label:'Calendar',         icon:'📅' },
-    { id:'pages',        label:'Landing Pages',    icon:'📄' },
-    { id:'voice',        label:'Voice & FAQ',      icon:'🎙️' },
-    { id:'gbpqa',        label:'AI FAQ & Schema',  icon:'🧠' },
+    { id:'calendar',     label:'Calendar',         icon:'ðŸ“…' },
+    { id:'pages',        label:'Landing Pages',    icon:'ðŸ“„' },
+    { id:'voice',        label:'Voice & FAQ',      icon:'ðŸŽ™ï¸' },
+    { id:'gbpqa',        label:'AI FAQ & Schema',  icon:'ðŸ§ ' },
   ]},
   { label:'Intelligence', items:[
-    { id:'kwgap',        label:'KW Gap',           icon:'🔍' },
-    { id:'rank-tracker', label:'Rank Tracker',     icon:'📈' },
-    { id:'gsc',          label:'Search Console',   icon:'🔎' },
-    { id:'schema-mon',   label:'Schema Monitor',   icon:'🔧' },
+    { id:'kwgap',        label:'KW Gap',           icon:'ðŸ”' },
+    { id:'rank-tracker', label:'Rank Tracker',     icon:'ðŸ“ˆ' },
+    { id:'gsc',          label:'Search Console',   icon:'ðŸ”Ž' },
+    { id:'schema-mon',   label:'Schema Monitor',   icon:'ðŸ”§' },
   ]},
   { label:'Agency', items:[
-    { id:'social-pub',   label:'Social Publisher', icon:'📲' },
-    { id:'social-proof', label:'Social Proof',     icon:'🏆' },
-    { id:'pdfreport',    label:'Reports',          icon:'📑' },
-    { id:'meta',         label:'Meta Tags',        icon:'🏷️' },
+    { id:'social-pub',   label:'Social Publisher', icon:'ðŸ“²' },
+    { id:'social-proof', label:'Social Proof',     icon:'ðŸ†' },
+    { id:'pdfreport',    label:'Reports',          icon:'ðŸ“‘' },
+    { id:'meta',         label:'Meta Tags',        icon:'ðŸ·ï¸' },
   ]},
   { label:'Technical', items:[
-    { id:'index',        label:'Indexing & AI',    icon:'⚡' },
-    { id:'keys',         label:'API Keys',         icon:'🔑' },
+    { id:'index',        label:'Indexing & AI',    icon:'âš¡' },
+    { id:'keys',         label:'API Keys',         icon:'ðŸ”‘' },
   ]},
 ]
 
@@ -69,30 +69,30 @@ export default function DashboardShell({ session, subscription }) {
   const plan = subscription?.plan || 'solopreneur'
   const maxClients = subscription?.max_clients || 1
 
-  // ── Load iframe when client selected ─────────────────
+  // â”€â”€ Load iframe when client selected â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!activeId) return
     setIframeReady(false)
     setIframeSrc('/rankforge3.html?client=' + activeId + '&t=' + Date.now())
   }, [activeId]) // eslint-disable-line
 
-  // ── Switch tab by clicking the real button inside iframe ──
+  // â”€â”€ Switch tab by clicking the real button inside iframe â”€â”€
   const switchTab = useCallback((tabId) => {
     setActiveTab(tabId)
-    // postMessage only — contentDocument is inaccessible (confirmed null)
+    // postMessage only â€” contentDocument is inaccessible (confirmed null)
     iframeRef.current?.contentWindow?.postMessage(
       { type: 'SWITCH_TAB', payload: { tab: tabId } }, '*'
     )
   }, [])
 
-  // ── After iframe loads: inject CSS + switch to active tab ─
+  // â”€â”€ After iframe loads: inject CSS + switch to active tab â”€
   const onIframeLoad = useCallback(() => {
     setIframeReady(true)
     // rankforge3 detects it's in an iframe and hides its own sidebar automatically
     // Tab switching happens via postMessage when RF_APP_READY fires
   }, [])
 
-  // Listen for RF_APP_READY — rankforge3 sends this when fully initialised
+  // Listen for RF_APP_READY â€” rankforge3 sends this when fully initialised
   useEffect(() => {
     const handler = async (e) => {
       if (e.data?.type === 'RF_APP_READY') {
@@ -165,7 +165,7 @@ export default function DashboardShell({ session, subscription }) {
   useEffect(() => {
     if (!activeId || activeTab === 'clients' || activeTab === 'dash') return
     pendingTabRef.current = activeTab
-    // postMessage is the ONLY way — contentDocument is null (cross-origin restriction)
+    // postMessage is the ONLY way â€” contentDocument is null (cross-origin restriction)
     iframeRef.current?.contentWindow?.postMessage(
       { type: 'SWITCH_TAB', payload: { tab: activeTab } }, '*'
     )
@@ -185,7 +185,7 @@ export default function DashboardShell({ session, subscription }) {
     <div style={{ display:'flex', height:'100vh', background:'#060d1a',
       fontFamily:"'Segoe UI',system-ui,sans-serif", overflow:'hidden' }}>
 
-      {/* ══ SIDEBAR ══ */}
+      {/* â•â• SIDEBAR â•â• */}
       <div style={{
         width: sidebarOpen ? 228 : 0, minWidth: sidebarOpen ? 228 : 0,
         background:'#080f1e', borderRight:'1px solid #0f2040',
@@ -238,7 +238,7 @@ export default function DashboardShell({ session, subscription }) {
             color:activeTab==='clients'?'#93c5fd':'#4a6080',fontWeight:activeTab==='clients'?700:500,
             fontSize:13,borderLeft:activeTab==='clients'?'2px solid #3b82f6':'2px solid transparent',
           }}>
-            <span>🏢</span> My Businesses
+            <span>ðŸ¢</span> My Businesses
           </button>
           <div style={{ height:1,background:'#0f2040',marginBottom:8 }} />
 
@@ -280,7 +280,7 @@ export default function DashboardShell({ session, subscription }) {
                 {session.user.email}
               </div>
             </div>
-            <span style={{ color:'#1a3560',fontSize:9 }}>{userMenuOpen?'▲':'▼'}</span>
+            <span style={{ color:'#1a3560',fontSize:9 }}>{userMenuOpen?'â–²':'â–¼'}</span>
           </div>
           {userMenuOpen && (
             <div style={{ position:'absolute',bottom:'100%',left:8,right:8,background:'#0d1f3c',
@@ -289,14 +289,14 @@ export default function DashboardShell({ session, subscription }) {
               <button onClick={signOut} style={{ width:'100%',padding:'8px 12px',background:'transparent',
                 color:'#f87171',border:'none',borderRadius:7,fontSize:13,fontWeight:600,
                 cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:8 }}>
-                🚪 Sign Out
+                ðŸšª Sign Out
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* ══ MAIN ══ */}
+      {/* â•â• MAIN â•â• */}
       <div style={{ flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0 }}>
 
         {/* Topbar */}
@@ -304,7 +304,7 @@ export default function DashboardShell({ session, subscription }) {
           display:'flex',alignItems:'center',padding:'0 14px',gap:10 }}>
           <button onClick={()=>setSidebarOpen(o=>!o)}
             style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20,padding:'4px',borderRadius:6,lineHeight:1,flexShrink:0 }}>
-            ☰
+            â˜°
           </button>
           <div style={{ flex:1,display:'flex',alignItems:'center',gap:8,minWidth:0,overflow:'hidden' }}>
             {activeClient && isToolTab && (
@@ -317,7 +317,7 @@ export default function DashboardShell({ session, subscription }) {
                   overflow:'hidden',textOverflow:'ellipsis',maxWidth:140 }}>
                   {activeClient.name}
                 </span>
-                <span style={{ color:'#1a3050',flexShrink:0 }}>›</span>
+                <span style={{ color:'#1a3050',flexShrink:0 }}>â€º</span>
               </>
             )}
             <span style={{ fontSize:12.5,color:'#4a6080',fontWeight:500,whiteSpace:'nowrap' }}>
@@ -347,7 +347,7 @@ export default function DashboardShell({ session, subscription }) {
                 title="Reload tool"
                 style={{ background:'rgba(59,130,246,.08)',border:'1px solid #1a3560',color:'#4a7adb',
                   borderRadius:7,padding:'5px 9px',cursor:'pointer',fontSize:14 }}>
-                ↻
+                â†»
               </button>
             )}
           </div>
@@ -372,7 +372,7 @@ export default function DashboardShell({ session, subscription }) {
             {!activeId && (
               <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',
                 alignItems:'center',justifyContent:'center',gap:16,background:'#060d1a',zIndex:5 }}>
-                <div style={{ fontSize:48 }}>🏢</div>
+                <div style={{ fontSize:48 }}>ðŸ¢</div>
                 <div style={{ fontSize:16,fontWeight:700,color:'#e2e8f0' }}>No business selected</div>
                 <button onClick={()=>setActiveTab('clients')}
                   style={{ padding:'10px 24px',background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
@@ -441,12 +441,12 @@ function AddModal({ onClose, onCreate, remaining, plan }) {
       <div style={{ background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:16,
         padding:'28px 32px',width:'100%',maxWidth:400,boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16 }}>
-          <div style={{ fontSize:17,fontWeight:800,color:'#e2e8f0' }}>➕ Add New Business</div>
-          <button onClick={onClose} style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20 }}>×</button>
+          <div style={{ fontSize:17,fontWeight:800,color:'#e2e8f0' }}>âž• Add New Business</div>
+          <button onClick={onClose} style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20 }}>Ã—</button>
         </div>
         <div style={{ background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)',borderRadius:8,
           padding:'8px 12px',marginBottom:18,fontSize:12,color:'#60a5fa' }}>
-          {remaining>0?`${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`:`All slots used — upgrade for more`}
+          {remaining>0?`${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`:`All slots used â€” upgrade for more`}
         </div>
         {[{l:'Business Name *',v:name,s:setName,p:'e.g. Austin Plumbing Pros',r:true},
           {l:'City / State',v:city,s:setCity,p:'e.g. Austin, TX'},
@@ -476,3 +476,5 @@ function AddModal({ onClose, onCreate, remaining, plan }) {
     </div>
   )
 }
+
+
