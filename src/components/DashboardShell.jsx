@@ -242,8 +242,8 @@ export default function DashboardShell({ session, subscription }) {
             color:activeTab==='clients'?'#93c5fd':'#4a6080',fontWeight:activeTab==='clients'?700:500,
             fontSize:13,borderLeft:activeTab==='clients'?'2px solid #3b82f6':'2px solid transparent',
           }}>
-            <span>ðŸ¢</span> My Businesses
-          </button>
+            My Businesses
+                      </button>
           <div style={{ height:1,background:'#0f2040',marginBottom:8 }} />
 
           {NAV_GROUPS.map(group => (
@@ -305,7 +305,7 @@ export default function DashboardShell({ session, subscription }) {
 
         {/* Topbar */}
         <div style={{ height:50,flexShrink:0,background:'#080f1e',borderBottom:'1px solid #0f2040',
-          display:isToolTab?'none':'flex',alignItems:'center',padding:'0 14px',gap:10 }}>
+          display:'none',alignItems:'center',padding:'0 14px',gap:10 }}>
           <button onClick={()=>setSidebarOpen(o=>!o)}
             style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20,padding:'4px',borderRadius:6,lineHeight:1,flexShrink:0 }}>
             â˜°
@@ -444,7 +444,7 @@ export default function DashboardShell({ session, subscription }) {
 
 function AddModal({ onClose, onCreate, remaining, plan }) {
   const [name,setName]=useState(''); const [city,setCity]=useState('');
-  const [cat,setCat]=useState(''); const [saving,setSaving]=useState(false)
+  const [cat,setCat]=useState(''); const [desc,setDesc]=useState(''); const [keywords,setKeywords]=useState(''); const [saving,setSaving]=useState(false)
   const inp = { width:'100%',padding:'9px 12px',background:'#07111f',color:'#e2e8f0',
     border:'1.5px solid #1a3560',borderRadius:7,fontSize:13.5,outline:'none',boxSizing:'border-box' }
   return (
@@ -463,7 +463,9 @@ function AddModal({ onClose, onCreate, remaining, plan }) {
         </div>
         {[{l:'Business Name *',v:name,s:setName,p:'e.g. Austin Plumbing Pros',r:true},
           {l:'City / State',v:city,s:setCity,p:'e.g. Austin, TX'},
-          {l:'Business Type',v:cat,s:setCat,p:'e.g. Plumber, HVAC, Dentist'}
+          {l:'Business Type',v:cat,s:setCat,p:'e.g. Plumber, HVAC, Dentist'},
+          {l:'Business Description',v:desc,s:setDesc,p:'Describe the business in 2-3 sentences...'},
+          {l:'Keywords (comma separated)',v:keywords,s:setKeywords,p:'plumber, drain cleaning, water heater'}
         ].map(f=>(
           <div key={f.l} style={{ marginBottom:12 }}>
             <label style={{ fontSize:12,fontWeight:600,color:'#60a5fa',marginBottom:4,display:'block' }}>{f.l}</label>
@@ -476,7 +478,7 @@ function AddModal({ onClose, onCreate, remaining, plan }) {
         <div style={{ display:'flex',gap:10,marginTop:18 }}>
           <button onClick={onClose} style={{ flex:1,padding:'10px 0',background:'transparent',color:'#4a6080',
             border:'1px solid #1a3560',borderRadius:8,fontSize:13.5,fontWeight:600,cursor:'pointer' }}>Cancel</button>
-          <button onClick={async()=>{ if(!name.trim()||saving||remaining<=0)return; setSaving(true); await onCreate({name:name.trim(),city:city.trim(),category:cat.trim()}); setSaving(false) }}
+          <button onClick={async()=>{ if(!name.trim()||saving||remaining<=0)return; setSaving(true); await onCreate({name:name.trim(),city:city.trim(),category:cat.trim(),desc:desc.trim(),keywords:keywords.trim()}); setSaving(false) }}
             disabled={!name.trim()||saving||remaining<=0}
             style={{ flex:2,padding:'10px 0',
               background:!name.trim()||saving||remaining<=0?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
