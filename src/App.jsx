@@ -1,16 +1,17 @@
-// src/App.jsx
+﻿// src/App.jsx
 import { useState, useEffect } from 'react'
 import { supabase }                        from './lib/supabase'
 import { migrateLocalStorageKeysToVault }  from './lib/vaultKeys'
 import AuthPage                            from './components/AuthPage'
 import DashboardShell                      from './components/DashboardShell'
+import BillingPage                         from './components/BillingPage'
 import OnboardingWizard                    from './components/OnboardingWizard'
 
 export default function App() {
   const [session, setSession]           = useState(undefined)
   const [subscription, setSubscription] = useState(undefined)
 
-  // ── Auth listener ──────────────────────────────────
+  // â”€â”€ Auth listener â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
@@ -21,14 +22,14 @@ export default function App() {
     return () => authSub.unsubscribe()
   }, [])
 
-  // ── Migrate any localStorage API keys into Vault ───
+  // â”€â”€ Migrate any localStorage API keys into Vault â”€â”€â”€
   useEffect(() => {
     if (session?.user) {
       migrateLocalStorageKeysToVault().catch(console.warn)
     }
   }, [session])
 
-  // ── Load subscription when session exists ──────────
+  // â”€â”€ Load subscription when session exists â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!session?.user?.id) { setSubscription(null); return }
     supabase
@@ -39,7 +40,7 @@ export default function App() {
       .then(({ data }) => setSubscription(data || null))
   }, [session])
 
-  // ── Loading ────────────────────────────────────────
+  // â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (session === undefined || (session && subscription === undefined)) {
     return (
       <div style={{
@@ -59,10 +60,10 @@ export default function App() {
     )
   }
 
-  // ── Not logged in ──────────────────────────────────
+  // â”€â”€ Not logged in â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (!session) return <AuthPage />
 
-  // ── Logged in but no subscription or onboarding incomplete ──
+  // â”€â”€ Logged in but no subscription or onboarding incomplete â”€â”€
   if (!subscription || !subscription.onboarding_completed) {
     return (
       <OnboardingWizard
@@ -80,6 +81,10 @@ export default function App() {
     )
   }
 
-  // ── Fully onboarded — show main dashboard ──────────
+  // â”€â”€ Fully onboarded â€” show main dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  if (new URLSearchParams(window.location.search).get('action') === 'billing') {
+    return <BillingPage userId={session.user.id} userEmail={session.user.email} onBack={() => { window.history.replaceState({}, '', '/'); window.location.reload() }} />
+  }
   return <DashboardShell session={session} subscription={subscription} />
 }
+
