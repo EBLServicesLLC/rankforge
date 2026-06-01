@@ -25,7 +25,7 @@ const SEO_TIPS = [
 
 export default function ClientsPage({
   clients, activeId, maxClients, plan,
-  onSelect, onAdd, onDelete, onUpdateMeta, onCreate
+  onSelect, onAdd, onDelete, onUpdateMeta, onCreate, onUpgrade
 }) {
   const [editId, setEditId]           = useState(null)
   const [editData, setEditData]       = useState({})
@@ -270,8 +270,8 @@ export default function ClientsPage({
             <div style={{ fontSize:14, fontWeight:700, color:'#c4b5fd', marginBottom:3 }}>🚀 Ready to scale?</div>
             <div style={{ fontSize:12.5, color:'#7c6aa8' }}>You\'ve used all {maxClients} business slot{maxClients!==1?'s':''} on your {plan} plan. Upgrade to manage more businesses.</div>
           </div>
-          <button style={{ padding:'9px 20px', background:'linear-gradient(135deg,#8b5cf6,#6d28d9)', color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer', flexShrink:0 }}>
-            Upgrade Plan →
+          <button onClick={onUpgrade} style={{ padding:'9px 20px', background:'linear-gradient(135deg,#8b5cf6,#6d28d9)', color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer', flexShrink:0 }}>
+             Upgrade Plan →
           </button>
         </div>
       )}

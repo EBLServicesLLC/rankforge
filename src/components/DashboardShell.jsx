@@ -361,8 +361,7 @@ export default function DashboardShell({ session, subscription }) {
         {activeTab==='clients' && (
           <ClientsPage
             clients={clients} activeId={activeId} maxClients={maxClients} plan={plan}
-            onSelect={(id)=>{ setActiveId(id); setActiveTab('dash') }}
-            onAdd={()=>setShowAddModal(true)}
+            onUpgrade={()=>setShowBilling(true)}
             onDelete={deleteClient}
             onUpdateMeta={updateClientMeta}
             onCreate={createClient}
