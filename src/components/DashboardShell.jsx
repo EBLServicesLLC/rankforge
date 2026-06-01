@@ -301,7 +301,7 @@ export default function DashboardShell({ session, subscription }) {
       </div>
 
       {/* â•â• MAIN â•â• */}
-      <div style={{ flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0 }}>
+      <div style={{ flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0,margin:0,padding:0 }}>
 
         {/* Topbar */}
         <div style={{ height:50,flexShrink:0,background:'#080f1e',borderBottom:'1px solid #0f2040',
@@ -371,7 +371,7 @@ export default function DashboardShell({ session, subscription }) {
 
         {/* Tool iframe */}
         {activeTab!=='clients' && (
-          <div style={{ flex:1,position:'relative',overflow:'hidden' }}>
+          <div style={{ flex:1,position:'relative',overflow:'hidden',margin:0,padding:0 }}>
             {/* No client */}
             {!activeId && (
               <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',
