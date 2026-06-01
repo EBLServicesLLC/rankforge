@@ -95,7 +95,6 @@ export default function DashboardShell({ session, subscription }) {
 
   // Listen for RF_APP_READY â€” rankforge3 sends this when fully initialised
   useEffect(() => {
- useEffect(() => {
     const handler = async (e) => {
       if (e.data?.type === 'RF_BILLING') {
         setShowBilling(true)
