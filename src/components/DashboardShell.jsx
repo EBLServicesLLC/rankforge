@@ -1,4 +1,4 @@
-﻿// src/components/DashboardShell.jsx
+﻿import BillingPage from './BillingPage'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useClients } from '../hooks/useClients'
@@ -59,6 +59,7 @@ export default function DashboardShell({ session, subscription }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [iframeReady, setIframeReady] = useState(false)
+  const [showBilling, setShowBilling] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [iframeSrc, setIframeSrc]     = useState('')
   const iframeRef = useRef(null)
@@ -413,6 +414,15 @@ export default function DashboardShell({ session, subscription }) {
       </div>
 
       {/* Add Business Modal */}
+      {showBilling && (
+  <div style={{ position:'fixed',inset:0,zIndex:9999,background:'#060d1a',overflow:'auto' }}>
+    <BillingPage
+      userId={session.user.id}
+      userEmail={session.user.email}
+      onBack={() => setShowBilling(false)}
+    />
+  </div>
+)}
       {showAddModal && (
         <AddModal
           onClose={()=>setShowAddModal(false)}
