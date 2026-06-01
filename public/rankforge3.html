@@ -1,4 +1,4 @@
-<style>
+﻿<style>
 /* Tabler Icons */
 @import url("https://unpkg.com/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css");
 /* Full-screen layout */
@@ -6531,7 +6531,7 @@ function rfProfileAction(action){
   var _email=sessionStorage.getItem('rf_user_email')||'';
   if(_email){var em=document.getElementById('rf-user-email');if(em)em.textContent=_email;}
 })();
-if(window.self!==window.top){var s=document.querySelector(".ef-sidebar");if(s)s.style.display="none";}
+if(window.self!==window.top){var s=document.querySelector(".ef-sidebar");if(s)s.style.display="none";var t=document.querySelector(".ef-topbar");if(t)t.style.display="none";}
 </script>
 
 </body>
