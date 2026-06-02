@@ -515,7 +515,9 @@ function AddModal({ onClose, onCreate, remaining, plan }) {
             {CATS.map(c=><option key={c} value={c}>{c}</option>)}
           </select></div>
         <div style={{ marginBottom:12 }}><label style={lbl}>Street Address</label>
-          <div style={{ display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:8,marginBottom:12 }}>
+          <input value={addr} onChange={e=>setAddr(e.target.value)} placeholder="123 Main St" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} />
+        </div>
+        <div style={{ display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:8,marginBottom:12 }}>
           <div><label style={lbl}>City</label><input value={city} onChange={e=>setCity(e.target.value)} placeholder="Austin" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
           <div><label style={lbl}>State</label><input value={state} onChange={e=>setState(e.target.value)} placeholder="TX" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
           <div><label style={lbl}>ZIP</label><input value={zip} onChange={e=>setZip(e.target.value)} placeholder="78701" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
