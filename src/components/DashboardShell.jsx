@@ -515,9 +515,28 @@ function AddModal({ onClose, onCreate, remaining, plan }) {
             {CATS.map(c=><option key={c} value={c}>{c}</option>)}
           </select></div>
         <div style={{ marginBottom:12 }}><label style={lbl}>Street Address</label>
-          <input value={addr} onChange={e=>setAddr(e.target.value)} placeholder="123 Main St" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
-        <div style={{ display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:8,marginBottom:12 }}>
-          <div><label style={lbl}>City</label><input value={city} onChange={e=>setCity(e.target.value)} placeholder="Austin" style={inp} onFocus
-
-
-
+          <div style={{ display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:8,marginBottom:12 }}>
+          <div><label style={lbl}>City</label><input value={city} onChange={e=>setCity(e.target.value)} placeholder="Austin" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+          <div><label style={lbl}>State</label><input value={state} onChange={e=>setState(e.target.value)} placeholder="TX" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+          <div><label style={lbl}>ZIP</label><input value={zip} onChange={e=>setZip(e.target.value)} placeholder="78701" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+        </div>
+        <div style={{ marginBottom:12 }}><label style={lbl}>Phone</label>
+          <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="(512) 555-0100" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+        <div style={{ marginBottom:12 }}><label style={lbl}>Website</label>
+          <input value={website} onChange={e=>setWebsite(e.target.value)} placeholder="https://yourbusiness.com" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+        <div style={{ marginBottom:12 }}><label style={lbl}>Keywords (comma separated)</label>
+          <input value={keywords} onChange={e=>setKeywords(e.target.value)} placeholder="plumber, drain cleaning, water heater" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+        <div style={{ marginBottom:12 }}><label style={lbl}>Business Description</label>
+          <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Describe the business in 2-3 sentences..." rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}} /></div>
+        <div style={{ display:'flex',gap:10,marginTop:18 }}>
+          <button onClick={onClose} style={{ flex:1,padding:'10px 0',background:'transparent',color:'#4a6080',border:'1px solid #1a3560',borderRadius:8,fontSize:13.5,fontWeight:600,cursor:'pointer' }}>Cancel</button>
+          <button onClick={async()=>{ if(!name.trim()||saving||remaining<=0)return; setSaving(true); await onCreate({name:name.trim(),addr:addr.trim(),city:city.trim(),state:state.trim(),zip:zip.trim(),phone:phone.trim(),website:website.trim(),category:cat,desc:desc.trim(),keywords:keywords.trim()}); setSaving(false) }}
+            disabled={!name.trim()||saving||remaining<=0}
+            style={{ flex:2,padding:'10px 0',background:!name.trim()||saving||remaining<=0?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',color:!name.trim()||saving||remaining<=0?'#2a4060':'#fff',border:'none',borderRadius:8,fontSize:13.5,fontWeight:700,cursor:'pointer' }}>
+            {saving?'Creating...':'Create Business'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
