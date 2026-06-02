@@ -12,35 +12,35 @@ const PLANS = {
 }
 
 const SEO_TYPES = {
-  local:    { icon:'', label:'Local SEO',    desc:'Rank in your city â€” Google Maps, local citations, reviews' },
-  regional: { icon:'',  label:'Regional SEO', desc:'Target multiple cities â€” service area pages, regional keywords' },
-  national: { icon:'', label:'National SEO', desc:'Rank nationwide â€” topic clusters, authority building, PR' },
+  local:    { icon:'', label:'Local SEO',    desc:'Rank in your city  Google Maps, local citations, reviews' },
+  regional: { icon:'',  label:'Regional SEO', desc:'Target multiple cities  service area pages, regional keywords' },
+  national: { icon:'', label:'National SEO', desc:'Rank nationwide  topic clusters, authority building, PR' },
 }
 
 const API_GUIDES = [
   {
     key:'anthropic', label:'Anthropic (Claude AI)', required:true, color:'#f59e0b', icon:'',
-    why:'Powers all 11 AI agents â€” content writing, weekly reports, keyword briefs, outreach emails. Most important key.',
+    why:'Powers all 11 AI agents  content writing, weekly reports, keyword briefs, outreach emails. Most important key.',
     steps:[
       'Go to console.anthropic.com and sign up or log in',
       'Click "API Keys" in the left sidebar',
       'Click "+ Create Key" and name it "RankForged AI"',
-      'Copy the key â€” it starts with sk-ant-',
+      'Copy the key  it starts with sk-ant-',
       'Paste it in the field below',
     ],
-    link:'https://console.anthropic.com', linkLabel:'Open Anthropic Console â†’', placeholder:'sk-ant-api03-...',
+    link:'https://console.anthropic.com', linkLabel:'Open Anthropic Console ', placeholder:'sk-ant-api03-...',
   },
   {
     key:'openai', label:'OpenAI (ChatGPT)', required:false, color:'#10b981', icon:'',
     why:'Enables ChatGPT-powered content generation as an alternative to Claude. Use either or both.',
     steps:[
       'Go to platform.openai.com and sign up or log in',
-      'Click your profile icon â†’ "API Keys"',
-      'Click "+ Create new secret key" â€” name it "RankForged AI"',
-      'Copy the key â€” it starts with sk-',
+      'Click your profile icon  "API Keys"',
+      'Click "+ Create new secret key"  name it "RankForged AI"',
+      'Copy the key  it starts with sk-',
       'Paste it in the field below',
     ],
-    link:'https://platform.openai.com/api-keys', linkLabel:'Open OpenAI Platform â†’', placeholder:'sk-...',
+    link:'https://platform.openai.com/api-keys', linkLabel:'Open OpenAI Platform ', placeholder:'sk-...',
   },
   {
     key:'google', label:'Google Search Console API', required:false, color:'#4285f4', icon:'',
@@ -49,10 +49,10 @@ const API_GUIDES = [
       'Go to console.cloud.google.com',
       'Create a new project or select existing',
       'Search for "Search Console API" and enable it',
-      'Go to Credentials â†’ Create Credentials â†’ API Key',
+      'Go to Credentials  Create Credentials  API Key',
       'Copy the key and paste below',
     ],
-    link:'https://console.cloud.google.com', linkLabel:'Open Google Cloud Console â†’', placeholder:'AIza...',
+    link:'https://console.cloud.google.com', linkLabel:'Open Google Cloud Console ', placeholder:'AIza...',
   },
   {
     key:'gemini', label:'Google Gemini AI', required:false, color:'#ea4335', icon:'',
@@ -64,42 +64,42 @@ const API_GUIDES = [
       'Click "Create API Key"',
       'Copy and paste the key below',
     ],
-    link:'https://aistudio.google.com', linkLabel:'Open Google AI Studio â†’', placeholder:'AIza...',
+    link:'https://aistudio.google.com', linkLabel:'Open Google AI Studio ', placeholder:'AIza...',
   },
   {
     key:'yext', label:'Yext Listings', required:false, color:'#fc3d21', icon:'',
     why:'Automates citation submission to 100+ directories simultaneously. Saves hours of manual work.',
     steps:[
       'Go to yext.com and sign up for an account',
-      'Go to Account Settings â†’ API Keys',
+      'Go to Account Settings  API Keys',
       'Generate a new API key',
       'Also copy your Account ID from the same page',
       'Paste both below',
     ],
-    link:'https://www.yext.com', linkLabel:'Open Yext â†’', placeholder:'your-yext-api-key',
+    link:'https://www.yext.com', linkLabel:'Open Yext ', placeholder:'your-yext-api-key',
   },
   {
     key:'moz', label:'Moz (Domain Authority)', required:false, color:'#007bff', icon:'',
     why:'Provides Domain Authority scores for competitor analysis and backlink prospecting.',
     steps:[
       'Go to moz.com/products/api and sign up',
-      'Go to your Moz account â†’ API Access',
+      'Go to your Moz account  API Access',
       'Find your Access ID and Secret Key',
       'Paste both below',
     ],
-    link:'https://moz.com/products/api', linkLabel:'Open Moz API â†’', placeholder:'mozscape-...',
+    link:'https://moz.com/products/api', linkLabel:'Open Moz API ', placeholder:'mozscape-...',
   },
   {
     key:'brightlocal', label:'BrightLocal', required:false, color:'#ff6b35', icon:'',
     why:'Advanced local SEO rank tracking and citation management across multiple locations.',
     steps:[
       'Go to brightlocal.com and sign up',
-      'Go to Account â†’ API Keys',
+      'Go to Account  API Keys',
       'Generate a new API key',
       'Also note your Campaign ID if you have one',
       'Paste below',
     ],
-    link:'https://www.brightlocal.com', linkLabel:'Open BrightLocal â†’', placeholder:'your-brightlocal-key',
+    link:'https://www.brightlocal.com', linkLabel:'Open BrightLocal ', placeholder:'your-brightlocal-key',
   },
   {
     key:'indexnow', label:'IndexNow', required:false, color:'#0891b2', icon:'',
@@ -111,7 +111,7 @@ const API_GUIDES = [
       'Verify it at yourdomain.com/your-key.txt',
       'Paste the key below',
     ],
-    link:'https://www.indexnow.org/en/documentation', linkLabel:'Open IndexNow Docs â†’', placeholder:'your-indexnow-key',
+    link:'https://www.indexnow.org/en/documentation', linkLabel:'Open IndexNow Docs ', placeholder:'your-indexnow-key',
   },
   {
     key:'gmail', label:'Gmail (Email Sending)', required:false, color:'#ea4335', icon:'',
@@ -122,9 +122,9 @@ const API_GUIDES = [
       'Click "Authorize APIs" and sign in with Gmail',
       'Click "Exchange authorization code for tokens"',
       'Copy the Access Token (starts with ya29.)',
-      'Note: tokens expire â€” you will need to refresh periodically',
+      'Note: tokens expire  you will need to refresh periodically',
     ],
-    link:'https://developers.google.com/oauthplayground', linkLabel:'Open OAuth Playground â†’', placeholder:'ya29...',
+    link:'https://developers.google.com/oauthplayground', linkLabel:'Open OAuth Playground ', placeholder:'ya29...',
   },
 ]
 
@@ -169,7 +169,7 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
     const { data, error } = await supabase
       .from('activation_keys').select('*')
       .eq('key', activationKey.trim().toUpperCase()).single()
-    if (error || !data) { setError('Invalid activation key â€” check your email and try again'); setValidating(false); return }
+    if (error || !data) { setError('Invalid activation key  check your email and try again'); setValidating(false); return }
     if (data.used)       { setError('This key has already been used. Contact support if this is an error.'); setValidating(false); return }
     setKeyData(data); setKeyValid(true)
     setSeoTypes(PLANS[data.plan]?.types || ['local'])
@@ -232,7 +232,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
 
   const prevStep = () => { setStep(s => Math.max(0, s-1)); setError('') }
 
-  // â”€â”€ Shared styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  //  Shared styles 
   const inp = {
     width:'100%', padding:'11px 14px',
     background:'#07111f', color:'#e2e8f0',
@@ -280,7 +280,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
                   boxShadow: i === step ? '0 0 0 4px rgba(59,130,246,.15)' : 'none',
                   transition:'.2s',
                 }}>
-                  {i < step ? 'âœ“' : s.icon}
+                  {i < step ? '' : s.icon}
                 </div>
                 <div style={{ fontSize:10.5, fontWeight: i === step ? 700 : 500, color: i === step ? '#60a5fa' : i < step ? '#3b82f6' : '#2a4060', whiteSpace:'nowrap' }}>
                   {s.label}
@@ -293,10 +293,10 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
         {/* Main card */}
         <div style={{ background:'#0d1f3c', borderRadius:16, padding:'32px 36px', border:'1px solid #1a3560', marginBottom:16 }}>
 
-          {/* STEP 0 â€” ACTIVATION KEY */}
+          {/* STEP 0  ACTIVATION KEY */}
           {step === 0 && (
             <div>
-              <div style={{ fontSize:24, fontWeight:800, color:'#e2e8f0', marginBottom:6 }}>ðŸ”‘ Activate Your Account</div>
+              <div style={{ fontSize:24, fontWeight:800, color:'#e2e8f0', marginBottom:6 }}> Activate Your Account</div>
               <p style={hint}>
                 Enter the activation key from your purchase confirmation email.
                 It looks like <code style={{ background:'#f1f5f9', padding:'2px 8px', borderRadius:6, color:'#60a5fa', fontSize:12.5 }}>RFA-XXXX-XXXX-XXXX</code>
@@ -316,13 +316,13 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
                   background: keyValid ? '#10b981' : '#3b82f6',
                   color:'#fff', fontWeight:700, fontSize:13, cursor:'pointer',
                 }}>
-                  {validating ? 'Checking...' : keyValid ? 'âœ“ Valid' : 'Validate'}
+                  {validating ? 'Checking...' : keyValid ? ' Valid' : 'Validate'}
                 </button>
               </div>
 
               {keyValid && keyData && (
                 <div style={{ background:'rgba(16,185,129,.1)', border:'1.5px solid rgba(16,185,129,.4)', borderRadius:12, padding:'16px 20px', marginBottom:20 }}>
-                  <div style={{ fontSize:13.5, fontWeight:700, color:'#4ade80', marginBottom:12 }}>âœ… Key activated successfully!</div>
+                  <div style={{ fontSize:13.5, fontWeight:700, color:'#4ade80', marginBottom:12 }}> Key activated successfully!</div>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                     {[['Plan',PLANS[keyData.plan]?.label],['Price',PLANS[keyData.plan]?.price],['Businesses',keyData.max_clients],['SEO Types',PLANS[keyData.plan]?.types.join(', ')]].map(([k,v])=>(
                       <div key={k} style={{ background:'rgba(0,0,0,.2)', borderRadius:8, padding:'8px 12px', border:'1px solid rgba(16,185,129,.2)' }}>
@@ -371,11 +371,11 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
             </div>
           )}
 
-          {/* STEP 1 â€” BUSINESS PROFILE */}
+          {/* STEP 1  BUSINESS PROFILE */}
           {step === 1 && (
             <div>
-              <div style={{ fontSize:24, fontWeight:800, color:'#e2e8f0', marginBottom:6 }}>ðŸ¢ Your Business Profile</div>
-              <p style={hint}>This data powers every agent, report, and piece of content. Fill it in as completely as possible â€” you can always update it later.</p>
+              <div style={{ fontSize:24, fontWeight:800, color:'#e2e8f0', marginBottom:6 }}> Your Business Profile</div>
+              <p style={hint}>This data powers every agent, report, and piece of content. Fill it in as completely as possible  you can always update it later.</p>
 
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 16px' }}>
                 <div style={{ gridColumn:'1/-1' }}>
@@ -424,16 +424,16 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
 
               <div style={{ background:'rgba(59,130,246,.08)', borderRadius:10, padding:'12px 16px', border:'1px solid rgba(59,130,246,.25)' }}>
                 <div style={{ fontSize:12.5, color:'#93c5fd', lineHeight:1.6 }}>
-                  ðŸ’¡ <strong>Tip:</strong> Add your top 5-8 services as keywords. The AI agents use these to write city-specific content and find keyword opportunities.
+                   <strong>Tip:</strong> Add your top 5-8 services as keywords. The AI agents use these to write city-specific content and find keyword opportunities.
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 2 â€” SEO TYPE */}
+          {/* STEP 2  SEO TYPE */}
           {step === 2 && (
             <div>
-              <div style={{ fontSize:24, fontWeight:800, color:'#e2e8f0', marginBottom:6 }}>ðŸŽ¯ What Type of SEO Do You Need?</div>
+              <div style={{ fontSize:24, fontWeight:800, color:'#e2e8f0', marginBottom:6 }}> What Type of SEO Do You Need?</div>
               <p style={hint}>
                 Your <strong style={{ color:'#e2e8f0' }}>{PLANS[keyData?.plan]?.label}</strong> plan includes:{' '}
                 <strong style={{ color:'#60a5fa' }}>{PLANS[keyData?.plan]?.types.join(', ')} SEO</strong>.
@@ -468,7 +468,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
                         border: '2px solid ' + (selected ? '#3b82f6' : '#1a3560'),
                         display:'flex', alignItems:'center', justifyContent:'center',
                         fontSize:13, color:'#fff',
-                      }}>{selected?'âœ“':''}</div>
+                      }}>{selected?'':''}</div>
                     </div>
                   )
                 })}
@@ -476,23 +476,23 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
 
               <div style={{ background:'rgba(16,185,129,.08)', borderRadius:10, padding:'12px 16px', border:'1px solid rgba(16,185,129,.25)' }}>
                 <div style={{ fontSize:12.5, color:'#4ade80', lineHeight:1.6 }}>
-                  ðŸ’¡ <strong>Not sure?</strong> Start with Local SEO â€” it shows the fastest results. You can enable Regional and National later as your business grows.
+                   <strong>Not sure?</strong> Start with Local SEO  it shows the fastest results. You can enable Regional and National later as your business grows.
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 3 â€” API KEYS */}
+          {/* STEP 3  API KEYS */}
           {step === 3 && (
             <div>
-              <div style={{ fontSize:24, fontWeight:800, color:'#e2e8f0', marginBottom:6 }}>âš™ï¸ Connect Your API Keys</div>
+              <div style={{ fontSize:24, fontWeight:800, color:'#e2e8f0', marginBottom:6 }}> Connect Your API Keys</div>
               <p style={hint}>
                 API keys connect RankForged AI to external services. The <strong style={{ color:'#e2e8f0' }}>Anthropic key is required</strong> to enable AI agents.
-                All others are optional â€” add them now or later from the API Keys tab.
+                All others are optional  add them now or later from the API Keys tab.
               </p>
 
               <div style={{ background:'rgba(59,130,246,.08)', borderRadius:10, padding:'11px 16px', marginBottom:20, border:'1px solid rgba(59,130,246,.2)', display:'flex', alignItems:'center', gap:10 }}>
-                <span style={{ fontSize:16 }}>ðŸ”’</span>
+                <span style={{ fontSize:16 }}></span>
                 <div style={{ fontSize:12.5, color:'#93c5fd' }}>Keys are stored securely in your account and never shared. You can update or remove them anytime.</div>
               </div>
 
@@ -515,11 +515,11 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
                           <span style={{ fontSize:14, fontWeight:700, color:'#e2e8f0' }}>{guide.label}</span>
                           {guide.required && <span style={{ fontSize:10.5, background:'#fef3c7', color:'#d97706', padding:'2px 8px', borderRadius:20, fontWeight:700 }}>REQUIRED</span>}
                           {!guide.required && <span style={{ fontSize:10.5, background:'#eff6ff', color:'#3b82f6', padding:'2px 8px', borderRadius:20, fontWeight:700 }}>OPTIONAL</span>}
-                          {hasValue && <span style={{ fontSize:10.5, background:'#f0fdf4', color:'#16a34a', padding:'2px 8px', borderRadius:20, fontWeight:700 }}>âœ“ ADDED</span>}
+                          {hasValue && <span style={{ fontSize:10.5, background:'#f0fdf4', color:'#16a34a', padding:'2px 8px', borderRadius:20, fontWeight:700 }}> ADDED</span>}
                         </div>
                         <div style={{ fontSize:12, color:'#4a6080', marginTop:2 }}>{guide.why}</div>
                       </div>
-                      <span style={{ color:'#1a3560', fontSize:12, flexShrink:0 }}>{isOpen?'â–²':'â–¼'}</span>
+                      <span style={{ color:'#1a3560', fontSize:12, flexShrink:0 }}>{isOpen?'':''}</span>
                     </div>
 
                     {/* Expanded content */}
@@ -536,7 +536,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
                           ))}
                           <a href={guide.link} target="_blank" rel="noopener noreferrer"
                             style={{ display:'inline-flex', alignItems:'center', gap:5, marginTop:6, fontSize:12.5, color:'#93c5fd', fontWeight:600, textDecoration:'none' }}>
-                            ðŸ”— {guide.linkLabel}
+                             {guide.linkLabel}
                           </a>
                         </div>
 
@@ -583,10 +583,10 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
             </div>
           )}
 
-          {/* STEP 4 â€” BRANDING */}
+          {/* STEP 4  BRANDING */}
           {step === 4 && (
             <div>
-              <div style={{ fontSize:24, fontWeight:800, color:'#e2e8f0', marginBottom:6 }}>ðŸŽ¨ Your Branding</div>
+              <div style={{ fontSize:24, fontWeight:800, color:'#e2e8f0', marginBottom:6 }}> Your Branding</div>
               <p style={hint}>Personalise your reports and client content. This appears on weekly reports, PDF exports, and email headers.</p>
 
               <label style={lbl}>Agency / Business Name</label>
@@ -619,10 +619,10 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
             </div>
           )}
 
-          {/* STEP 5 â€” LAUNCH */}
+          {/* STEP 5  LAUNCH */}
           {step === 5 && (
             <div style={{ textAlign:'center' }}>
-              <div style={{ fontSize:52, marginBottom:12 }}>ðŸš€</div>
+              <div style={{ fontSize:52, marginBottom:12 }}></div>
               <div style={{ fontSize:26, fontWeight:800, color:'#e2e8f0', marginBottom:8 }}>You're all set!</div>
               <p style={{ ...hint, maxWidth:440, margin:'0 auto 28px' }}>
                 Your account is configured and your first business is ready. Click Launch to open the RankForged AI dashboard.
@@ -633,12 +633,12 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
                 <div style={{ fontSize:12, fontWeight:700, color:'#2a4a6a', textTransform:'uppercase', letterSpacing:'.05em', marginBottom:14 }}>Setup Summary</div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                   {[
-                    ['Business',  profile.bizName||'â€”'],
-                    ['Location',  [profile.city,profile.state].filter(Boolean).join(', ')||'â€”'],
-                    ['Plan',      PLANS[keyData?.plan]?.label||'â€”'],
+                    ['Business',  profile.bizName||''],
+                    ['Location',  [profile.city,profile.state].filter(Boolean).join(', ')||''],
+                    ['Plan',      PLANS[keyData?.plan]?.label||''],
                     ['SEO Types', seoTypes.join(', ')],
-                    ['AI Agents', apiKeys.anthropic?'âœ… Enabled':'âš ï¸ Add Anthropic key'],
-                    ['Branding',  branding.agencyName||profile.bizName||'â€”'],
+                    ['AI Agents', apiKeys.anthropic?' Enabled':' Add Anthropic key'],
+                    ['Branding',  branding.agencyName||profile.bizName||''],
                   ].map(([k,v])=>(
                     <div key={k} style={{ background:'rgba(255,255,255,.04)', borderRadius:8, padding:'10px 14px', border:'1px solid #1a3560' }}>
                       <div style={{ fontSize:10.5, color:'#2a4a6a', fontWeight:700, textTransform:'uppercase', marginBottom:3 }}>{k}</div>
@@ -650,7 +650,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
 
               {/* First steps */}
               <div style={{ background:'rgba(59,130,246,.08)', borderRadius:12, padding:'16px 20px', border:'1px solid rgba(59,130,246,.25)', textAlign:'left' }}>
-                <div style={{ fontSize:13, fontWeight:700, color:'#60a5fa', marginBottom:10 }}>ðŸŽ¯ Recommended first steps:</div>
+                <div style={{ fontSize:13, fontWeight:700, color:'#60a5fa', marginBottom:10 }}> Recommended first steps:</div>
                 {[
                   'Run the GBP Health Monitor to score your Google Business Profile',
                   'Submit to the top 20 citation directories with one click',
@@ -658,7 +658,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
                   'Set up your Weekly Report scheduler for automated client reports',
                 ].map((tip,i)=>(
                   <div key={i} style={{ display:'flex', gap:8, marginBottom:6, fontSize:13, color:'#60a5fa' }}>
-                    <span style={{ flexShrink:0 }}>â†’</span>{tip}
+                    <span style={{ flexShrink:0 }}></span>{tip}
                   </div>
                 ))}
               </div>
@@ -678,7 +678,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
               padding:'11px 24px', borderRadius:8, fontSize:14, fontWeight:600, cursor: step===0?'not-allowed':'pointer',
               background:'rgba(255,255,255,.05)', color: step===0?'#1a3560':'#7a9ab8', border:'1.5px solid #1a3560',
             }}>
-              â† Back
+               Back
             </button>
             <div style={{ fontSize:12, color:'#1a3560' }}>Step {step+1} of {STEPS.length}</div>
             <button onClick={nextStep} disabled={saving||(step===0&&!keyValid)} style={{
@@ -688,7 +688,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
               color:(saving||(step===0&&!keyValid))?'#94a3b8':'#fff',
               boxShadow:(saving||(step===0&&!keyValid))?'none':'0 4px 12px rgba(59,130,246,.35)',
             }}>
-              {saving?'Saving...':step===5?'ðŸš€ Launch RankForged AI':'Continue â†’'}
+              {saving?'Saving...':step===5?' Launch RankForged AI':'Continue '}
             </button>
           </div>
         </div>
