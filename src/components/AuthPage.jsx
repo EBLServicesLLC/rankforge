@@ -15,6 +15,7 @@ export default function AuthPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (mode === 'forgot') { handleForgot(); return }
     setLoading(true)
     setError('')
     setMessage('')
@@ -28,7 +29,16 @@ export default function AuthPage() {
     }
     setLoading(false)
   }
-
+const handleForgot = async () => {
+    if (!email) { setError('Enter your email address above first.'); return }
+    setLoading(true); setError(''); setMessage('')
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/?reset=1',
+    })
+    if (error) setError(error.message)
+    else setMessage('Password reset link sent! Check your email.')
+    setLoading(false)
+  }
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -166,6 +176,13 @@ export default function AuthPage() {
           ))}
         </div>
 
+        {mode === 'forgot' && (
+          <div style={{ marginBottom: 16, fontSize: 13, color: '#4a5c7a', cursor: 'pointer' }}
+            onClick={() => { setMode('login'); setError(''); setMessage(''); }}>
+            ← Back to Login
+          </div>
+        )}
+
         {/* Google button */}
         <button onClick={handleGoogle} style={{
           width: '100%', padding: '12px 0',
@@ -229,8 +246,25 @@ export default function AuthPage() {
             onBlur={e  => e.target.style.borderColor = '#1a2840'}
           />
 
+          {mode === 'login' && (
+            <div style={{ textAlign: 'right', marginBottom: 12, marginTop: -8 }}>
+              <span
+                onClick={() => { setMode('forgot'); setError(''); setMessage(''); }}
+                style={{ fontSize: 12, color: '#1a5fd4', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Forgot password?
+              </span>
+            </div>
+          )}
+
+          {error   && <div style={{ color:'#ff5a5a', fontSize:13, marginBottom:12, padding:'8px 12px', background:'rgba(255,90,90,.08)', borderRadius:8 }}>{error}</div>}
           {error   && <div style={{ color:'#ff5a5a', fontSize:13, marginBottom:12, padding:'8px 12px', background:'rgba(255,90,90,.08)', borderRadius:8 }}>{error}</div>}
           {message && <div style={{ color:'#34c759', fontSize:13, marginBottom:12, padding:'8px 12px', background:'rgba(52,199,89,.08)', borderRadius:8 }}>{message}</div>}
+{mode === 'forgot' && (
+            <div style={{ marginBottom: 12, fontSize: 13, color: '#6b82aa' }}>
+              Enter your email above and click below to receive a reset link.
+            </div>
+          )}
 
           <button type="submit" disabled={loading} style={{
             width: '100%', padding: '13px 0',
@@ -240,7 +274,7 @@ export default function AuthPage() {
             boxShadow: loading ? 'none' : '0 4px 16px rgba(26,95,212,.4)',
             transition: '.2s',
           }}>
-            {loading ? 'Please wait…' : mode === 'login' ? 'Log In' : 'Create Account'}
+            {loading ? 'Please wait…' : mode === 'login' ? 'Log In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'}
           </button>
         </form>
 
