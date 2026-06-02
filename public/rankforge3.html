@@ -6539,9 +6539,6 @@ function rfProfileAction(action){
   // Expose rf_plan for topbar badge
   var _plan=sessionStorage.getItem('rf_plan')||localStorage.getItem('rf_plan')||'';
   if(_plan){var pb=document.getElementById('rf-plan-badge');if(pb){pb.textContent=_plan;pb.style.display='inline-flex';}}
-  // Expose user email for profile menu
-  var _email=sessionStorage.getItem('rf_user_email')||'';
-  if(_email){var em=document.getElementById('rf-user-email');if(em)em.textContent=_email;}
 })();
 if(window.self!==window.top){var s=document.querySelector(".ef-sidebar");if(s)s.style.display="none";var t=document.querySelector(".ef-topbar");if(t)t.style.display="none";var a=document.querySelector(".ef-app");if(a){a.style.maxWidth="100%";a.style.borderRadius="0";a.style.margin="0";a.style.height="100vh";}}
 // Redirect to React app if loaded outside iframe without credentials
