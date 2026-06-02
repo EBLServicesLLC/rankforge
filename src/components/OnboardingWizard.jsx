@@ -353,6 +353,10 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
                   <label style={lbl}>Business Name *</label>
                   <input value={profile.bizName} onChange={e=>setProfile(p=>({...p,bizName:e.target.value}))} placeholder="e.g. Austin Plumbing Pros" style={inp} />
                 </div>
+                <div style={{ gridColumn:'1/-1' }}>
+                  <label style={lbl}>Street Address</label>
+                  <input value={profile.addr} onChange={e=>setProfile(p=>({...p,addr:e.target.value}))} placeholder="e.g. 123 Main St" style={inp} />
+                </div>
                 <div>
                   <label style={lbl}>City *</label>
                   <input value={profile.city} onChange={e=>setProfile(p=>({...p,city:e.target.value}))} placeholder="e.g. Austin" style={inp} />
@@ -360,6 +364,10 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
                 <div>
                   <label style={lbl}>State</label>
                   <input value={profile.state} onChange={e=>setProfile(p=>({...p,state:e.target.value}))} placeholder="e.g. TX" style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>ZIP Code</label>
+                  <input value={profile.zip} onChange={e=>setProfile(p=>({...p,zip:e.target.value}))} placeholder="e.g. 78701" style={inp} />
                 </div>
                 <div>
                   <label style={lbl}>Business Category</label>
