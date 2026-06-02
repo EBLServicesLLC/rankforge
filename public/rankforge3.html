@@ -6468,7 +6468,19 @@ function rfProfileAction(action){
       // Push to CM client record so Directories tab stays in sync
       if(typeof CM!=='undefined'&&CM.activeId&&typeof cmPushProfileToForm==='function'){
         var _cl=CM.clients.find(function(c){return c.id===CM.activeId;});
-        if(_cl)setTimeout(function(){cmPushProfileToForm(_cl);},200);
+        if(_cl){
+          _cl.name=d.biz_name||_cl.name;
+          _cl.addr=d.biz_addr||_cl.addr;
+          _cl.city=d.biz_city||_cl.city;
+          _cl.state=d.biz_state||_cl.state;
+          _cl.zip=d.biz_zip||_cl.zip;
+          _cl.cat=d.biz_cat||_cl.cat;
+          _cl.phone=d.biz_phone||_cl.phone;
+          _cl.website=d.biz_website||_cl.website;
+          _cl.keywords=d.biz_kw||_cl.keywords;
+          _cl.desc=d.biz_desc||_cl.desc;
+          try{localStorage.setItem('rf_clients',JSON.stringify(CM.clients));}catch(e){}
+          setTimeout(function(){cmPushProfileToForm(_cl);},200);
       }
       // Also sync into CM client record if one exists
       if(typeof CM!=='undefined'&&CM.activeId){
