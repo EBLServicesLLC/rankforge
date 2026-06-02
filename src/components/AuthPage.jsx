@@ -350,8 +350,6 @@ const handleForgot = async () => {
             ))}
           </div>
         </div>
-      </div>
-
       {/* ── Responsive: hide left panel on small screens ── */}
       <style>{`
         @media (max-width: 768px) {
