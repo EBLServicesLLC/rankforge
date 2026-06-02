@@ -19,7 +19,7 @@ const SEO_TYPES = {
 
 const API_GUIDES = [
   {
-    key:'anthropic', label:'Anthropic (Claude AI)', required:true, color:'#f59e0b', icon:'',
+    key:'anthropic', label:'Anthropic (Claude AI)', required:true, color:'#f59e0b', icon:'AI',
     why:'Powers all 11 AI agents â€” content writing, weekly reports, keyword briefs, outreach emails. Most important key.',
     steps:[
       'Go to console.anthropic.com and sign up or log in',
@@ -31,7 +31,7 @@ const API_GUIDES = [
     link:'https://console.anthropic.com', linkLabel:'Open Anthropic Console â†’', placeholder:'sk-ant-api03-...',
   },
   {
-    key:'openai', label:'OpenAI (ChatGPT)', required:false, color:'#10b981', icon:'',
+    key:'openai', label:'OpenAI (ChatGPT)', required:false, color:'#10b981', icon:'AI',
     why:'Enables ChatGPT-powered content generation as an alternative to Claude. Use either or both.',
     steps:[
       'Go to platform.openai.com and sign up or log in',
@@ -43,7 +43,7 @@ const API_GUIDES = [
     link:'https://platform.openai.com/api-keys', linkLabel:'Open OpenAI Platform â†’', placeholder:'sk-...',
   },
   {
-    key:'google', label:'Google Search Console API', required:false, color:'#4285f4', icon:'',
+    key:'google', label:'Google Search Console API', required:false, color:'#4285f4', icon:'G',
     why:'Shows real keyword rankings and click data from Google. Unlocks the Keyword Opportunity Spotter agent.',
     steps:[
       'Go to console.cloud.google.com',
@@ -55,7 +55,7 @@ const API_GUIDES = [
     link:'https://console.cloud.google.com', linkLabel:'Open Google Cloud Console â†’', placeholder:'AIza...',
   },
   {
-    key:'gemini', label:'Google Gemini AI', required:false, color:'#ea4335', icon:'',
+    key:'gemini', label:'Google Gemini AI', required:false, color:'#ea4335', icon:'G',
     why:'Googles Gemini AI model for content generation. Alternative or supplement to Claude and ChatGPT.',
     steps:[
       'Go to aistudio.google.com',
@@ -67,7 +67,7 @@ const API_GUIDES = [
     link:'https://aistudio.google.com', linkLabel:'Open Google AI Studio â†’', placeholder:'AIza...',
   },
   {
-    key:'yext', label:'Yext Listings', required:false, color:'#fc3d21', icon:'',
+    key:'yext', label:'Yext Listings', required:false, color:'#fc3d21', icon:'Y',
     why:'Automates citation submission to 100+ directories simultaneously. Saves hours of manual work.',
     steps:[
       'Go to yext.com and sign up for an account',
@@ -79,7 +79,7 @@ const API_GUIDES = [
     link:'https://www.yext.com', linkLabel:'Open Yext â†’', placeholder:'your-yext-api-key',
   },
   {
-    key:'moz', label:'Moz (Domain Authority)', required:false, color:'#007bff', icon:'',
+    key:'moz', label:'Moz (Domain Authority)', required:false, color:'#007bff', icon:'M',
     why:'Provides Domain Authority scores for competitor analysis and backlink prospecting.',
     steps:[
       'Go to moz.com/products/api and sign up',
@@ -90,7 +90,7 @@ const API_GUIDES = [
     link:'https://moz.com/products/api', linkLabel:'Open Moz API â†’', placeholder:'mozscape-...',
   },
   {
-    key:'brightlocal', label:'BrightLocal', required:false, color:'#ff6b35', icon:'',
+    key:'brightlocal', label:'BrightLocal', required:false, color:'#ff6b35', icon:'B',
     why:'Advanced local SEO rank tracking and citation management across multiple locations.',
     steps:[
       'Go to brightlocal.com and sign up',
@@ -102,7 +102,7 @@ const API_GUIDES = [
     link:'https://www.brightlocal.com', linkLabel:'Open BrightLocal â†’', placeholder:'your-brightlocal-key',
   },
   {
-    key:'indexnow', label:'IndexNow', required:false, color:'#0891b2', icon:'',
+    key:'indexnow', label:'IndexNow', required:false, color:'#0891b2', icon:'I',
     why:'Instantly notifies search engines when you publish new content. Dramatically speeds up indexing.',
     steps:[
       'Go to indexnow.org/en/documentation',
@@ -114,7 +114,7 @@ const API_GUIDES = [
     link:'https://www.indexnow.org/en/documentation', linkLabel:'Open IndexNow Docs â†’', placeholder:'your-indexnow-key',
   },
   {
-    key:'gmail', label:'Gmail (Email Sending)', required:false, color:'#ea4335', icon:'',
+    key:'gmail', label:'Gmail (Email Sending)', required:false, color:'#ea4335', icon:'@',
     why:'Sends automated weekly reports and review request emails directly from your Gmail account.',
     steps:[
       'Go to Google OAuth Playground: oauth.com/playground',
@@ -127,6 +127,8 @@ const API_GUIDES = [
     link:'https://developers.google.com/oauthplayground', linkLabel:'Open OAuth Playground â†’', placeholder:'ya29...',
   },
 ]
+
+
 function mapCategory(input) {
   if (!input) return 'General'
   const s = input.toLowerCase()
@@ -143,6 +145,7 @@ function mapCategory(input) {
   if (/tech|software|it |computer|web|app|digital|seo/.test(s)) return 'Technology'
   return 'General'
 }
+
 export default function OnboardingWizard({ userId, userEmail, onComplete }) {
   const [step, setStep]       = useState(0)
   const [saving, setSaving]   = useState(false)
@@ -170,12 +173,12 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
   const [branding, setBranding] = useState({ agencyName:'', brandColor:'#3b82f6', tagline:'' })
 
   const STEPS = [
-    { id:'activate', label:'Activate', icon:'' },
-    { id:'profile',  label:'Business', icon:'' },
-    { id:'seo-type', label:'SEO Type', icon:'' },
-    { id:'api-keys', label:'API Keys', icon:'' },
-    { id:'branding', label:'Branding', icon:'' },
-    { id:'launch',   label:'Launch',   icon:'' },
+    { id:'activate', label:'Activate', icon:'1' },
+    { id:'profile',  label:'Business', icon:'2' },
+    { id:'seo-type', label:'SEO Type', icon:'3' },
+    { id:'api-keys', label:'API Keys', icon:'4' },
+    { id:'branding', label:'Branding', icon:'5' },
+    { id:'launch',   label:'Launch',   icon:'6' },
   ]
 
   const validateKey = async () => {
