@@ -274,46 +274,20 @@ export default function DashboardShell({ session, subscription }) {
           ))}
         </nav>
 
-        {/* User */}
-        <div style={{ padding:'8px',borderTop:'1px solid #0f2040',position:'relative' }}>
-          <div onClick={()=>setUserMenuOpen(o=>!o)}
-            style={{ display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:8,cursor:'pointer',
-              background:userMenuOpen?'rgba(59,130,246,.1)':'transparent' }}>
-            <div style={{ width:28,height:28,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-              display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#fff',flexShrink:0 }}>
-              {session.user.email.charAt(0).toUpperCase()}
-            </div>
-            <div style={{ flex:1,minWidth:0 }}>
-              <div style={{ fontSize:11,color:'#3a5070',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>
-                {session.user.email}
-              </div>
-            </div>
-            <span style={{ color:'#1a3560',fontSize:9 }}>{userMenuOpen?'â–²':'â–¼'}</span>
-          </div>
-          {userMenuOpen && (
-            <div style={{ position:'absolute',bottom:'100%',left:8,right:8,background:'#0d1f3c',
-              border:'1px solid #1a3560',borderRadius:10,padding:6,marginBottom:4,
-              boxShadow:'0 -8px 24px rgba(0,0,0,.5)' }}>
-              <button onClick={signOut} style={{ width:'100%',padding:'8px 12px',background:'transparent',
-                color:'#f87171',border:'none',borderRadius:7,fontSize:13,fontWeight:600,
-                cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:8 }}>
-                ðŸšª Sign Out
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
+        
       {/* â•â• MAIN â•â• */}
       <div style={{ flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0,margin:0,padding:0 }}>
 
         {/* Topbar */}
         <div style={{ height:50,flexShrink:0,background:'#080f1e',borderBottom:'1px solid #0f2040',
-          display:'none',alignItems:'center',padding:'0 14px',gap:10 }}>
+          ddisplay:'flex',alignItems:'center',padding:'0 14px',gap:10 }}>
           <button onClick={()=>setSidebarOpen(o=>!o)}
             style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20,padding:'4px',borderRadius:6,lineHeight:1,flexShrink:0 }}>
-            â˜°
+            ☰
           </button>
+          <div style={{ width:1,height:24,background:'#0f2040',flexShrink:0 }} />
+          <img src={LOGO} alt="RankForged AI" style={{ height:28,width:'auto',objectFit:'contain' }}
+            onError={e=>e.target.style.display='none'} />
           <div style={{ flex:1,display:'flex',alignItems:'center',gap:8,minWidth:0,overflow:'hidden' }}>
             {activeClient && isToolTab && (
               <>
@@ -357,6 +331,49 @@ export default function DashboardShell({ session, subscription }) {
                   borderRadius:7,padding:'5px 9px',cursor:'pointer',fontSize:14 }}>
                 â†»
               </button>
+            )}
+          </div>
+
+          {/* My Profile button */}
+          <div style={{ position:'relative', flexShrink:0 }}>
+            <button onClick={()=>setUserMenuOpen(o=>!o)} style={{
+              display:'flex',alignItems:'center',gap:7,padding:'6px 12px',
+              background:'rgba(59,130,246,.08)',border:'1px solid #1a3560',
+              borderRadius:8,cursor:'pointer',color:'#93c5fd',fontSize:12.5,fontWeight:600
+            }}>
+              <div style={{ width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'#fff' }}>
+                {session.user.email.charAt(0).toUpperCase()}
+              </div>
+              My Profile ▾
+            </button>
+            {userMenuOpen && (
+              <div style={{ position:'absolute',top:'calc(100% + 6px)',right:0,
+                background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:10,
+                padding:6,minWidth:200,zIndex:999,boxShadow:'0 8px 24px rgba(0,0,0,.5)' }}>
+                <div style={{ padding:'6px 12px 8px',borderBottom:'1px solid #1a3560',marginBottom:4 }}>
+                  <div style={{ fontSize:11,color:'#3a5070',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>
+                    {session.user.email}
+                  </div>
+                </div>
+                {[
+                  { label:'👤 View Profile',    action:()=>{ setActiveTab('clients'); setUserMenuOpen(false) } },
+                  { label:'🔑 Reset Password',  action:()=>{ supabase.auth.resetPasswordForEmail(session.user.email); setUserMenuOpen(false); alert('Password reset email sent to ' + session.user.email) } },
+                  { label:'💳 Billing',          action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
+                  { label:'⬆️ Upgrade Plan',     action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
+                  { label:'❌ Cancel Subscription', action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
+                  { label:'🚪 Sign Out',          action:()=>{ signOut(); setUserMenuOpen(false) }, red:true },
+                ].map(item => (
+                  <button key={item.label} onClick={item.action} style={{
+                    width:'100%',padding:'8px 12px',background:'transparent',
+                    color:item.red?'#f87171':'#c8d8f0',border:'none',borderRadius:7,
+                    fontSize:13,fontWeight:500,cursor:'pointer',textAlign:'left',
+                    display:'flex',alignItems:'center',gap:8
+                  }}>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </div>
