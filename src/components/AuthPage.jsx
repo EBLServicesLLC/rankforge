@@ -298,7 +298,7 @@ const handleForgot = async () => {
                   const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/stripe-checkout', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU' },
-                    body: JSON.stringify({ priceId: plan.priceId })
+                    body: JSON.stringify({ price_id: plan.priceId, success_url: window.location.origin + '/?activated=1', cancel_url: window.location.origin })
                   })
                   const data = await res.json()
                   if (data.url) window.location.href = data.url
@@ -333,7 +333,7 @@ const handleForgot = async () => {
                   const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/stripe-checkout', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU' },
-                    body: JSON.stringify({ priceId: plan.priceId })
+                    body: JSON.stringify({ price_id: plan.priceId, success_url: window.location.origin + '/?activated=1', cancel_url: window.location.origin })
                   })
                   const data = await res.json()
                   if (data.url) window.location.href = data.url
