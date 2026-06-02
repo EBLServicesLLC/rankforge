@@ -6481,6 +6481,7 @@ function rfProfileAction(action){
           _cl.desc=d.biz_desc||_cl.desc;
           try{localStorage.setItem('rf_clients',JSON.stringify(CM.clients));}catch(e){}
           setTimeout(function(){cmPushProfileToForm(_cl);},200);
+        }
       }
       // Also sync into CM client record if one exists
       if(typeof CM!=='undefined'&&CM.activeId){
