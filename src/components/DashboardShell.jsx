@@ -307,7 +307,7 @@ export default function DashboardShell({ session, subscription }) {
 
         {/* Topbar */}
         <div style={{ height:50,flexShrink:0,background:'#080f1e',borderBottom:'1px solid #0f2040',
-          display:'none',alignItems:'center',padding:'0 14px',gap:10 }}>
+          display:'flex',alignItems:'center',padding:'0 14px',gap:10 }}>
           <button onClick={()=>setSidebarOpen(o=>!o)}
             style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20,padding:'4px',borderRadius:6,lineHeight:1,flexShrink:0 }}>
             â˜°
