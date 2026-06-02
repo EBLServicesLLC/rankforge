@@ -339,23 +339,46 @@ export default function DashboardShell({ session, subscription }) {
                 {clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             )}
-            <button onClick={()=>setShowAddModal(true)} disabled={clients.length>=maxClients}
-              style={{ padding:'5px 12px',borderRadius:7,border:'none',
-                background:clients.length>=maxClients?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-                color:clients.length>=maxClients?'#2a4060':'#fff',fontSize:12.5,fontWeight:700,
-                cursor:clients.length>=maxClients?'not-allowed':'pointer',
-                display:'flex',alignItems:'center',gap:5 }}>
-              + Business
-            </button>
-            {isToolTab && activeId && (
-              <button
-                onClick={()=>{ setIframeReady(false); setIframeSrc('/rankforge3.html?client='+activeId+'&t='+Date.now()) }}
-                title="Reload tool"
-                style={{ background:'rgba(59,130,246,.08)',border:'1px solid #1a3560',color:'#4a7adb',
-                  borderRadius:7,padding:'5px 9px',cursor:'pointer',fontSize:14 }}>
-                â†»
+            <div style={{ position:'relative' }}>
+              <button onClick={()=>setUserMenuOpen(o=>!o)} style={{
+                display:'flex',alignItems:'center',gap:7,padding:'6px 12px',
+                background:'rgba(59,130,246,.08)',border:'1px solid #1a3560',
+                borderRadius:8,cursor:'pointer',color:'#93c5fd',fontSize:12.5,fontWeight:600
+              }}>
+                <div style={{ width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'#fff' }}>
+                  {session.user.email.charAt(0).toUpperCase()}
+                </div>
+                My Profile
               </button>
-            )}
+              {userMenuOpen && (
+                <div style={{ position:'absolute',top:'calc(100% + 6px)',right:0,
+                  background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:10,
+                  padding:6,minWidth:210,zIndex:999,boxShadow:'0 8px 24px rgba(0,0,0,.5)' }}>
+                  <div style={{ padding:'6px 12px 8px',borderBottom:'1px solid #1a3560',marginBottom:4 }}>
+                    <div style={{ fontSize:12,fontWeight:600,color:'#7ab4ff' }}>{session.user.email}</div>
+                  </div>
+                  {[
+                    { label:'View Profile',        action:()=>{ setShowProfile(true); setUserMenuOpen(false) } },
+                    { label:'Plans and Billing',   action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
+                    { label:'Upgrade Plan',        action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
+                    { label:'Cancel Subscription', action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
+                    { label:'Reset Password',      action:()=>{ supabase.auth.resetPasswordForEmail(session.user.email); setUserMenuOpen(false); alert('Password reset email sent to ' + session.user.email) } },
+                    { label:'Sign Out',            action:()=>{ signOut(); setUserMenuOpen(false) }, red:true },
+                  ].map(item => (
+                    <button key={item.label} onClick={item.action} style={{
+                      width:'100%',padding:'8px 12px',background:'transparent',
+                      color:item.red?'#f87171':'#c8d8f0',border:'none',borderRadius:7,
+                      fontSize:13,fontWeight:500,cursor:'pointer',textAlign:'left'
+                    }}>
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            
           </div>
         </div>
 
@@ -429,7 +452,6 @@ export default function DashboardShell({ session, subscription }) {
     />
   </div>
 )}
-      
       {showProfile && (
         <ProfileModal
           session={session}
