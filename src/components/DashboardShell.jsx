@@ -453,7 +453,7 @@ export default function DashboardShell({ session, subscription }) {
       {showProfile && (
         <ProfileModal
           session={session}
-          activeId={activeId}
+          activeId={activeId || (clients.length > 0 ? clients[0].id : null)}
           subscription={subscription}
           onClose={()=>setShowProfile(false)}
           onResetPassword={async()=>{ await supabase.auth.resetPasswordForEmail(session.user.email); alert('Password reset email sent to ' + session.user.email) }}
