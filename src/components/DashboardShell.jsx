@@ -1,4 +1,4 @@
-﻿import BillingPage from './BillingPage'
+import BillingPage from './BillingPage'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useClients } from '../hooks/useClients'
@@ -364,6 +364,10 @@ export default function DashboardShell({ session, subscription }) {
             onSelect={(id)=>{ setActiveId(id); setActiveTab('dash') }}
             onAdd={()=>setShowAddModal(true)}
             onUpgrade={()=>setShowBilling(true)}
+            onBilling={()=>setShowBilling(true)}
+            onSignOut={signOut}
+            onResetPassword={async()=>{ await supabase.auth.resetPasswordForEmail(session.user.email); alert('Password reset email sent!') }}
+            userEmail={session.user.email}
             onDelete={deleteClient}
             onUpdateMeta={updateClientMeta}
             onCreate={createClient}

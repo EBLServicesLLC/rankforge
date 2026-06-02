@@ -1,4 +1,4 @@
-﻿// src/components/OnboardingWizard.jsx
+// src/components/OnboardingWizard.jsx
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 

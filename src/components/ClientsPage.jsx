@@ -25,7 +25,8 @@ const SEO_TIPS = [
 
 export default function ClientsPage({
   clients, activeId, maxClients, plan,
-  onSelect, onAdd, onDelete, onUpdateMeta, onCreate, onUpgrade
+  onSelect, onAdd, onDelete, onUpdateMeta, onCreate,
+  onUpgrade, onBilling, onSignOut, onResetPassword, userEmail
 }) {
   const [editId, setEditId]           = useState(null)
   const [editData, setEditData]       = useState({})
@@ -103,6 +104,39 @@ export default function ClientsPage({
             <div style={{ fontSize:11.5, color:'#2a4060' }}>{stat.sub}</div>
           </div>
         ))}
+      </div>
+
+      {/* ── My Profile ── */}
+      <div style={{ background:'#0a1628', border:'1px solid #1a3560', borderRadius:14, padding:'20px 24px', marginBottom:24 }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'#2a4060', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:14 }}>My Profile</div>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+            <div style={{ width:44, height:44, borderRadius:'50%', background:'linear-gradient(135deg,#3b82f6,#1d4ed8)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:800, color:'#fff', flexShrink:0 }}>
+              {userEmail?.charAt(0).toUpperCase() || '?'}
+            </div>
+            <div>
+              <div style={{ fontSize:14, fontWeight:700, color:'#e2e8f0', marginBottom:2 }}>{userEmail || '—'}</div>
+              <div style={{ fontSize:12, color:'#4a6080' }}>
+                <span style={{ color: PLAN_COLORS[plan]||'#3b82f6', fontWeight:700, textTransform:'capitalize' }}>{plan}</span>
+                {' '}plan · {clients.length}/{maxClients} slots used
+              </div>
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+            <button onClick={onBilling} style={{ padding:'8px 16px', background:'#0d1f3c', border:'1px solid #1a3560', borderRadius:8, color:'#a0b4cc', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+              Billing & Plan
+            </button>
+            <button onClick={onUpgrade} style={{ padding:'8px 16px', background:'linear-gradient(135deg,#8b5cf6,#6d28d9)', border:'none', borderRadius:8, color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+              Upgrade Plan
+            </button>
+            <button onClick={onResetPassword} style={{ padding:'8px 16px', background:'#0d1f3c', border:'1px solid #1a3560', borderRadius:8, color:'#a0b4cc', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+              Reset Password
+            </button>
+            <button onClick={onSignOut} style={{ padding:'8px 16px', background:'transparent', border:'1px solid rgba(239,68,68,0.4)', borderRadius:8, color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+              Sign Out
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* ── Search ── */}
