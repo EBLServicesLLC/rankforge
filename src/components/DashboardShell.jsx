@@ -241,7 +241,7 @@ export default function DashboardShell({ session, subscription }) {
             width:'100%',display:'flex',alignItems:'center',gap:8,padding:'8px 10px',
             borderRadius:8,border:'none',cursor:'pointer',marginBottom:8,textAlign:'left',
             background:activeTab==='clients'?'linear-gradient(135deg,rgba(59,130,246,.22),rgba(59,130,246,.08))':'transparent',
-            color:activeTab==='clients'?'#93c5fd':'#4a6080',fontWeight:activeTab==='clients'?700:500,
+            color:activeTab==='clients'?'#93c5fd':'#7a9cc0',fontWeight:activeTab==='clients'?700:500,
             fontSize:13,borderLeft:activeTab==='clients'?'2px solid #3b82f6':'2px solid transparent',
           }}>
             My Businesses
@@ -259,7 +259,7 @@ export default function DashboardShell({ session, subscription }) {
                   width:'100%',display:'flex',alignItems:'center',gap:8,padding:'7px 10px',
                   borderRadius:7,border:'none',cursor:'pointer',marginBottom:1,textAlign:'left',
                   background:activeTab===tab.id?'linear-gradient(135deg,rgba(59,130,246,.18),rgba(59,130,246,.06))':'transparent',
-                  color:activeTab===tab.id?'#93c5fd':!activeId?'#4a6080':'#4a6080',
+                  color:activeTab===tab.id?'#93c5fd':!activeId?'#7a9cc0':'#7a9cc0',
                   fontWeight:activeTab===tab.id?700:400,fontSize:12.5,transition:'.1s',
                   borderLeft:activeTab===tab.id?'2px solid #3b82f6':'2px solid transparent',
                   opacity:!activeId?0.4:1,
@@ -326,7 +326,7 @@ export default function DashboardShell({ session, subscription }) {
                 <span style={{ color:'#1a3050',flexShrink:0 }}>â€º</span>
               </>
             )}
-            <span style={{ fontSize:12.5,color:'#7a9cc0',fontWeight:500,whiteSpace:'nowrap' }}>
+            <span style={{ fontSize:12.5,color:'#7e98b4',fontWeight:500,whiteSpace:'nowrap' }}>
               {isToolTab ? (currentTab?.label || activeTab) : 'My Businesses'}
             </span>
           </div>
