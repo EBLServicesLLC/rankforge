@@ -19,7 +19,7 @@ const SEO_TYPES = {
 
 const API_GUIDES = [
   {
-    key:'anthropic', label:'Anthropic (Claude AI)', required:true, color:'#f59e0b', icon:'AI',
+    key:'anthropic', label:'Anthropic (Claude AI)', required:true, color:'#f59e0b', icon:'',
     why:'Powers all 11 AI agents â€” content writing, weekly reports, keyword briefs, outreach emails. Most important key.',
     steps:[
       'Go to console.anthropic.com and sign up or log in',
@@ -31,7 +31,7 @@ const API_GUIDES = [
     link:'https://console.anthropic.com', linkLabel:'Open Anthropic Console â†’', placeholder:'sk-ant-api03-...',
   },
   {
-    key:'openai', label:'OpenAI (ChatGPT)', required:false, color:'#10b981', icon:'AI',
+    key:'openai', label:'OpenAI (ChatGPT)', required:false, color:'#10b981', icon:'',
     why:'Enables ChatGPT-powered content generation as an alternative to Claude. Use either or both.',
     steps:[
       'Go to platform.openai.com and sign up or log in',
@@ -43,7 +43,7 @@ const API_GUIDES = [
     link:'https://platform.openai.com/api-keys', linkLabel:'Open OpenAI Platform â†’', placeholder:'sk-...',
   },
   {
-    key:'google', label:'Google Search Console API', required:false, color:'#4285f4', icon:'G',
+    key:'google', label:'Google Search Console API', required:false, color:'#4285f4', icon:'',
     why:'Shows real keyword rankings and click data from Google. Unlocks the Keyword Opportunity Spotter agent.',
     steps:[
       'Go to console.cloud.google.com',
@@ -55,7 +55,7 @@ const API_GUIDES = [
     link:'https://console.cloud.google.com', linkLabel:'Open Google Cloud Console â†’', placeholder:'AIza...',
   },
   {
-    key:'gemini', label:'Google Gemini AI', required:false, color:'#ea4335', icon:'G',
+    key:'gemini', label:'Google Gemini AI', required:false, color:'#ea4335', icon:'',
     why:'Googles Gemini AI model for content generation. Alternative or supplement to Claude and ChatGPT.',
     steps:[
       'Go to aistudio.google.com',
@@ -67,7 +67,7 @@ const API_GUIDES = [
     link:'https://aistudio.google.com', linkLabel:'Open Google AI Studio â†’', placeholder:'AIza...',
   },
   {
-    key:'yext', label:'Yext Listings', required:false, color:'#fc3d21', icon:'Y',
+    key:'yext', label:'Yext Listings', required:false, color:'#fc3d21', icon:'',
     why:'Automates citation submission to 100+ directories simultaneously. Saves hours of manual work.',
     steps:[
       'Go to yext.com and sign up for an account',
@@ -79,7 +79,7 @@ const API_GUIDES = [
     link:'https://www.yext.com', linkLabel:'Open Yext â†’', placeholder:'your-yext-api-key',
   },
   {
-    key:'moz', label:'Moz (Domain Authority)', required:false, color:'#007bff', icon:'M',
+    key:'moz', label:'Moz (Domain Authority)', required:false, color:'#007bff', icon:'',
     why:'Provides Domain Authority scores for competitor analysis and backlink prospecting.',
     steps:[
       'Go to moz.com/products/api and sign up',
@@ -90,7 +90,7 @@ const API_GUIDES = [
     link:'https://moz.com/products/api', linkLabel:'Open Moz API â†’', placeholder:'mozscape-...',
   },
   {
-    key:'brightlocal', label:'BrightLocal', required:false, color:'#ff6b35', icon:'B',
+    key:'brightlocal', label:'BrightLocal', required:false, color:'#ff6b35', icon:'',
     why:'Advanced local SEO rank tracking and citation management across multiple locations.',
     steps:[
       'Go to brightlocal.com and sign up',
@@ -102,7 +102,7 @@ const API_GUIDES = [
     link:'https://www.brightlocal.com', linkLabel:'Open BrightLocal â†’', placeholder:'your-brightlocal-key',
   },
   {
-    key:'indexnow', label:'IndexNow', required:false, color:'#0891b2', icon:'I',
+    key:'indexnow', label:'IndexNow', required:false, color:'#0891b2', icon:'',
     why:'Instantly notifies search engines when you publish new content. Dramatically speeds up indexing.',
     steps:[
       'Go to indexnow.org/en/documentation',
@@ -114,7 +114,7 @@ const API_GUIDES = [
     link:'https://www.indexnow.org/en/documentation', linkLabel:'Open IndexNow Docs â†’', placeholder:'your-indexnow-key',
   },
   {
-    key:'gmail', label:'Gmail (Email Sending)', required:false, color:'#ea4335', icon:'@',
+    key:'gmail', label:'Gmail (Email Sending)', required:false, color:'#ea4335', icon:'',
     why:'Sends automated weekly reports and review request emails directly from your Gmail account.',
     steps:[
       'Go to Google OAuth Playground: oauth.com/playground',
@@ -127,24 +127,6 @@ const API_GUIDES = [
     link:'https://developers.google.com/oauthplayground', linkLabel:'Open OAuth Playground â†’', placeholder:'ya29...',
   },
 ]
-
-
-function mapCategory(input) {
-  if (!input) return 'General'
-  const s = input.toLowerCase()
-  if (/plumb|hvac|electric|roof|landscap|paint|clean|handyman|pest|pool|garage|fence|gutter|window|flooring|carpet|appli|mover|storage|junk|tree|lawn|snow/.test(s)) return 'Home Services'
-  if (/restaurant|food|pizza|burger|cafe|coffee|bakery|catering|diner|sushi|taco|bar|pub|grill/.test(s)) return 'Restaurant'
-  if (/doctor|dentist|medical|health|clinic|therapy|chiro|optom|vet|pharmacy|hospital|mental/.test(s)) return 'Healthcare'
-  if (/financ|bank|account|tax|insurance|invest|mortgage|loan|credit/.test(s)) return 'Finance'
-  if (/law|legal|attorney|lawyer/.test(s)) return 'Legal'
-  if (/retail|shop|store|boutique|gift/.test(s)) return 'Retail'
-  if (/real estate|realtor|property|realty/.test(s)) return 'Real Estate'
-  if (/auto|car|mechanic|tire|body shop|detailing|towing/.test(s)) return 'Automotive'
-  if (/salon|spa|beauty|hair|nail|massage|barber|skin/.test(s)) return 'Beauty & Wellness'
-  if (/school|tutor|coach|training|education|daycare|preschool/.test(s)) return 'Education'
-  if (/tech|software|it |computer|web|app|digital|seo/.test(s)) return 'Technology'
-  return 'General'
-}
 
 export default function OnboardingWizard({ userId, userEmail, onComplete }) {
   const [step, setStep]       = useState(0)
@@ -173,12 +155,12 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
   const [branding, setBranding] = useState({ agencyName:'', brandColor:'#3b82f6', tagline:'' })
 
   const STEPS = [
-    { id:'activate', label:'Activate', icon:'1' },
-    { id:'profile',  label:'Business', icon:'2' },
-    { id:'seo-type', label:'SEO Type', icon:'3' },
-    { id:'api-keys', label:'API Keys', icon:'4' },
-    { id:'branding', label:'Branding', icon:'5' },
-    { id:'launch',   label:'Launch',   icon:'6' },
+    { id:'activate', label:'Activate', icon:'' },
+    { id:'profile',  label:'Business', icon:'' },
+    { id:'seo-type', label:'SEO Type', icon:'' },
+    { id:'api-keys', label:'API Keys', icon:'' },
+    { id:'branding', label:'Branding', icon:'' },
+    { id:'launch',   label:'Launch',   icon:'' },
   ]
 
   const validateKey = async () => {
@@ -235,7 +217,7 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
               client_id:client.id, user_id:userId,
   biz_name:profile.bizName, biz_addr:profile.addr, biz_city:profile.city,
 biz_state:profile.state, biz_zip:profile.zip,
-biz_cat:mapCategory(profile.category), biz_phone:profile.phone, biz_website:profile.website,
+biz_cat:profile.category, biz_phone:profile.phone, biz_website:profile.website,
 biz_desc:profile.desc, biz_kw:profile.keywords,
             })
           }
@@ -353,9 +335,36 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
               )}
 
               <div style={{ background:'rgba(255,255,255,.04)', borderRadius:10, padding:'14px 16px', border:'1px solid #1a3560' }}>
-                <div style={{ fontSize:13, color:'#64748b', lineHeight:1.6 }}>
+                <div style={{ fontSize:13, color:'#64748b', lineHeight:1.6, marginBottom:12 }}>
                   <strong style={{ color:'#94a3b8' }}>Testing?</strong> Use key <code style={{ background:'#e2e8f0', padding:'1px 6px', borderRadius:4, fontSize:12 }}>RFA-SOLO-TEST-0001</code> to try the wizard.
-                  <br/>Don't have a key? <a href="#" style={{ color:'#60a5fa', fontWeight:600 }}>Purchase a plan â†’</a>
+                </div>
+                <div style={{ fontSize:13, color:'#94a3b8', fontWeight:600, marginBottom:10 }}>Don't have a key? Choose a plan:</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                  {[
+                    { label:'Solopreneur', price:'$97/mo',  priceId:'price_1TdJajLQRnOj0qLPQmbNz2kN', color:'#3b82f6' },
+                    { label:'Deluxe',      price:'$197/mo', priceId:'price_1TdJbkLQRnOj0qLPJPfsQsJI', color:'#8b5cf6' },
+                    { label:'Pro',         price:'$397/mo', priceId:'price_1TdJczLQRnOj0qLPa7nat9Hi', color:'#06b6d4' },
+                    { label:'Agency',      price:'$997/mo', priceId:'price_1TdJdnLQRnOj0qLPv56ml87r', color:'#10b981' },
+                  ].map(plan => (
+                    <button key={plan.label} onClick={async () => {
+                      try {
+                        const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/stripe-checkout', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU' },
+                          body: JSON.stringify({ priceId: plan.priceId, userId: userId, userEmail: userEmail })
+                        })
+                        const data = await res.json()
+                        if (data.url) window.location.href = data.url
+                      } catch(e) { alert('Checkout error: ' + e.message) }
+                    }} style={{
+                      padding:'10px 8px', borderRadius:8, border:'1px solid ' + plan.color,
+                      background:'transparent', color:plan.color, cursor:'pointer',
+                      fontSize:12.5, fontWeight:700, textAlign:'center'
+                    }}>
+                      <div>{plan.label}</div>
+                      <div style={{ fontSize:11, fontWeight:400, opacity:.8 }}>{plan.price}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
