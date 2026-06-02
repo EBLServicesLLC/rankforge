@@ -100,7 +100,7 @@ export default function DashboardShell({ session, subscription }) {
         setShowBilling(true)
         return
       }
-      if (e.data?.type === 'RF_APP_READY') {
+      if (e.data?.type === 'RF_APP_READY' || e.data?.type === 'RF_READY') {
         const iWin = iframeRef.current?.contentWindow
         if (!iWin) return
         // 1. Load settings + client data from Supabase and inject into rankforge3
@@ -364,10 +364,6 @@ export default function DashboardShell({ session, subscription }) {
             onSelect={(id)=>{ setActiveId(id); setActiveTab('dash') }}
             onAdd={()=>setShowAddModal(true)}
             onUpgrade={()=>setShowBilling(true)}
-            onBilling={()=>setShowBilling(true)}
-            onSignOut={signOut}
-            onResetPassword={async()=>{ await supabase.auth.resetPasswordForEmail(session.user.email); alert('Password reset email sent!') }}
-            userEmail={session.user.email}
             onDelete={deleteClient}
             onUpdateMeta={updateClientMeta}
             onCreate={createClient}
