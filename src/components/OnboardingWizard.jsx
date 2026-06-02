@@ -215,9 +215,10 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
           if (client) {
             await supabase.from('client_data').insert({
               client_id:client.id, user_id:userId,
-              biz_name:profile.bizName, biz_city:profile.city, biz_state:profile.state,
-              biz_cat:profile.category, biz_phone:profile.phone, biz_website:profile.website,
-              biz_desc:profile.desc, biz_kw:profile.keywords,
+  biz_name:profile.bizName, biz_addr:profile.addr, biz_city:profile.city,
+  biz_state:profile.state, biz_zip:profile.zip,
+  biz_cat:profile.category, biz_phone:profile.phone, biz_website:profile.website,
+  biz_desc:profile.desc, biz_kw:profile.keywords,
             })
           }
         }
