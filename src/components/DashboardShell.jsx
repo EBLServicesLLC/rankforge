@@ -1,5 +1,4 @@
 import BillingPage from './BillingPage'
-import ProfileModal from './ProfileModal'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useClients } from '../hooks/useClients'
@@ -61,7 +60,6 @@ export default function DashboardShell({ session, subscription }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [iframeReady, setIframeReady] = useState(false)
   const [showBilling, setShowBilling] = useState(false)
-  const [showProfile, setShowProfile] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [iframeSrc, setIframeSrc]     = useState('')
   const iframeRef = useRef(null)
@@ -307,7 +305,7 @@ export default function DashboardShell({ session, subscription }) {
 
         {/* Topbar */}
         <div style={{ height:50,flexShrink:0,background:'#080f1e',borderBottom:'1px solid #0f2040',
-          display:'flex',alignItems:'center',padding:'0 14px',gap:10 }}>
+          display:'none',alignItems:'center',padding:'0 14px',gap:10 }}>
           <button onClick={()=>setSidebarOpen(o=>!o)}
             style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20,padding:'4px',borderRadius:6,lineHeight:1,flexShrink:0 }}>
             â˜°
@@ -339,46 +337,23 @@ export default function DashboardShell({ session, subscription }) {
                 {clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             )}
-            <div style={{ position:'relative' }}>
-              <button onClick={()=>setUserMenuOpen(o=>!o)} style={{
-                display:'flex',alignItems:'center',gap:7,padding:'6px 12px',
-                background:'rgba(59,130,246,.08)',border:'1px solid #1a3560',
-                borderRadius:8,cursor:'pointer',color:'#93c5fd',fontSize:12.5,fontWeight:600
-              }}>
-                <div style={{ width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'#fff' }}>
-                  {session.user.email.charAt(0).toUpperCase()}
-                </div>
-                My Profile
+            <button onClick={()=>setShowAddModal(true)} disabled={clients.length>=maxClients}
+              style={{ padding:'5px 12px',borderRadius:7,border:'none',
+                background:clients.length>=maxClients?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                color:clients.length>=maxClients?'#2a4060':'#fff',fontSize:12.5,fontWeight:700,
+                cursor:clients.length>=maxClients?'not-allowed':'pointer',
+                display:'flex',alignItems:'center',gap:5 }}>
+              + Business
+            </button>
+            {isToolTab && activeId && (
+              <button
+                onClick={()=>{ setIframeReady(false); setIframeSrc('/rankforge3.html?client='+activeId+'&t='+Date.now()) }}
+                title="Reload tool"
+                style={{ background:'rgba(59,130,246,.08)',border:'1px solid #1a3560',color:'#4a7adb',
+                  borderRadius:7,padding:'5px 9px',cursor:'pointer',fontSize:14 }}>
+                â†»
               </button>
-              {userMenuOpen && (
-                <div style={{ position:'absolute',top:'calc(100% + 6px)',right:0,
-                  background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:10,
-                  padding:6,minWidth:210,zIndex:999,boxShadow:'0 8px 24px rgba(0,0,0,.5)' }}>
-                  <div style={{ padding:'6px 12px 8px',borderBottom:'1px solid #1a3560',marginBottom:4 }}>
-                    <div style={{ fontSize:12,fontWeight:600,color:'#7ab4ff' }}>{session.user.email}</div>
-                  </div>
-                  {[
-                    { label:'View Profile',        action:()=>{ setShowProfile(true); setUserMenuOpen(false) } },
-                    { label:'Plans and Billing',   action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
-                    { label:'Upgrade Plan',        action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
-                    { label:'Cancel Subscription', action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
-                    { label:'Reset Password',      action:()=>{ supabase.auth.resetPasswordForEmail(session.user.email); setUserMenuOpen(false); alert('Password reset email sent to ' + session.user.email) } },
-                    { label:'Sign Out',            action:()=>{ signOut(); setUserMenuOpen(false) }, red:true },
-                  ].map(item => (
-                    <button key={item.label} onClick={item.action} style={{
-                      width:'100%',padding:'8px 12px',background:'transparent',
-                      color:item.red?'#f87171':'#c8d8f0',border:'none',borderRadius:7,
-                      fontSize:13,fontWeight:500,cursor:'pointer',textAlign:'left'
-                    }}>
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            
+            )}
           </div>
         </div>
 
@@ -452,17 +427,6 @@ export default function DashboardShell({ session, subscription }) {
     />
   </div>
 )}
-      {showProfile && (
-        <ProfileModal
-          session={session}
-          activeId={activeId}
-          subscription={subscription}
-          onClose={()=>setShowProfile(false)}
-          onResetPassword={async()=>{ await supabase.auth.resetPasswordForEmail(session.user.email); alert('Password reset email sent to ' + session.user.email) }}
-          onBilling={()=>{ setShowProfile(false); setShowBilling(true) }}
-          iframeRef={iframeRef}
-        />
-      )}
       {showAddModal && (
         <AddModal
           onClose={()=>setShowAddModal(false)}
@@ -470,6 +434,20 @@ export default function DashboardShell({ session, subscription }) {
             const client = await createClient(data.name)
             if (client) {
               if (data.city||data.category) await updateClientMeta(client.id,{city:data.city,category:data.category})
+              await supabase.from('client_data').upsert({
+                client_id:   client.id,
+                user_id:     session.user.id,
+                biz_name:    data.name,
+                biz_cat:     data.category || '',
+                biz_addr:    data.addr     || '',
+                biz_city:    data.city     || '',
+                biz_state:   data.state    || '',
+                biz_zip:     data.zip      || '',
+                biz_phone:   data.phone    || '',
+                biz_website: data.website  || '',
+                biz_desc:    data.desc     || '',
+                biz_kw:      data.keywords || '',
+              }, { onConflict:'client_id' })
               setActiveId(client.id)
               setActiveTab('dash')
             }
@@ -484,42 +462,102 @@ export default function DashboardShell({ session, subscription }) {
 }
 
 function AddModal({ onClose, onCreate, remaining, plan }) {
-  const [name,setName]=useState(''); const [city,setCity]=useState('');
-  const [cat,setCat]=useState(''); const [desc,setDesc]=useState(''); const [keywords,setKeywords]=useState(''); const [saving,setSaving]=useState(false)
+  const [name,setName]=useState('')
+  const [addr,setAddr]=useState('')
+  const [city,setCity]=useState('')
+  const [state,setState]=useState('')
+  const [zip,setZip]=useState('')
+  const [phone,setPhone]=useState('')
+  const [website,setWebsite]=useState('')
+  const [cat,setCat]=useState('')
+  const [desc,setDesc]=useState('')
+  const [keywords,setKeywords]=useState('')
+  const [saving,setSaving]=useState(false)
+  const CATEGORIES = ['Home Services','Restaurant','Healthcare','Finance','Legal','Retail','Real Estate','Automotive','Beauty & Wellness','Education','Technology','General']
   const inp = { width:'100%',padding:'9px 12px',background:'#07111f',color:'#e2e8f0',
     border:'1.5px solid #1a3560',borderRadius:7,fontSize:13.5,outline:'none',boxSizing:'border-box' }
+  const lbl = { fontSize:12,fontWeight:600,color:'#60a5fa',marginBottom:4,display:'block' }
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:1000,
       display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}
       onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={{ background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:16,
-        padding:'28px 32px',width:'100%',maxWidth:400,boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
+        padding:'28px 32px',width:'100%',maxWidth:480,maxHeight:'90vh',overflowY:'auto',
+        boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16 }}>
-          <div style={{ fontSize:17,fontWeight:800,color:'#e2e8f0' }}>âž• Add New Business</div>
-          <button onClick={onClose} style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20 }}>Ã—</button>
+          <div style={{ fontSize:17,fontWeight:800,color:'#e2e8f0' }}>Add New Business</div>
+          <button onClick={onClose} style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20 }}>x</button>
         </div>
         <div style={{ background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)',borderRadius:8,
           padding:'8px 12px',marginBottom:18,fontSize:12,color:'#60a5fa' }}>
-          {remaining>0?`${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`:`All slots used â€” upgrade for more`}
+          {remaining>0?`${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`:`All slots used - upgrade for more`}
         </div>
-        {[{l:'Business Name *',v:name,s:setName,p:'e.g. Austin Plumbing Pros',r:true},
-          {l:'City / State',v:city,s:setCity,p:'e.g. Austin, TX'},
-          {l:'Business Type',v:cat,s:setCat,p:'e.g. Plumber, HVAC, Dentist'},
-          {l:'Business Description',v:desc,s:setDesc,p:'Describe the business in 2-3 sentences...'},
-          {l:'Keywords (comma separated)',v:keywords,s:setKeywords,p:'plumber, drain cleaning, water heater'}
-        ].map(f=>(
-          <div key={f.l} style={{ marginBottom:12 }}>
-            <label style={{ fontSize:12,fontWeight:600,color:'#60a5fa',marginBottom:4,display:'block' }}>{f.l}</label>
-            <input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.p} required={f.r}
-              style={inp}
-              onFocus={e=>e.target.style.borderColor='#3b82f6'}
-              onBlur={e=>e.target.style.borderColor='#1a3560'} />
+        <div style={{ marginBottom:12 }}>
+          <label style={lbl}>Business Name *</label>
+          <input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Austin Plumbing Pros" required
+            style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} />
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <label style={lbl}>Category</label>
+          <select value={cat} onChange={e=>setCat(e.target.value)} style={{...inp,cursor:'pointer'}}>
+            <option value="">Select category...</option>
+            {CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <label style={lbl}>Street Address</label>
+          <input value={addr} onChange={e=>setAddr(e.target.value)} placeholder="123 Main St"
+            style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} />
+        </div>
+        <div style={{ display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:8,marginBottom:12 }}>
+          <div>
+            <label style={lbl}>City</label>
+            <input value={city} onChange={e=>setCity(e.target.value)} placeholder="Austin"
+              style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} />
           </div>
-        ))}
+          <div>
+            <label style={lbl}>State</label>
+            <input value={state} onChange={e=>setState(e.target.value)} placeholder="TX"
+              style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} />
+          </div>
+          <div>
+            <label style={lbl}>ZIP</label>
+            <input value={zip} onChange={e=>setZip(e.target.value)} placeholder="78701"
+              style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} />
+          </div>
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <label style={lbl}>Phone</label>
+          <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="(512) 555-0100"
+            style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} />
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <label style={lbl}>Website</label>
+          <input value={website} onChange={e=>setWebsite(e.target.value)} placeholder="https://yourbusiness.com"
+            style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} />
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <label style={lbl}>Keywords (comma separated)</label>
+          <input value={keywords} onChange={e=>setKeywords(e.target.value)} placeholder="plumber, drain cleaning, water heater"
+            style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} />
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <label style={lbl}>Business Description</label>
+          <textarea value={desc} onChange={e=>setDesc(e.target.value)}
+            placeholder="Describe the business in 2-3 sentences..."
+            rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}} />
+        </div>
         <div style={{ display:'flex',gap:10,marginTop:18 }}>
           <button onClick={onClose} style={{ flex:1,padding:'10px 0',background:'transparent',color:'#4a6080',
             border:'1px solid #1a3560',borderRadius:8,fontSize:13.5,fontWeight:600,cursor:'pointer' }}>Cancel</button>
-          <button onClick={async()=>{ if(!name.trim()||saving||remaining<=0)return; setSaving(true); await onCreate({name:name.trim(),city:city.trim(),category:cat.trim(),desc:desc.trim(),keywords:keywords.trim()}); setSaving(false) }}
+          <button onClick={async()=>{
+            if(!name.trim()||saving||remaining<=0) return
+            setSaving(true)
+            await onCreate({name:name.trim(),addr:addr.trim(),city:city.trim(),state:state.trim(),
+              zip:zip.trim(),phone:phone.trim(),website:website.trim(),
+              category:cat,desc:desc.trim(),keywords:keywords.trim()})
+            setSaving(false)
+          }}
             disabled={!name.trim()||saving||remaining<=0}
             style={{ flex:2,padding:'10px 0',
               background:!name.trim()||saving||remaining<=0?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
@@ -532,6 +570,3 @@ function AddModal({ onClose, onCreate, remaining, plan }) {
     </div>
   )
 }
-
-
-
