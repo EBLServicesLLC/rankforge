@@ -315,14 +315,7 @@ export default function DashboardShell({ session, subscription }) {
                 {clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             )}
-            <button onClick={()=>setShowAddModal(true)} disabled={clients.length>=maxClients}
-              style={{ padding:'5px 12px',borderRadius:7,border:'none',
-                background:clients.length>=maxClients?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-                color:clients.length>=maxClients?'#2a4060':'#fff',fontSize:12.5,fontWeight:700,
-                cursor:clients.length>=maxClients?'not-allowed':'pointer',
-                display:'flex',alignItems:'center',gap:5 }}>
-              + Business
-            </button>
+           
             {isToolTab && activeId && (
               <button
                 onClick={()=>{ setIframeReady(false); setIframeSrc('/rankforge3.html?client='+activeId+'&t='+Date.now()) }}
