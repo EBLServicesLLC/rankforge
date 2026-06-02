@@ -6360,6 +6360,31 @@ window.addEventListener('message', function(ev) {
   if (ev.data.type === 'RF_SAAS_PING') {
     ev.source.postMessage({ type: 'RF_READY' }, '*');
   }
+  if (ev.data.type === 'LOAD_DATA' && ev.data.payload) {
+    var p = ev.data.payload;
+    if (p.keys) {
+      if(typeof S!=='undefined'&&S.keys){
+        Object.keys(p.keys).forEach(function(k){if(p.keys[k])S.keys[k]=p.keys[k];});
+        if(typeof persist==='function')persist();
+        if(typeof updateKeyIndicators==='function')updateKeyIndicators();
+      }
+    }
+    if (p.profile) {
+      var pr = p.profile;
+      function sf2(id,val){var el=document.getElementById(id);if(el&&val){el.value=val;el.dispatchEvent(new Event('input'));el.dispatchEvent(new Event('change'));}}
+      sf2('biz-name',pr.bizName);
+      sf2('biz-cat',pr.bizCat);
+      sf2('biz-addr',pr.bizAddr);
+      sf2('biz-city',pr.bizCity);
+      sf2('biz-state',pr.bizState);
+      sf2('biz-zip',pr.bizZip);
+      sf2('biz-phone',pr.bizPhone);
+      sf2('biz-website',pr.bizWebsite);
+      sf2('biz-desc',pr.bizDesc);
+      sf2('biz-kw',pr.bizKw);
+      if(typeof autoSave==='function')autoSave();
+    }
+  }
 });
 // Signal to parent that we're ready
 setTimeout(function() {
