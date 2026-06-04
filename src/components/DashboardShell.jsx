@@ -448,47 +448,58 @@ export default function DashboardShell({ session, subscription }) {
 }
 
 function AddModal({ onClose, onCreate, remaining, plan }) {
-  const [name,setName]=useState(''); const [city,setCity]=useState('');
-  const [cat,setCat]=useState(''); const [desc,setDesc]=useState(''); const [keywords,setKeywords]=useState(''); const [saving,setSaving]=useState(false)
-  const inp = { width:'100%',padding:'9px 12px',background:'#07111f',color:'#e2e8f0',
-    border:'1.5px solid #1a3560',borderRadius:7,fontSize:13.5,outline:'none',boxSizing:'border-box' }
+  const [name,setName]=useState('')
+  const [addr,setAddr]=useState('')
+  const [city,setCity]=useState('')
+  const [state,setState]=useState('')
+  const [zip,setZip]=useState('')
+  const [phone,setPhone]=useState('')
+  const [website,setWebsite]=useState('')
+  const [cat,setCat]=useState('')
+  const [desc,setDesc]=useState('')
+  const [keywords,setKeywords]=useState('')
+  const [saving,setSaving]=useState(false)
+  const CATS = ['Home Services','Restaurant','Healthcare','Finance','Legal','Retail','Real Estate','Automotive','Beauty & Wellness','Education','Technology','General']
+  const inp = { width:'100%',padding:'9px 12px',background:'#07111f',color:'#e2e8f0',border:'1.5px solid #1a3560',borderRadius:7,fontSize:13.5,outline:'none',boxSizing:'border-box' }
+  const lbl = { fontSize:12,fontWeight:600,color:'#60a5fa',marginBottom:4,display:'block' }
   return (
-    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:1000,
-      display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}
+    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}
       onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{ background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:16,
-        padding:'28px 32px',width:'100%',maxWidth:400,boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
+      <div style={{ background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:16,padding:'28px 32px',width:'100%',maxWidth:480,maxHeight:'90vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16 }}>
-          <div style={{ fontSize:17,fontWeight:800,color:'#e2e8f0' }}> Add New Business</div>
-          <button onClick={onClose} style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20 }}></button>
+          <div style={{ fontSize:17,fontWeight:800,color:'#e2e8f0' }}>Add New Business</div>
+          <button onClick={onClose} style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20 }}>x</button>
         </div>
-        <div style={{ background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)',borderRadius:8,
-          padding:'8px 12px',marginBottom:18,fontSize:12,color:'#60a5fa' }}>
-          {remaining>0?`${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`:`All slots used  upgrade for more`}
+        <div style={{ background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)',borderRadius:8,padding:'8px 12px',marginBottom:18,fontSize:12,color:'#60a5fa' }}>
+          {remaining>0?`${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`:`All slots used - upgrade for more`}
         </div>
-        {[{l:'Business Name *',v:name,s:setName,p:'e.g. Austin Plumbing Pros',r:true},
-          {l:'City / State',v:city,s:setCity,p:'e.g. Austin, TX'},
-          {l:'Business Type',v:cat,s:setCat,p:'e.g. Plumber, HVAC, Dentist'},
-          {l:'Business Description',v:desc,s:setDesc,p:'Describe the business in 2-3 sentences...'},
-          {l:'Keywords (comma separated)',v:keywords,s:setKeywords,p:'plumber, drain cleaning, water heater'}
-        ].map(f=>(
-          <div key={f.l} style={{ marginBottom:12 }}>
-            <label style={{ fontSize:12,fontWeight:600,color:'#60a5fa',marginBottom:4,display:'block' }}>{f.l}</label>
-            <input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.p} required={f.r}
-              style={inp}
-              onFocus={e=>e.target.style.borderColor='#3b82f6'}
-              onBlur={e=>e.target.style.borderColor='#1a3560'} />
-          </div>
-        ))}
+        <div style={{ marginBottom:12 }}><label style={lbl}>Business Name *</label>
+          <input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Austin Plumbing Pros" required style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+        <div style={{ marginBottom:12 }}><label style={lbl}>Category</label>
+          <select value={cat} onChange={e=>setCat(e.target.value)} style={{...inp,cursor:'pointer'}}>
+            <option value="">Select category...</option>
+            {CATS.map(c=><option key={c} value={c}>{c}</option>)}
+          </select></div>
+        <div style={{ marginBottom:12 }}><label style={lbl}>Street Address</label>
+          <input value={addr} onChange={e=>setAddr(e.target.value)} placeholder="123 Main St" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+        <div style={{ display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:8,marginBottom:12 }}>
+          <div><label style={lbl}>City</label><input value={city} onChange={e=>setCity(e.target.value)} placeholder="Austin" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+          <div><label style={lbl}>State</label><input value={state} onChange={e=>setState(e.target.value)} placeholder="TX" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+          <div><label style={lbl}>ZIP</label><input value={zip} onChange={e=>setZip(e.target.value)} placeholder="78701" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+        </div>
+        <div style={{ marginBottom:12 }}><label style={lbl}>Phone</label>
+          <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="(512) 555-0100" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+        <div style={{ marginBottom:12 }}><label style={lbl}>Website</label>
+          <input value={website} onChange={e=>setWebsite(e.target.value)} placeholder="https://yourbusiness.com" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+        <div style={{ marginBottom:12 }}><label style={lbl}>Keywords (comma separated)</label>
+          <input value={keywords} onChange={e=>setKeywords(e.target.value)} placeholder="plumber, drain cleaning, water heater" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
+        <div style={{ marginBottom:12 }}><label style={lbl}>Business Description</label>
+          <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Describe the business in 2-3 sentences..." rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}} /></div>
         <div style={{ display:'flex',gap:10,marginTop:18 }}>
-          <button onClick={onClose} style={{ flex:1,padding:'10px 0',background:'transparent',color:'#4a6080',
-            border:'1px solid #1a3560',borderRadius:8,fontSize:13.5,fontWeight:600,cursor:'pointer' }}>Cancel</button>
-          <button onClick={async()=>{ if(!name.trim()||saving||remaining<=0)return; setSaving(true); await onCreate({name:name.trim(),city:city.trim(),category:cat.trim(),desc:desc.trim(),keywords:keywords.trim()}); setSaving(false) }}
+          <button onClick={onClose} style={{ flex:1,padding:'10px 0',background:'transparent',color:'#4a6080',border:'1px solid #1a3560',borderRadius:8,fontSize:13.5,fontWeight:600,cursor:'pointer' }}>Cancel</button>
+          <button onClick={async()=>{ if(!name.trim()||saving||remaining<=0)return; setSaving(true); await onCreate({name:name.trim(),addr:addr.trim(),city:city.trim(),state:state.trim(),zip:zip.trim(),phone:phone.trim(),website:website.trim(),category:cat,desc:desc.trim(),keywords:keywords.trim()}); setSaving(false) }}
             disabled={!name.trim()||saving||remaining<=0}
-            style={{ flex:2,padding:'10px 0',
-              background:!name.trim()||saving||remaining<=0?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-              color:!name.trim()||saving||remaining<=0?'#2a4060':'#fff',border:'none',borderRadius:8,
-              fontSize:13.5,fontWeight:700,cursor:'pointer' }}>
+            style={{ flex:2,padding:'10px 0',background:!name.trim()||saving||remaining<=0?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',color:!name.trim()||saving||remaining<=0?'#2a4060':'#fff',border:'none',borderRadius:8,fontSize:13.5,fontWeight:700,cursor:'pointer' }}>
             {saving?'Creating...':'Create Business'}
           </button>
         </div>
