@@ -224,7 +224,7 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
         await supabase.from('subscriptions').update({ onboarding_step:4 }).eq('user_id', userId)
       }
       if (step === 4) {
-        await supabase.from('settings').upsert({ user_id:userId, agency_name:branding.agencyName, brand_color:branding.brandColor, agency_tagline:branding.tagline }, { onConflict:'user_id' })
+        await supabase.from('settings').upsert({ user_id:userId, agency_name:branding.agencyName||profile.bizName, brand_color:branding.brandColor, agency_tagline:branding.tagline||'' }, { onConflict:'user_id' })
         await supabase.from('subscriptions').update({ onboarding_step:5 }).eq('user_id', userId)
       }
       if (step === 5) {
@@ -355,7 +355,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
               <div style={{ background:'rgba(255,255,255,.04)', borderRadius:10, padding:'14px 16px', border:'1px solid #1a3560' }}>
                 <div style={{ fontSize:13, color:'#64748b', lineHeight:1.6 }}>
                   <strong style={{ color:'#94a3b8' }}>Testing?</strong> Use key <code style={{ background:'#e2e8f0', padding:'1px 6px', borderRadius:4, fontSize:12 }}>RFA-SOLO-TEST-0001</code> to try the wizard.
-                  <br/>Don't have a key? <a href="#" style={{ color:'#60a5fa', fontWeight:600 }}>Purchase a plan </a>
+                  <br/>Don't have a key? <a href="#" onClick={e=>{e.preventDefault();supabase.auth.signOut()}} style={{ color:'#60a5fa', fontWeight:600 }}>Sign out &amp; purchase a plan</a>
                 </div>
               </div>
             </div>
