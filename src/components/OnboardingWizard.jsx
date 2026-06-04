@@ -128,23 +128,6 @@ const API_GUIDES = [
   },
 ]
 
-function mapCategory(input) {
-  if (!input) return 'General'
-  const s = input.toLowerCase()
-  if (/plumb|hvac|electric|roof|landscap|paint|clean|handyman|pest|pool|garage|fence|gutter|window|flooring|carpet|appli|mover|storage|junk|tree|lawn|snow/.test(s)) return 'Home Services'
-  if (/restaurant|food|pizza|burger|cafe|coffee|bakery|catering|diner|sushi|taco|bar|pub|grill/.test(s)) return 'Restaurant'
-  if (/doctor|dentist|medical|health|clinic|therapy|chiro|optom|vet|pharmacy|hospital|mental/.test(s)) return 'Healthcare'
-  if (/financ|bank|account|tax|insurance|invest|mortgage|loan|credit/.test(s)) return 'Finance'
-  if (/law|legal|attorney|lawyer/.test(s)) return 'Legal'
-  if (/retail|shop|store|boutique|gift/.test(s)) return 'Retail'
-  if (/real estate|realtor|property|realty/.test(s)) return 'Real Estate'
-  if (/auto|car|mechanic|tire|body shop|detailing|towing/.test(s)) return 'Automotive'
-  if (/salon|spa|beauty|hair|nail|massage|barber|skin/.test(s)) return 'Beauty & Wellness'
-  if (/school|tutor|coach|training|education|daycare|preschool/.test(s)) return 'Education'
-  if (/tech|software|it |computer|web|app|digital|seo/.test(s)) return 'Technology'
-  return 'General'
-}
-
 export default function OnboardingWizard({ userId, userEmail, onComplete }) {
   const [step, setStep]       = useState(0)
   const [saving, setSaving]   = useState(false)
@@ -234,7 +217,7 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
               client_id:client.id, user_id:userId,
   biz_name:profile.bizName, biz_addr:profile.addr, biz_city:profile.city,
 biz_state:profile.state, biz_zip:profile.zip,
-biz_cat:mapCategory(profile.category), biz_phone:profile.phone, biz_website:profile.website,
+biz_cat:profile.category, biz_phone:profile.phone, biz_website:profile.website,
 biz_desc:profile.desc, biz_kw:profile.keywords,
             })
           }
@@ -691,13 +674,17 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
 
           {/* Navigation */}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:28, paddingTop:20, borderTop:'1px solid #1a3560' }}>
-            <button onClick={prevStep} disabled={step===0} style={{
-              padding:'11px 24px', borderRadius:8, fontSize:14, fontWeight:600, cursor: step===0?'not-allowed':'pointer',
-              background:'rgba(255,255,255,.05)', color: step===0?'#1a3560':'#7a9ab8', border:'1.5px solid #1a3560',
-            }}>
-               Back
-            </button>
-            <div style={{ fontSize:12, color:'#1a3560' }}>Step {step+1} of {STEPS.length}</div>
+            {step === 0 ? (
+              <button onClick={()=>{ supabase.auth.signOut(); window.location.reload() }} style={{
+                padding:'11px 24px', borderRadius:8, fontSize:14, fontWeight:600, cursor:'pointer',
+                background:'transparent', color:'#f87171', border:'1.5px solid rgba(239,68,68,.3)',
+              }}>Sign Out</button>
+            ) : (
+              <button onClick={prevStep} style={{
+                padding:'11px 24px', borderRadius:8, fontSize:14, fontWeight:600, cursor:'pointer',
+                background:'rgba(255,255,255,.05)', color:'#7a9ab8', border:'1.5px solid #1a3560',
+              }}>Back</button>
+            )}            <div style={{ fontSize:12, color:'#1a3560' }}>Step {step+1} of {STEPS.length}</div>
             <button onClick={nextStep} disabled={saving||(step===0&&!keyValid)} style={{
               padding:'11px 28px', borderRadius:8, border:'none', fontSize:14, fontWeight:700,
               cursor:(saving||(step===0&&!keyValid))?'not-allowed':'pointer',
