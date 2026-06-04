@@ -217,7 +217,7 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
               client_id:client.id, user_id:userId,
   biz_name:profile.bizName, biz_addr:profile.addr, biz_city:profile.city,
 biz_state:profile.state, biz_zip:profile.zip,
-biz_cat:profile.category, biz_phone:profile.phone, biz_website:profile.website,
+biz_cat:mapCategory(profile.category), biz_phone:profile.phone, biz_website:profile.website,
 biz_desc:profile.desc, biz_kw:profile.keywords,
             })
           }
@@ -337,35 +337,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
               <div style={{ background:'rgba(255,255,255,.04)', borderRadius:10, padding:'14px 16px', border:'1px solid #1a3560' }}>
                 <div style={{ fontSize:13, color:'#64748b', lineHeight:1.6 }}>
                   <strong style={{ color:'#94a3b8' }}>Testing?</strong> Use key <code style={{ background:'#e2e8f0', padding:'1px 6px', borderRadius:4, fontSize:12 }}>RFA-SOLO-TEST-0001</code> to try the wizard.
-                  </div>
-                <div style={{ fontSize:13, color:'#94a3b8', fontWeight:600, marginBottom:10 }}>Don't have a key? Choose a plan:</div>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                  {[
-                    { label:'Solopreneur', price:'$97/mo',  priceId:'price_1TdJajLQRnOj0qLPQmbNz2kN', color:'#3b82f6' },
-                    { label:'Deluxe',      price:'$197/mo', priceId:'price_1TdJbkLQRnOj0qLPJPfsQsJI', color:'#8b5cf6' },
-                    { label:'Pro',         price:'$397/mo', priceId:'price_1TdJczLQRnOj0qLPa7nat9Hi', color:'#06b6d4' },
-                    { label:'Agency',      price:'$997/mo', priceId:'price_1TdJdnLQRnOj0qLPv56ml87r', color:'#10b981' },
-                  ].map(plan => (
-                    <button key={plan.label} onClick={async () => {
-                      try {
-                        const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/stripe-checkout', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU' },
-                          body: JSON.stringify({ price_id: plan.priceId, user_id: userId, user_email: userEmail, success_url: window.location.origin + '/?activated=1', cancel_url: window.location.origin })
-                        })
-                        const data = await res.json()
-                        if (data.url) window.location.href = data.url
-                        else alert('Error: ' + (data.error || 'No URL returned'))
-                      } catch(e) { alert('Checkout error: ' + e.message) }
-                    }} style={{
-                      padding:'10px 8px', borderRadius:8, border:'1px solid ' + plan.color,
-                      background:'transparent', color:plan.color, cursor:'pointer',
-                      fontSize:12.5, fontWeight:700, textAlign:'center'
-                    }}>
-                      <div>{plan.label}</div>
-                      <div style={{ fontSize:11, fontWeight:400, opacity:.8 }}>{plan.price}</div>
-                    </button>
-                  ))}
+                  <br/>Don't have a key? <a href="#" style={{ color:'#60a5fa', fontWeight:600 }}>Purchase a plan </a>
                 </div>
               </div>
             </div>
@@ -675,16 +647,17 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
           {/* Navigation */}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:28, paddingTop:20, borderTop:'1px solid #1a3560' }}>
             {step === 0 ? (
-              <button onClick={()=>{ supabase.auth.signOut(); window.location.reload() }} style={{
+              <button onClick={()=>{ supabase.auth.signOut().then(()=>window.location.reload()) }} style={{
                 padding:'11px 24px', borderRadius:8, fontSize:14, fontWeight:600, cursor:'pointer',
-                background:'transparent', color:'#f87171', border:'1.5px solid rgba(239,68,68,.3)',
-              }}>Sign Out</button>
+                background:'transparent', color:'#60a5fa', border:'1.5px solid #1a3560',
+              }}>Sign In</button>
             ) : (
               <button onClick={prevStep} style={{
                 padding:'11px 24px', borderRadius:8, fontSize:14, fontWeight:600, cursor:'pointer',
                 background:'rgba(255,255,255,.05)', color:'#7a9ab8', border:'1.5px solid #1a3560',
               }}>Back</button>
-            )}            <div style={{ fontSize:12, color:'#1a3560' }}>Step {step+1} of {STEPS.length}</div>
+            )}
+            <div style={{ fontSize:12, color:'#1a3560' }}>Step {step+1} of {STEPS.length}</div>
             <button onClick={nextStep} disabled={saving||(step===0&&!keyValid)} style={{
               padding:'11px 28px', borderRadius:8, border:'none', fontSize:14, fontWeight:700,
               cursor:(saving||(step===0&&!keyValid))?'not-allowed':'pointer',
@@ -692,7 +665,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
               color:(saving||(step===0&&!keyValid))?'#94a3b8':'#fff',
               boxShadow:(saving||(step===0&&!keyValid))?'none':'0 4px 12px rgba(59,130,246,.35)',
             }}>
-              {saving?'Saving...':step===5?' Launch RankForged AI':'Continue '}
+              {saving?'Saving...':step===5?'Launch RankForged AI':'Continue'}
             </button>
           </div>
         </div>
