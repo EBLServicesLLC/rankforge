@@ -1,5 +1,4 @@
 import BillingPage from './BillingPage'
-import ProfileModal from './ProfileModal'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useClients } from '../hooks/useClients'
@@ -61,7 +60,7 @@ export default function DashboardShell({ session, subscription }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [iframeReady, setIframeReady] = useState(false)
   const [showBilling, setShowBilling] = useState(false)
-  const [showProfile, setShowProfile] = useState(false)
+  const [darkMode, setDarkMode] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [iframeSrc, setIframeSrc]     = useState('')
   const iframeRef = useRef(null)
@@ -72,30 +71,30 @@ export default function DashboardShell({ session, subscription }) {
   const plan = subscription?.plan || 'solopreneur'
   const maxClients = subscription?.max_clients || 1
 
-  //  Load iframe when client selected 
+  // â”€â”€ Load iframe when client selected â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!activeId) return
     setIframeReady(false)
     setIframeSrc('/rankforge3.html?client=' + activeId + '&t=' + Date.now())
   }, [activeId]) // eslint-disable-line
 
-  //  Switch tab by clicking the real button inside iframe 
+  // â”€â”€ Switch tab by clicking the real button inside iframe â”€â”€
   const switchTab = useCallback((tabId) => {
     setActiveTab(tabId)
-    // postMessage only  contentDocument is inaccessible (confirmed null)
+    // postMessage only â€” contentDocument is inaccessible (confirmed null)
     iframeRef.current?.contentWindow?.postMessage(
       { type: 'SWITCH_TAB', payload: { tab: tabId } }, '*'
     )
   }, [])
 
-  //  After iframe loads: inject CSS + switch to active tab 
+  // â”€â”€ After iframe loads: inject CSS + switch to active tab â”€
   const onIframeLoad = useCallback(() => {
     setIframeReady(true)
     // rankforge3 detects it's in an iframe and hides its own sidebar automatically
     // Tab switching happens via postMessage when RF_APP_READY fires
   }, [])
 
-  // Listen for RF_APP_READY  rankforge3 sends this when fully initialised
+  // Listen for RF_APP_READY â€” rankforge3 sends this when fully initialised
   useEffect(() => {
     const handler = async (e) => {
       if (e.data?.type === 'RF_BILLING') {
@@ -171,7 +170,7 @@ export default function DashboardShell({ session, subscription }) {
   useEffect(() => {
     if (!activeId || activeTab === 'clients' || activeTab === 'dash') return
     pendingTabRef.current = activeTab
-    // postMessage is the ONLY way  contentDocument is null (cross-origin restriction)
+    // postMessage is the ONLY way â€” contentDocument is null (cross-origin restriction)
     iframeRef.current?.contentWindow?.postMessage(
       { type: 'SWITCH_TAB', payload: { tab: activeTab } }, '*'
     )
@@ -187,11 +186,16 @@ export default function DashboardShell({ session, subscription }) {
   const isToolTab = activeTab !== 'clients'
   const currentTab = ALL_TABS.find(t => t.id === activeTab)
 
+  const bg = darkMode ? '#060d1a' : '#f0f4f8'
+  const bg2 = darkMode ? '#080f1e' : '#ffffff'
+  const text1 = darkMode ? '#e2e8f0' : '#1a2a3a'
+  const border = darkMode ? '#0f2040' : '#d0dce8'
+
   return (
-    <div style={{ display:'flex', height:'100vh', background:'#060d1a',
+    <div style={{ display:'flex', height:'100vh', background:bg,
       fontFamily:"'Segoe UI',system-ui,sans-serif", overflow:'hidden' }}>
 
-      {/*  SIDEBAR  */}
+      {/* â•â• SIDEBAR â•â• */}
       <div style={{
         width: sidebarOpen ? 228 : 0, minWidth: sidebarOpen ? 228 : 0,
         background:'#080f1e', borderRight:'1px solid #0f2040',
@@ -286,7 +290,7 @@ export default function DashboardShell({ session, subscription }) {
                 {session.user.email}
               </div>
             </div>
-            <span style={{ color:'#1a3560',fontSize:9 }}>{userMenuOpen?'':''}</span>
+            <span style={{ color:'#1a3560',fontSize:9 }}>{userMenuOpen?'â–²':'â–¼'}</span>
           </div>
           {userMenuOpen && (
             <div style={{ position:'absolute',bottom:'100%',left:8,right:8,background:'#0d1f3c',
@@ -295,14 +299,14 @@ export default function DashboardShell({ session, subscription }) {
               <button onClick={signOut} style={{ width:'100%',padding:'8px 12px',background:'transparent',
                 color:'#f87171',border:'none',borderRadius:7,fontSize:13,fontWeight:600,
                 cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:8 }}>
-                 Sign Out
+                ðŸšª Sign Out
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/*  MAIN  */}
+      {/* â•â• MAIN â•â• */}
       <div style={{ flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0,margin:0,padding:0 }}>
 
         {/* Topbar */}
@@ -310,7 +314,7 @@ export default function DashboardShell({ session, subscription }) {
           display:'flex',alignItems:'center',padding:'0 14px',gap:10 }}>
           <button onClick={()=>setSidebarOpen(o=>!o)}
             style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20,padding:'4px',borderRadius:6,lineHeight:1,flexShrink:0 }}>
-            
+            â˜°
           </button>
           <div style={{ flex:1,display:'flex',alignItems:'center',gap:8,minWidth:0,overflow:'hidden' }}>
             {activeClient && isToolTab && (
@@ -323,7 +327,7 @@ export default function DashboardShell({ session, subscription }) {
                   overflow:'hidden',textOverflow:'ellipsis',maxWidth:140 }}>
                   {activeClient.name}
                 </span>
-                <span style={{ color:'#1a3050',flexShrink:0 }}></span>
+                <span style={{ color:'#1a3050',flexShrink:0 }}>â€º</span>
               </>
             )}
             <span style={{ fontSize:12.5,color:'#4a6080',fontWeight:500,whiteSpace:'nowrap' }}>
@@ -339,44 +343,23 @@ export default function DashboardShell({ session, subscription }) {
                 {clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             )}
-            <div style={{ position:'relative' }}>
-              <button onClick={()=>setUserMenuOpen(o=>!o)} style={{
-                display:'flex',alignItems:'center',gap:7,padding:'6px 12px',
-                background:'rgba(59,130,246,.08)',border:'1px solid #1a3560',
-                borderRadius:8,cursor:'pointer',color:'#93c5fd',fontSize:12.5,fontWeight:600
-              }}>
-                <div style={{ width:22,height:22,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-                  display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'#fff' }}>
-                  {session.user.email.charAt(0).toUpperCase()}
-                </div>
-                My Profile
+            <button onClick={()=>setShowAddModal(true)} disabled={clients.length>=maxClients}
+              style={{ padding:'5px 12px',borderRadius:7,border:'none',
+                background:clients.length>=maxClients?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                color:clients.length>=maxClients?'#2a4060':'#fff',fontSize:12.5,fontWeight:700,
+                cursor:clients.length>=maxClients?'not-allowed':'pointer',
+                display:'flex',alignItems:'center',gap:5 }}>
+              + Business
+            </button>
+            {isToolTab && activeId && (
+              <button
+                onClick={()=>{ setIframeReady(false); setIframeSrc('/rankforge3.html?client='+activeId+'&t='+Date.now()) }}
+                title="Reload tool"
+                style={{ background:'rgba(59,130,246,.08)',border:'1px solid #1a3560',color:'#4a7adb',
+                  borderRadius:7,padding:'5px 9px',cursor:'pointer',fontSize:14 }}>
+                â†»
               </button>
-              {userMenuOpen && (
-                <div style={{ position:'absolute',top:'calc(100% + 6px)',right:0,
-                  background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:10,
-                  padding:6,minWidth:210,zIndex:999,boxShadow:'0 8px 24px rgba(0,0,0,.5)' }}>
-                  <div style={{ padding:'6px 12px 8px',borderBottom:'1px solid #1a3560',marginBottom:4 }}>
-                    <div style={{ fontSize:12,fontWeight:600,color:'#7ab4ff' }}>{session.user.email}</div>
-                  </div>
-                  {[
-                    { label:'View Profile',        action:()=>{ setShowProfile(true); setUserMenuOpen(false) } },
-                    { label:'Plans and Billing',   action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
-                    { label:'Upgrade Plan',        action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
-                    { label:'Cancel Subscription', action:()=>{ setShowBilling(true); setUserMenuOpen(false) } },
-                    { label:'Reset Password',      action:()=>{ supabase.auth.resetPasswordForEmail(session.user.email); setUserMenuOpen(false); alert('Password reset email sent to ' + session.user.email) } },
-                    { label:'Sign Out',            action:()=>{ signOut(); setUserMenuOpen(false) }, red:true },
-                  ].map(item => (
-                    <button key={item.label} onClick={item.action} style={{
-                      width:'100%',padding:'8px 12px',background:'transparent',
-                      color:item.red?'#f87171':'#c8d8f0',border:'none',borderRadius:7,
-                      fontSize:13,fontWeight:500,cursor:'pointer',textAlign:'left'
-                    }}>
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
@@ -404,7 +387,7 @@ export default function DashboardShell({ session, subscription }) {
             {!activeId && (
               <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',
                 alignItems:'center',justifyContent:'center',gap:16,background:'#060d1a',zIndex:5 }}>
-                <div style={{ fontSize:48 }}></div>
+                <div style={{ fontSize:48 }}>ðŸ¢</div>
                 <div style={{ fontSize:16,fontWeight:700,color:'#e2e8f0' }}>No business selected</div>
                 <button onClick={()=>setActiveTab('clients')}
                   style={{ padding:'10px 24px',background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
@@ -450,17 +433,6 @@ export default function DashboardShell({ session, subscription }) {
     />
   </div>
 )}
-      {showProfile && (
-        <ProfileModal
-          session={session}
-          activeId={activeId || (clients.length > 0 ? clients[0].id : null)}
-          subscription={subscription}
-          onClose={()=>setShowProfile(false)}
-          onResetPassword={async()=>{ await supabase.auth.resetPasswordForEmail(session.user.email); alert('Password reset email sent to ' + session.user.email) }}
-          onBilling={()=>{ setShowProfile(false); setShowBilling(true) }}
-          iframeRef={iframeRef}
-        />
-      )}
       {showAddModal && (
         <AddModal
           onClose={()=>setShowAddModal(false)}
@@ -482,58 +454,47 @@ export default function DashboardShell({ session, subscription }) {
 }
 
 function AddModal({ onClose, onCreate, remaining, plan }) {
-  const [name,setName]=useState('')
-  const [addr,setAddr]=useState('')
-  const [city,setCity]=useState('')
-  const [state,setState]=useState('')
-  const [zip,setZip]=useState('')
-  const [phone,setPhone]=useState('')
-  const [website,setWebsite]=useState('')
-  const [cat,setCat]=useState('')
-  const [desc,setDesc]=useState('')
-  const [keywords,setKeywords]=useState('')
-  const [saving,setSaving]=useState(false)
-  const CATS = ['Home Services','Restaurant','Healthcare','Finance','Legal','Retail','Real Estate','Automotive','Beauty & Wellness','Education','Technology','General']
-  const inp = { width:'100%',padding:'9px 12px',background:'#07111f',color:'#e2e8f0',border:'1.5px solid #1a3560',borderRadius:7,fontSize:13.5,outline:'none',boxSizing:'border-box' }
-  const lbl = { fontSize:12,fontWeight:600,color:'#60a5fa',marginBottom:4,display:'block' }
+  const [name,setName]=useState(''); const [city,setCity]=useState('');
+  const [cat,setCat]=useState(''); const [desc,setDesc]=useState(''); const [keywords,setKeywords]=useState(''); const [saving,setSaving]=useState(false)
+  const inp = { width:'100%',padding:'9px 12px',background:'#07111f',color:'#e2e8f0',
+    border:'1.5px solid #1a3560',borderRadius:7,fontSize:13.5,outline:'none',boxSizing:'border-box' }
   return (
-    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}
+    <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:1000,
+      display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}
       onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{ background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:16,padding:'28px 32px',width:'100%',maxWidth:480,maxHeight:'90vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
+      <div style={{ background:'#0d1f3c',border:'1px solid #1a3560',borderRadius:16,
+        padding:'28px 32px',width:'100%',maxWidth:400,boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16 }}>
-          <div style={{ fontSize:17,fontWeight:800,color:'#e2e8f0' }}>Add New Business</div>
-          <button onClick={onClose} style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20 }}>x</button>
+          <div style={{ fontSize:17,fontWeight:800,color:'#e2e8f0' }}>âž• Add New Business</div>
+          <button onClick={onClose} style={{ background:'transparent',border:'none',color:'#3a5080',cursor:'pointer',fontSize:20 }}>Ã—</button>
         </div>
-        <div style={{ background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)',borderRadius:8,padding:'8px 12px',marginBottom:18,fontSize:12,color:'#60a5fa' }}>
-          {remaining>0?`${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`:`All slots used - upgrade for more`}
+        <div style={{ background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.2)',borderRadius:8,
+          padding:'8px 12px',marginBottom:18,fontSize:12,color:'#60a5fa' }}>
+          {remaining>0?`${remaining} slot${remaining>1?'s':''} remaining on ${plan} plan`:`All slots used â€” upgrade for more`}
         </div>
-        <div style={{ marginBottom:12 }}><label style={lbl}>Business Name *</label>
-          <input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Austin Plumbing Pros" required style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
-        <div style={{ marginBottom:12 }}><label style={lbl}>Category</label>
-          <select value={cat} onChange={e=>setCat(e.target.value)} style={{...inp,cursor:'pointer'}}>
-            <option value="">Select category...</option>
-            {CATS.map(c=><option key={c} value={c}>{c}</option>)}
-          </select></div>
-        <div style={{ marginBottom:12 }}><label style={lbl}>Street Address</label>
-          <input value={addr} onChange={e=>setAddr(e.target.value)} placeholder="123 Main St" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
-        <div style={{ display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:8,marginBottom:12 }}>
-          <div><label style={lbl}>City</label><input value={city} onChange={e=>setCity(e.target.value)} placeholder="Austin" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
-          <div><label style={lbl}>State</label><input value={state} onChange={e=>setState(e.target.value)} placeholder="TX" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
-          <div><label style={lbl}>ZIP</label><input value={zip} onChange={e=>setZip(e.target.value)} placeholder="78701" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
-        </div>
-        <div style={{ marginBottom:12 }}><label style={lbl}>Phone</label>
-          <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="(512) 555-0100" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
-        <div style={{ marginBottom:12 }}><label style={lbl}>Website</label>
-          <input value={website} onChange={e=>setWebsite(e.target.value)} placeholder="https://yourbusiness.com" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
-        <div style={{ marginBottom:12 }}><label style={lbl}>Keywords (comma separated)</label>
-          <input value={keywords} onChange={e=>setKeywords(e.target.value)} placeholder="plumber, drain cleaning, water heater" style={inp} onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#1a3560'} /></div>
-        <div style={{ marginBottom:12 }}><label style={lbl}>Business Description</label>
-          <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Describe the business in 2-3 sentences..." rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}} /></div>
+        {[{l:'Business Name *',v:name,s:setName,p:'e.g. Austin Plumbing Pros',r:true},
+          {l:'City / State',v:city,s:setCity,p:'e.g. Austin, TX'},
+          {l:'Business Type',v:cat,s:setCat,p:'e.g. Plumber, HVAC, Dentist'},
+          {l:'Business Description',v:desc,s:setDesc,p:'Describe the business in 2-3 sentences...'},
+          {l:'Keywords (comma separated)',v:keywords,s:setKeywords,p:'plumber, drain cleaning, water heater'}
+        ].map(f=>(
+          <div key={f.l} style={{ marginBottom:12 }}>
+            <label style={{ fontSize:12,fontWeight:600,color:'#60a5fa',marginBottom:4,display:'block' }}>{f.l}</label>
+            <input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.p} required={f.r}
+              style={inp}
+              onFocus={e=>e.target.style.borderColor='#3b82f6'}
+              onBlur={e=>e.target.style.borderColor='#1a3560'} />
+          </div>
+        ))}
         <div style={{ display:'flex',gap:10,marginTop:18 }}>
-          <button onClick={onClose} style={{ flex:1,padding:'10px 0',background:'transparent',color:'#4a6080',border:'1px solid #1a3560',borderRadius:8,fontSize:13.5,fontWeight:600,cursor:'pointer' }}>Cancel</button>
-          <button onClick={async()=>{ if(!name.trim()||saving||remaining<=0)return; setSaving(true); await onCreate({name:name.trim(),addr:addr.trim(),city:city.trim(),state:state.trim(),zip:zip.trim(),phone:phone.trim(),website:website.trim(),category:cat,desc:desc.trim(),keywords:keywords.trim()}); setSaving(false) }}
+          <button onClick={onClose} style={{ flex:1,padding:'10px 0',background:'transparent',color:'#4a6080',
+            border:'1px solid #1a3560',borderRadius:8,fontSize:13.5,fontWeight:600,cursor:'pointer' }}>Cancel</button>
+          <button onClick={async()=>{ if(!name.trim()||saving||remaining<=0)return; setSaving(true); await onCreate({name:name.trim(),city:city.trim(),category:cat.trim(),desc:desc.trim(),keywords:keywords.trim()}); setSaving(false) }}
             disabled={!name.trim()||saving||remaining<=0}
-            style={{ flex:2,padding:'10px 0',background:!name.trim()||saving||remaining<=0?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',color:!name.trim()||saving||remaining<=0?'#2a4060':'#fff',border:'none',borderRadius:8,fontSize:13.5,fontWeight:700,cursor:'pointer' }}>
+            style={{ flex:2,padding:'10px 0',
+              background:!name.trim()||saving||remaining<=0?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+              color:!name.trim()||saving||remaining<=0?'#2a4060':'#fff',border:'none',borderRadius:8,
+              fontSize:13.5,fontWeight:700,cursor:'pointer' }}>
             {saving?'Creating...':'Create Business'}
           </button>
         </div>
