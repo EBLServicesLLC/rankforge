@@ -317,39 +317,6 @@ const handleForgot = async () => {
         </div>
       </div>
 
-        <div style={{ marginTop:28, width:'100%' }}>
-          <div style={{ textAlign:'center', fontSize:12, color:'#2a3a54', marginBottom:12 }}>
-            New to RankForged AI? Choose a plan to get started:
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-            {[
-              { label:'Solopreneur', price:'$97/mo',  priceId:'price_1TdJajLQRnOj0qLPQmbNz2kN', color:'#3b82f6' },
-              { label:'Deluxe',      price:'$197/mo', priceId:'price_1TdJbkLQRnOj0qLPJPfsQsJI', color:'#8b5cf6' },
-              { label:'Pro',         price:'$397/mo', priceId:'price_1TdJczLQRnOj0qLPa7nat9Hi', color:'#06b6d4' },
-              { label:'Agency',      price:'$997/mo', priceId:'price_1TdJdnLQRnOj0qLPv56ml87r', color:'#10b981' },
-            ].map(plan => (
-              <button key={plan.label} onClick={async () => {
-                try {
-                  const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/stripe-checkout', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU' },
-                    body: JSON.stringify({ price_id: plan.priceId, success_url: window.location.origin + '/?activated=1', cancel_url: window.location.origin })
-                  })
-                  const data = await res.json()
-                  if (data.url) window.location.href = data.url
-                } catch(e) { alert('Checkout error: ' + e.message) }
-              }} style={{
-                padding:'10px 8px', borderRadius:8,
-                border:'1px solid ' + plan.color,
-                background:'transparent', color:plan.color,
-                cursor:'pointer', fontSize:12.5, fontWeight:700, textAlign:'center'
-              }}>
-                <div>{plan.label}</div>
-                <div style={{ fontSize:11, fontWeight:400, opacity:.8 }}>{plan.price}</div>
-              </button>
-            ))}
-          </div>
-        </div>
       {/* ── Responsive: hide left panel on small screens ── */}
       <style>{`
         @media (max-width: 768px) {
