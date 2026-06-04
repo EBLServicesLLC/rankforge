@@ -258,7 +258,6 @@ const handleForgot = async () => {
           )}
 
           {error   && <div style={{ color:'#ff5a5a', fontSize:13, marginBottom:12, padding:'8px 12px', background:'rgba(255,90,90,.08)', borderRadius:8 }}>{error}</div>}
-          {error   && <div style={{ color:'#ff5a5a', fontSize:13, marginBottom:12, padding:'8px 12px', background:'rgba(255,90,90,.08)', borderRadius:8 }}>{error}</div>}
           {message && <div style={{ color:'#34c759', fontSize:13, marginBottom:12, padding:'8px 12px', background:'rgba(52,199,89,.08)', borderRadius:8 }}>{message}</div>}
 {mode === 'forgot' && (
             <div style={{ marginBottom: 12, fontSize: 13, color: '#6b82aa' }}>
