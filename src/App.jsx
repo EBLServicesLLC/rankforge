@@ -133,18 +133,29 @@ export default function App() {
   // Not logged in
   if (!session) return <AuthPage />
 
-  // No subscription — send to billing first
+  // Billing action (from dashboard topbar)
+  if (new URLSearchParams(window.location.search).get('action') === 'billing') {
+    return (
+      <BillingPage
+        userId={session.user.id}
+        userEmail={session.user.email}
+        onBack={() => { window.history.replaceState({}, '', '/'); window.location.reload() }}
+      />
+    )
+  }
+
+  // Logged in, no subscription — pay first
   if (!subscription) {
     return (
       <BillingPage
         userId={session.user.id}
         userEmail={session.user.email}
-        onBack={() => {}}
+        onBack={() => supabase.auth.signOut()}
       />
     )
   }
 
-  // Subscription exists but onboarding incomplete
+  // Subscription exists but onboarding not complete
   if (!subscription.onboarding_completed) {
     return (
       <OnboardingWizard
@@ -160,12 +171,6 @@ export default function App() {
         }}
       />
     )
-  }
-
-  // Billing action
-  if (new URLSearchParams(window.location.search).get('action') === 'billing') {
-    return <BillingPage userId={session.user.id} userEmail={session.user.email}
-      onBack={() => { window.history.replaceState({}, '', '/'); window.location.reload() }} />
   }
 
   // Fully onboarded - show main dashboard
