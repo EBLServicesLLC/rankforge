@@ -133,8 +133,19 @@ export default function App() {
   // Not logged in
   if (!session) return <AuthPage />
 
-  // Logged in but no subscription or onboarding incomplete
-  if (!subscription || !subscription.onboarding_completed) {
+  // No subscription — send to billing first
+  if (!subscription) {
+    return (
+      <BillingPage
+        userId={session.user.id}
+        userEmail={session.user.email}
+        onBack={() => {}}
+      />
+    )
+  }
+
+  // Subscription exists but onboarding incomplete
+  if (!subscription.onboarding_completed) {
     return (
       <OnboardingWizard
         userId={session.user.id}
