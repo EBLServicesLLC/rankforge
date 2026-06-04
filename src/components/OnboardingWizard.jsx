@@ -128,6 +128,7 @@ const API_GUIDES = [
   },
 ]
 
+
 function mapCategory(input) {
   if (!input) return 'General'
   const s = input.toLowerCase()
@@ -389,7 +390,10 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
                 </div>
                 <div>
                   <label style={lbl}>Business Category</label>
-                  <input value={profile.category} onChange={e=>setProfile(p=>({...p,category:e.target.value}))} placeholder="e.g. Plumber, HVAC, Dentist" style={inp} />
+                  <select value={profile.category} onChange={e=>setProfile(p=>({...p,category:e.target.value}))} style={{...inp,cursor:'pointer'}}>
+                    <option value="">Select category...</option>
+                    {['Home Services','Restaurant','Healthcare','Finance','Legal','Retail','Real Estate','Automotive','Beauty & Wellness','Education','Technology','General'].map(c=><option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label style={lbl}>Phone Number</label>
@@ -663,17 +667,12 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
 
           {/* Navigation */}
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:28, paddingTop:20, borderTop:'1px solid #1a3560' }}>
-            {step === 0 ? (
-              <button onClick={()=>{ supabase.auth.signOut().then(()=>window.location.reload()) }} style={{
-                padding:'11px 24px', borderRadius:8, fontSize:14, fontWeight:600, cursor:'pointer',
-                background:'transparent', color:'#60a5fa', border:'1.5px solid #1a3560',
-              }}>Sign In</button>
-            ) : (
-              <button onClick={prevStep} style={{
-                padding:'11px 24px', borderRadius:8, fontSize:14, fontWeight:600, cursor:'pointer',
-                background:'rgba(255,255,255,.05)', color:'#7a9ab8', border:'1.5px solid #1a3560',
-              }}>Back</button>
-            )}
+            <button onClick={prevStep} disabled={step===0} style={{
+              padding:'11px 24px', borderRadius:8, fontSize:14, fontWeight:600, cursor: step===0?'not-allowed':'pointer',
+              background:'rgba(255,255,255,.05)', color: step===0?'#1a3560':'#7a9ab8', border:'1.5px solid #1a3560',
+            }}>
+               Back
+            </button>
             <div style={{ fontSize:12, color:'#1a3560' }}>Step {step+1} of {STEPS.length}</div>
             <button onClick={nextStep} disabled={saving||(step===0&&!keyValid)} style={{
               padding:'11px 28px', borderRadius:8, border:'none', fontSize:14, fontWeight:700,
@@ -682,7 +681,7 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
               color:(saving||(step===0&&!keyValid))?'#94a3b8':'#fff',
               boxShadow:(saving||(step===0&&!keyValid))?'none':'0 4px 12px rgba(59,130,246,.35)',
             }}>
-              {saving?'Saving...':step===5?'Launch RankForged AI':'Continue'}
+              {saving?'Saving...':step===5?' Launch RankForged AI':'Continue '}
             </button>
           </div>
         </div>
