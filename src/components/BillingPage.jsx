@@ -1,4 +1,4 @@
-// src/components/BillingPage.jsx
+ï»¿// src/components/BillingPage.jsx
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
@@ -92,9 +92,9 @@ export default function BillingPage({ userId, userEmail, onBack }) {
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
               <div>
                 <div style={{ fontSize:20, fontWeight:800, color: currentPlan?.color || '#e2e8f0', marginBottom:4 }}>
-                  {currentPlan?.label || subscription.plan} — {currentPlan?.price}/mo
+                  {currentPlan?.label || subscription.plan}  {currentPlan?.price}/mo
                 </div>
-                <div style={{ fontSize:13, color:'#64748b' }}>{subscription.max_clients} {subscription.max_clients === 1 ? 'business' : 'businesses'} · {userEmail}</div>
+                <div style={{ fontSize:13, color:'#64748b' }}>{subscription.max_clients} {subscription.max_clients === 1 ? 'business' : 'businesses'}  {userEmail}</div>
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
                 {isActive   && <span style={{ background:'#10b98118', color:'#10b981', border:'1px solid #10b98144', borderRadius:20, padding:'4px 12px', fontSize:12, fontWeight:700 }}>? Active</span>}
@@ -134,7 +134,7 @@ export default function BillingPage({ userId, userEmail, onBack }) {
               )
             })}
           </div>
-          <div style={{ marginTop:16, fontSize:12, color:'#2a4a6a', textAlign:'center' }}>30-day money-back guarantee · Cancel anytime · Secure payment via Stripe</div>
+          <div style={{ marginTop:16, fontSize:12, color:'#2a4a6a', textAlign:'center' }}>30-day money-back guarantee  Cancel anytime  Secure payment via Stripe</div>
         </div>
 
         {error && <div style={{ background:'rgba(239,68,68,.1)', border:'1px solid rgba(239,68,68,.3)', borderRadius:8, padding:'10px 14px', fontSize:13, color:'#f87171' }}>{error}</div>}
