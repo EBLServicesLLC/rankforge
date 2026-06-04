@@ -72,9 +72,9 @@ export default function BillingPage({ userId, userEmail, onBack }) {
   }
 
   const currentPlan = PLANS.find(p => p.id === subscription?.plan)
-  const isActive    = subscription?.subscription_status === 'active'
-  const isPastDue   = subscription?.subscription_status === 'past_due'
-  const isCancelled = subscription?.subscription_status === 'cancelled'
+  const isActive    = subscription?.status === 'active'
+  const isPastDue   = subscription?.status === 'past_due'
+  const isCancelled = subscription?.status === 'cancelled'
 
   if (loading) return (
     <div style={{ minHeight:'100vh', background:'#060d1a', display:'flex', alignItems:'center', justifyContent:'center' }}>
