@@ -230,7 +230,7 @@ export default function SocialPublisherPage() {
     if (data) setConnections({ facebook: !!data.fb_token, linkedin: !!data.linkedin_token });
   }, [session]);
 
-  // ── AI Generate ───────────────────────────────────────────────────────────
+  // ── AI Generate (via edge function) ──────────────────────────────────────
   const handleGenerate = useCallback(async () => {
     if (!topic.trim()) { setError("Please enter a topic or message first."); return; }
     const connectedList = Object.values(PLATFORMS).filter(p => connections[p.id]);
@@ -241,47 +241,31 @@ export default function SocialPublisherPage() {
     setPublishResult(null);
 
     try {
-      const newPosts = {};
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/social-publish`, {
+        method: "POST",
+        headers: getHeaders(session),
+        body: JSON.stringify({
+          action: "generate",
+          topic,
+          businessName,
+          platforms: connectedList.map(p => p.id),
+        }),
+      });
 
-      for (const platform of connectedList) {
-        const prompt = `You are a social media expert writing for a local business.
+      const data = await res.json();
 
-Business name: ${businessName || "the business"}
-Platform: ${platform.label}
-Tone: ${platform.tone}
-Character limit: ${platform.charLimit}
-
-Topic / message to post about:
-${topic}
-
-Write a single social media post for ${platform.label}. 
-- Stay under ${platform.id === "linkedin" ? 1300 : 500} characters for best engagement
-- Do not include quotation marks around the post
-- Do not add any explanation, just the post text itself`;
-
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: CLAUDE_MODEL,
-            max_tokens: 1000,
-            messages: [{ role: "user", content: prompt }],
-          }),
-        });
-
-        const data = await res.json();
-        const text = data.content?.[0]?.text || "";
-        newPosts[platform.id] = text.trim();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "AI generation failed");
       }
 
-      setPosts(newPosts);
+      setPosts(data.posts);
       setSelectedPlatforms(connectedList.map(p => p.id));
     } catch (err) {
       setError(`AI generation failed: ${err.message}`);
     } finally {
       setGenerating(false);
     }
-  }, [topic, businessName, connections]);
+  }, [topic, businessName, connections, session]);
 
   // ── Publish ───────────────────────────────────────────────────────────────
   const handlePublish = useCallback(async () => {
@@ -290,21 +274,19 @@ Write a single social media post for ${platform.label}.
     setPublishResult(null);
 
     try {
-      const results = [];
-      for (const pid of selectedPlatforms) {
-        const content = posts[pid];
-        if (!content) continue;
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/social-publish`, {
-          method: "POST",
-          headers: getHeaders(session),
-          body: JSON.stringify({ content, platforms: [pid] }),
-        });
-        const data = await res.json();
-        if (data.results) results.push(...data.results);
-      }
-      const allOk = results.every(r => r.success);
-      setPublishResult({ success: allOk, results });
-      if (allOk) { setTopic(""); setPosts({}); }
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/social-publish`, {
+        method: "POST",
+        headers: getHeaders(session),
+        body: JSON.stringify({
+          action: "publish",
+          posts,
+          platforms: selectedPlatforms,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Publish failed");
+      setPublishResult({ success: data.allSucceeded, results: data.results });
+      if (data.allSucceeded) { setTopic(""); setPosts({}); setSelectedPlatforms([]); }
     } catch (err) {
       setPublishResult({ success: false, results: [{ platform: "All", success: false, message: err.message }] });
     } finally {
