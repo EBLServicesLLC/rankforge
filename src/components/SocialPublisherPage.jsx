@@ -367,6 +367,24 @@ export default function SocialPublisherPage({ session }) {
       <div style={{ background:T.pageBg, minHeight:'100%', fontFamily:"'Segoe UI',system-ui,sans-serif",
         color:T.text, WebkitFontSmoothing:'antialiased' }}>
 
+        {/* ── PANEL HEADER — matches rankforge3 tab headers ────────────────── */}
+        <div style={{ padding:'14px 20px 12px', borderBottom:`1px solid ${T.border}`,
+          background:T.cardBg2 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:5 }}>
+            <span style={{ fontSize:18, fontWeight:800, color:T.text, letterSpacing:'-.3px' }}>
+              Social Publisher
+            </span>
+            <span style={{ fontSize:13, color:T.muted }}>
+              ▪ Blog 2 Social
+            </span>
+          </div>
+          <p style={{ margin:0, fontSize:12.5, color:T.muted, lineHeight:1.6, maxWidth:900 }}>
+            Write once, publish everywhere. Compose a post, generate platform-optimised variations with AI,
+            and push to Facebook Pages, LinkedIn Pages, and Google Business Profile simultaneously.
+            Social tokens are stored in your account — never sent to any third-party server.
+          </p>
+        </div>
+
         {/* ── BANNERS ─────────────────────────────────────────────────────── */}
         {error && (
           <div className="sp-slidedn" style={{ padding:'10px 20px', background:'rgba(248,113,113,.07)',
