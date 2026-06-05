@@ -16,11 +16,21 @@ export default function SocialCallbackPage() {
 
   useEffect(() => {
     async function handleCallback() {
+      // DEBUG — log everything we receive
+      console.log("[SocialCallback] full URL:", window.location.href);
+      console.log("[SocialCallback] search:", window.location.search);
+      console.log("[SocialCallback] hash:", window.location.hash);
+      console.log("[SocialCallback] has opener:", !!window.opener);
+
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
       const state = params.get("state");
       const error = params.get("error");
       const errorDescription = params.get("error_description");
+
+      console.log("[SocialCallback] code:", code ? "EXISTS" : "MISSING");
+      console.log("[SocialCallback] state:", state);
+      console.log("[SocialCallback] error:", error);
 
       // OAuth denied by user
       if (error) {
