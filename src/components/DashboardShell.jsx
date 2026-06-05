@@ -1,4 +1,4 @@
-﻿import BillingPage from './BillingPage'
+import BillingPage from './BillingPage'
 import ProfileModal from './ProfileModal'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
