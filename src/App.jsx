@@ -6,6 +6,8 @@ import AuthPage                            from './components/AuthPage'
 import DashboardShell                      from './components/DashboardShell'
 import BillingPage                         from './components/BillingPage'
 import OnboardingWizard                    from './components/OnboardingWizard'
+import SocialPublisherPage                 from './components/SocialPublisherPage'
+import SocialCallbackPage                  from './components/SocialCallbackPage'
 
 function ResetPasswordForm({ onDone }) {
   const [password, setPassword] = useState('')
@@ -104,6 +106,11 @@ export default function App() {
       .single()
       .then(({ data }) => setSubscription(data || null))
   }, [session])
+
+  // ── Social Publisher routes (no auth gate needed — page handles its own auth) ──
+  const path = window.location.pathname
+  if (path === '/social/callback') return <SocialCallbackPage />
+  if (path === '/social')          return <SocialPublisherPage />
 
   // Show reset password form if recovery event fired
   if (isRecovery) {
