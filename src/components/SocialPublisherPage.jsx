@@ -277,18 +277,6 @@ export default function SocialPublisherPage() {
   useEffect(() => {
     function handleOAuthMessage(event) {
       if (event.origin !== window.location.origin) return;
-
-      // Popup requests session token so it can call the edge function
-      if (event.data?.type === "SESSION_TOKEN_REQUEST") {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          event.source?.postMessage(
-            { type: "SESSION_TOKEN_RESPONSE", accessToken: session?.access_token || null },
-            window.location.origin
-          );
-        });
-        return;
-      }
-
       if (event.data?.type !== "SOCIAL_AUTH_COMPLETE") return;
 
       const { platform, success, token, pageId, error: authError } = event.data;

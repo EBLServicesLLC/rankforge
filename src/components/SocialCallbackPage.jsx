@@ -1,38 +1,35 @@
 /**
  * SocialCallbackPage.jsx
- * Handles OAuth redirect from Facebook and LinkedIn at /social/callback
  *
- * Fix: Popup gets session token from parent window via postMessage
- * instead of trying to read its own session (which may not exist in popup)
+ * Handles the OAuth redirect from Facebook and LinkedIn.
+ * Loaded at /social/callback
+ *
+ * Flow:
+ * 1. OAuth provider redirects here with ?code=xxx&state=yyy
+ * 2. This page calls the appropriate edge function to exchange code for token
+ * 3. Edge function returns the token + page info
+ * 4. This page sends postMessage to parent (SocialPublisherPage)
+ * 5. Parent saves token to Supabase → closes popup
  */
 
 import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 const SUPABASE_URL = "https://ybhpbpahhywiokhqpldj.supabase.co";
 
 export default function SocialCallbackPage() {
-  const [status, setStatus] = useState("processing");
+  const [status, setStatus] = useState("processing"); // processing | success | error
   const [message, setMessage] = useState("Completing connection…");
 
   useEffect(() => {
     async function handleCallback() {
-      // DEBUG — log everything we receive
-      console.log("[SocialCallback] full URL:", window.location.href);
-      console.log("[SocialCallback] search:", window.location.search);
-      console.log("[SocialCallback] hash:", window.location.hash);
-      console.log("[SocialCallback] has opener:", !!window.opener);
-
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
-      const state = params.get("state");
+      const state = params.get("state"); // contains platform identifier
       const error = params.get("error");
       const errorDescription = params.get("error_description");
 
-      console.log("[SocialCallback] code:", code ? "EXISTS" : "MISSING");
-      console.log("[SocialCallback] state:", state);
-      console.log("[SocialCallback] error:", error);
-
-      // OAuth denied by user
+      // OAuth was denied by the user
       if (error) {
         notifyParent(null, false, errorDescription || error);
         setStatus("error");
@@ -41,19 +38,21 @@ export default function SocialCallbackPage() {
       }
 
       if (!code || !state) {
+        notifyParent(null, false, "Missing authorization code or state.");
         setStatus("error");
-        setMessage("Invalid callback. Missing code or state.");
+        setMessage("Invalid callback. Missing code or state parameter.");
         return;
       }
 
+      // Determine platform from state param (set by edge function on initiation)
       const platform = state.startsWith("fb_") ? "facebook" : "linkedin";
 
       try {
-        // Request session token from parent window
-        const accessToken = await getTokenFromParent();
+        // Get current session to authenticate the edge function call
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (!accessToken) {
-          throw new Error("Could not get session from parent window. Please try again.");
+        if (!session) {
+          throw new Error("No active session. Please log in first.");
         }
 
         const endpoint = platform === "facebook"
@@ -65,8 +64,8 @@ export default function SocialCallbackPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            apikey: accessToken,
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: session.access_token,
           },
           body: JSON.stringify({
             code,
@@ -81,17 +80,13 @@ export default function SocialCallbackPage() {
           throw new Error(data.error || "Token exchange failed");
         }
 
-        // Notify parent of success
+        // Send success to parent window
         notifyParent(platform, true, null, data.token, data.page_id);
         setStatus("success");
-        setMessage(
-          platform === "facebook"
-            ? `Facebook Page connected: ${data.page_name || "Success"}`
-            : `LinkedIn connected: ${data.display_name || "Success"}`
-        );
+        setMessage(`${platform === "facebook" ? "Facebook" : "LinkedIn"} connected successfully!`);
 
         // Auto-close after brief delay
-        setTimeout(() => window.close(), 2000);
+        setTimeout(() => window.close(), 1500);
 
       } catch (err) {
         console.error("[SocialCallback] error:", err);
@@ -104,63 +99,70 @@ export default function SocialCallbackPage() {
     handleCallback();
   }, []);
 
-  // Ask parent window for its session access token via postMessage
-  function getTokenFromParent() {
-    return new Promise((resolve) => {
-      if (!window.opener) {
-        resolve(null);
-        return;
-      }
-
-      const timeout = setTimeout(() => resolve(null), 5000);
-
-      function handleMessage(event) {
-        if (event.origin !== window.location.origin) return;
-        if (event.data?.type !== "SESSION_TOKEN_RESPONSE") return;
-        clearTimeout(timeout);
-        window.removeEventListener("message", handleMessage);
-        resolve(event.data.accessToken || null);
-      }
-
-      window.addEventListener("message", handleMessage);
-
-      // Request the token from parent
-      window.opener.postMessage(
-        { type: "SESSION_TOKEN_REQUEST" },
-        window.location.origin
-      );
-    });
-  }
-
   function notifyParent(platform, success, error, token, pageId) {
     if (window.opener) {
       window.opener.postMessage(
-        { type: "SOCIAL_AUTH_COMPLETE", platform, success, token, pageId, error },
+        {
+          type: "SOCIAL_AUTH_COMPLETE",
+          platform,
+          success,
+          token,
+          pageId,
+          error,
+        },
         window.location.origin
       );
     }
   }
 
-  const colors = { processing: "#4a90d9", success: "#4ade80", error: "#f87171" };
+  const icons = {
+    processing: "⟳",
+    success: "✓",
+    error: "✕",
+  };
+
+  const colors = {
+    processing: "#4a90d9",
+    success: "#4ade80",
+    error: "#f87171",
+  };
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#0f1117",
-      display: "flex", alignItems: "center", justifyContent: "center",
+      minHeight: "100vh",
+      background: "#0f1117",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
       fontFamily: "'Segoe UI', system-ui, sans-serif",
     }}>
       <div style={{
-        background: "#161b27", border: "1px solid #1e2740",
-        borderRadius: "16px", padding: "40px", textAlign: "center",
-        maxWidth: "360px", width: "90%",
+        background: "#161b27",
+        border: "1px solid #1e2740",
+        borderRadius: "16px",
+        padding: "40px",
+        textAlign: "center",
+        maxWidth: "360px",
+        width: "90%",
       }}>
         <div style={{
-          width: "64px", height: "64px", borderRadius: "50%",
+          width: "64px",
+          height: "64px",
+          borderRadius: "50%",
           background: colors[status] + "22",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 20px", fontSize: "28px", color: colors[status],
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          margin: "0 auto 20px",
+          fontSize: "28px",
+          color: colors[status],
+          animation: status === "processing" ? "spin 1s linear infinite" : "none",
         }}>
-          {status === "processing" ? "⟳" : status === "success" ? "✓" : "✕"}
+          {status === "processing" ? (
+            <span style={{ display: "inline-block" }}>⟳</span>
+          ) : (
+            icons[status]
+          )}
         </div>
         <h2 style={{ margin: "0 0 8px", color: "#f1f5f9", fontSize: "18px" }}>
           {status === "processing" && "Connecting…"}
@@ -171,17 +173,28 @@ export default function SocialCallbackPage() {
           {message}
         </p>
         {status !== "processing" && (
-          <button onClick={() => window.close()} style={{
-            marginTop: "20px", background: "#1e2740", border: "none",
-            color: "#94a3b8", padding: "8px 20px", borderRadius: "8px",
-            cursor: "pointer", fontSize: "13px",
-          }}>
+          <button
+            onClick={() => window.close()}
+            style={{
+              marginTop: "20px",
+              background: "#1e2740",
+              border: "none",
+              color: "#94a3b8",
+              padding: "8px 20px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "13px",
+            }}
+          >
             Close window
           </button>
         )}
       </div>
       <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
       `}</style>
     </div>
   );
