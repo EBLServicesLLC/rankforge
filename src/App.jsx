@@ -75,6 +75,9 @@ export default function App() {
   const [subscription, setSubscription] = useState(undefined)
   const [isRecovery, setIsRecovery]     = useState(false)
 
+  // Capture path ONCE on mount — prevents ghost URL re-triggering on re-render
+  const [initialPath] = useState(() => window.location.pathname)
+
   // Auth listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -107,10 +110,11 @@ export default function App() {
       .then(({ data }) => setSubscription(data || null))
   }, [session])
 
-  // ── Social Publisher routes (no auth gate needed — page handles its own auth) ──
-  const path = window.location.pathname
-  if (path === '/social/callback') return <SocialCallbackPage />
-  if (path === '/social')          return <SocialPublisherPage />
+  // ── Social Publisher routes — checked against initialPath (captured on mount only)
+  // Using initialPath instead of window.location.pathname prevents ghost URL issue
+  // where navigating away from /social kept rendering SocialPublisherPage on re-renders
+  if (initialPath === '/social/callback') return <SocialCallbackPage />
+  if (initialPath === '/social')          return <SocialPublisherPage />
 
   // Show reset password form if recovery event fired
   if (isRecovery) {
