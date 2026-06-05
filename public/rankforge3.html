@@ -6363,11 +6363,17 @@ window.addEventListener('message', function(ev) {
   if (ev.data.type === 'LOAD_DATA' && ev.data.payload) {
     var p = ev.data.payload;
     if (p.keys) {
-      if(typeof S!=='undefined'&&S.keys){
-        Object.keys(p.keys).forEach(function(k){if(p.keys[k])S.keys[k]=p.keys[k];});
-        if(typeof persist==='function')persist();
-        if(typeof updateKeyIndicators==='function')updateKeyIndicators();
+      var _retryKeys=0;
+      function _applyKeys(){
+        if(typeof S!=='undefined'&&S.keys){
+          Object.keys(p.keys).forEach(function(k){if(p.keys[k])S.keys[k]=p.keys[k];});
+          if(typeof persist==='function')persist();
+          if(typeof updateKeyIndicators==='function')updateKeyIndicators();
+          if(typeof updateAIStatus==='function')updateAIStatus();
+          console.log('[RankForged] LOAD_DATA keys applied');
+        } else if(_retryKeys++<20){setTimeout(_applyKeys,150);}
       }
+      _applyKeys();
     }
     if (p.profile) {
       var pr = p.profile;
