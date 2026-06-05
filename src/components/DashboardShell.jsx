@@ -379,9 +379,9 @@ export default function DashboardShell({ session, subscription }) {
           />
         )}
 
-        {/* Social Publisher — renders inline, no iframe */}
+        {/* Social Publisher — renders inline, no iframe needed */}
         {activeTab === 'social-pub' && (
-          <div style={{ flex:1, overflowY:'auto', background:'#060c18' }}>
+          <div style={{ flex:1, overflowY:'auto', background:'#060d1a' }}>
             <SocialPublisherPage session={session} />
           </div>
         )}
