@@ -13,6 +13,7 @@ const PLATFORMS = {
     pageIdKey: "fb_page_id",
     charLimit: 63206,
     authEndpoint: "/functions/v1/social-auth-facebook",
+    tone: "friendly, conversational, and engaging. Use emojis sparingly. End with a call to action.",
   },
   linkedin: {
     id: "linkedin",
@@ -23,14 +24,14 @@ const PLATFORMS = {
     pageIdKey: null,
     charLimit: 3000,
     authEndpoint: "/functions/v1/social-auth-linkedin",
+    tone: "professional, insightful, and concise. No emojis. End with a thought-provoking question or insight.",
   },
 };
 
 const SUPABASE_URL = "https://ybhpbpahhywiokhqpldj.supabase.co";
+const CLAUDE_MODEL = "claude-sonnet-4-6";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function getSupabaseHeaders(session) {
+function getHeaders(session) {
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${session.access_token}`,
@@ -38,178 +39,55 @@ function getSupabaseHeaders(session) {
   };
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Platform Card ────────────────────────────────────────────────────────────
 
-function PlatformCard({ platform, connected, pageId, onConnect, onDisconnect, connecting }) {
+function PlatformCard({ platform, connected, onConnect, onDisconnect, connecting }) {
   const isConnecting = connecting === platform.id;
-
   return (
-    <div className="sp-platform-card" data-connected={connected}>
-      <div className="sp-platform-header">
-        <div className="sp-platform-icon" style={{ background: platform.color }}>
+    <div style={{
+      background: connected ? "#0d1f13" : "#161b27",
+      border: `1px solid ${connected ? "#166534" : "#1e2740"}`,
+      borderRadius: 12, padding: 16,
+      display: "flex", alignItems: "center",
+      justifyContent: "space-between", gap: 12,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 10,
+          background: platform.color,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 20, color: "white", flexShrink: 0,
+        }}>
           <i className={platform.icon}></i>
         </div>
-        <div className="sp-platform-info">
-          <div className="sp-platform-name">{platform.label}</div>
-          {connected ? (
-            <div className="sp-platform-status connected">
-              <i className="ti ti-circle-check-filled"></i>
-              {pageId ? `Page connected` : "Connected"}
-            </div>
-          ) : (
-            <div className="sp-platform-status disconnected">
-              <i className="ti ti-circle-x"></i>
-              Not connected
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="sp-platform-actions">
-        {connected ? (
-          <button
-            className="sp-btn sp-btn-outline"
-            onClick={() => onDisconnect(platform.id)}
-          >
-            <i className="ti ti-unlink"></i> Disconnect
-          </button>
-        ) : (
-          <button
-            className="sp-btn sp-btn-primary"
-            onClick={() => onConnect(platform.id)}
-            disabled={isConnecting}
-          >
-            {isConnecting ? (
-              <><i className="ti ti-loader-2 sp-spin"></i> Connecting…</>
-            ) : (
-              <><i className="ti ti-link"></i> Connect {platform.label}</>
-            )}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ComposerSection({ connections, publishing, publishResult, onPublish }) {
-  const [content, setContent] = useState("");
-  const [selectedPlatforms, setSelectedPlatforms] = useState([]);
-  const [charWarning, setCharWarning] = useState(null);
-
-  const connectedPlatforms = Object.values(PLATFORMS).filter(
-    (p) => connections[p.id]
-  );
-
-  useEffect(() => {
-    // Auto-select all connected platforms
-    setSelectedPlatforms(connectedPlatforms.map((p) => p.id));
-  }, [JSON.stringify(Object.keys(connections))]);
-
-  useEffect(() => {
-    if (!content || selectedPlatforms.length === 0) {
-      setCharWarning(null);
-      return;
-    }
-    const warnings = selectedPlatforms
-      .map((pid) => PLATFORMS[pid])
-      .filter((p) => content.length > p.charLimit)
-      .map((p) => `${p.label}: ${content.length}/${p.charLimit} chars`);
-    setCharWarning(warnings.length > 0 ? warnings.join(" · ") : null);
-  }, [content, selectedPlatforms]);
-
-  function togglePlatform(pid) {
-    setSelectedPlatforms((prev) =>
-      prev.includes(pid) ? prev.filter((p) => p !== pid) : [...prev, pid]
-    );
-  }
-
-  function handlePublish() {
-    if (!content.trim() || selectedPlatforms.length === 0) return;
-    onPublish({ content, platforms: selectedPlatforms });
-  }
-
-  if (connectedPlatforms.length === 0) {
-    return (
-      <div className="sp-composer sp-composer-empty">
-        <i className="ti ti-brand-social-instagram sp-empty-icon"></i>
-        <p>Connect at least one platform above to start publishing.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="sp-composer">
-      <div className="sp-composer-header">
-        <h3>Compose Post</h3>
-        <div className="sp-platform-toggles">
-          {connectedPlatforms.map((p) => (
-            <button
-              key={p.id}
-              className={`sp-toggle-btn ${selectedPlatforms.includes(p.id) ? "active" : ""}`}
-              style={{ "--platform-color": p.color }}
-              onClick={() => togglePlatform(p.id)}
-              title={p.label}
-            >
-              <i className={p.icon}></i>
-              <span>{p.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <textarea
-        className="sp-textarea"
-        placeholder="Write your post here…"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        rows={6}
-      />
-
-      <div className="sp-composer-footer">
-        <div className="sp-char-info">
-          {charWarning ? (
-            <span className="sp-char-warning">
-              <i className="ti ti-alert-triangle"></i> {charWarning}
-            </span>
-          ) : (
-            <span className="sp-char-count">{content.length} characters</span>
-          )}
-        </div>
-        <button
-          className="sp-btn sp-btn-publish"
-          onClick={handlePublish}
-          disabled={
-            publishing ||
-            !content.trim() ||
-            selectedPlatforms.length === 0 ||
-            !!charWarning
-          }
-        >
-          {publishing ? (
-            <><i className="ti ti-loader-2 sp-spin"></i> Publishing…</>
-          ) : (
-            <><i className="ti ti-send"></i> Publish Now</>
-          )}
-        </button>
-      </div>
-
-      {publishResult && (
-        <div className={`sp-result ${publishResult.success ? "sp-result-success" : "sp-result-error"}`}>
-          <i className={`ti ${publishResult.success ? "ti-circle-check" : "ti-circle-x"}`}></i>
-          <div>
-            <strong>{publishResult.success ? "Published!" : "Publish failed"}</strong>
-            <p>{publishResult.message}</p>
-            {publishResult.results && (
-              <ul className="sp-result-list">
-                {publishResult.results.map((r, i) => (
-                  <li key={i} className={r.success ? "ok" : "fail"}>
-                    <i className={`ti ${r.success ? "ti-check" : "ti-x"}`}></i>
-                    {r.platform}: {r.message}
-                  </li>
-                ))}
-              </ul>
-            )}
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 14, color: "#f1f5f9" }}>{platform.label}</div>
+          <div style={{ fontSize: 12, marginTop: 2, display: "flex", alignItems: "center", gap: 4,
+            color: connected ? "#4ade80" : "#64748b" }}>
+            <i className={`ti ${connected ? "ti-circle-check-filled" : "ti-circle-x"}`}></i>
+            {connected ? "Connected" : "Not connected"}
           </div>
         </div>
+      </div>
+      {connected ? (
+        <button onClick={() => onDisconnect(platform.id)} style={{
+          background: "transparent", border: "1px solid #2d3748",
+          color: "#94a3b8", padding: "6px 12px", borderRadius: 8,
+          fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
+        }}>
+          <i className="ti ti-unlink"></i> Disconnect
+        </button>
+      ) : (
+        <button onClick={() => onConnect(platform.id)} disabled={isConnecting} style={{
+          background: isConnecting ? "#1e2740" : "#2563eb",
+          border: "none", color: "white", padding: "6px 14px",
+          borderRadius: 8, fontSize: 12, cursor: isConnecting ? "not-allowed" : "pointer",
+          display: "flex", alignItems: "center", gap: 5, opacity: isConnecting ? 0.7 : 1,
+        }}>
+          <i className={`ti ${isConnecting ? "ti-loader-2" : "ti-link"}`}
+            style={isConnecting ? { animation: "sp-spin 0.8s linear infinite", display: "inline-block" } : {}}></i>
+          {isConnecting ? "Connecting…" : `Connect`}
+        </button>
       )}
     </div>
   );
@@ -223,800 +101,468 @@ export default function SocialPublisherPage() {
   const [connections, setConnections] = useState({});
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(null);
-  const [publishing, setPublishing] = useState(false);
-  const [publishResult, setPublishResult] = useState(null);
   const [error, setError] = useState(null);
 
-  // ── Auth ────────────────────────────────────────────────────────────────────
+  // AI + compose state
+  const [topic, setTopic] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [posts, setPosts] = useState({}); // { facebook: "...", linkedin: "..." }
+  const [selectedPlatforms, setSelectedPlatforms] = useState([]);
+  const [publishing, setPublishing] = useState(false);
+  const [publishResult, setPublishResult] = useState(null);
 
+  // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setSession(session);
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setSession(session));
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Load settings ───────────────────────────────────────────────────────────
-
+  // ── Load settings ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!session) return;
-
-    async function loadSettings() {
+    async function load() {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("settings")
-          .select("fb_token, fb_page_id, linkedin_token")
+          .select("fb_token, fb_page_id, linkedin_token, anthropic_key, agency_name")
           .eq("user_id", session.user.id)
           .single();
-
-        if (error && error.code !== "PGRST116") throw error;
-
         const s = data || {};
         setSettings(s);
-        setConnections({
-          facebook: !!s.fb_token,
-          linkedin: !!s.linkedin_token,
-        });
+        setConnections({ facebook: !!s.fb_token, linkedin: !!s.linkedin_token });
+        if (s.agency_name) setBusinessName(s.agency_name);
       } catch (err) {
-        setError("Failed to load connection status. Please refresh.");
-        console.error("[SocialPublisher] load error:", err);
+        setError("Failed to load settings.");
       } finally {
         setLoading(false);
       }
     }
-
-    loadSettings();
+    load();
   }, [session]);
 
-  // ── OAuth popup listener ────────────────────────────────────────────────────
-
+  // ── OAuth message listener ────────────────────────────────────────────────
   useEffect(() => {
-    function handleOAuthMessage(event) {
+    function handleMsg(event) {
       if (event.origin !== window.location.origin) return;
+      if (event.data?.type === "SESSION_TOKEN_REQUEST") {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          event.source?.postMessage(
+            { type: "SESSION_TOKEN_RESPONSE", accessToken: session?.access_token || null },
+            window.location.origin
+          );
+        });
+        return;
+      }
       if (event.data?.type !== "SOCIAL_AUTH_COMPLETE") return;
-
       const { platform, success, token, pageId, error: authError } = event.data;
-
       if (!success) {
         setError(`${platform} connection failed: ${authError || "Unknown error"}`);
         setConnecting(null);
         return;
       }
-
-      // Save token to Supabase settings
       saveToken(platform, token, pageId);
     }
-
-    window.addEventListener("message", handleOAuthMessage);
-    return () => window.removeEventListener("message", handleOAuthMessage);
+    window.addEventListener("message", handleMsg);
+    return () => window.removeEventListener("message", handleMsg);
   }, [session]);
 
-  // ── Connect platform ────────────────────────────────────────────────────────
-
+  // ── Connect ───────────────────────────────────────────────────────────────
   const handleConnect = useCallback(async (platformId) => {
     if (!session) return;
     setConnecting(platformId);
     setError(null);
-
     const platform = PLATFORMS[platformId];
-
     try {
-      // Get the OAuth URL from our edge function
       const res = await fetch(
         `${SUPABASE_URL}${platform.authEndpoint}?action=get_url&redirect_uri=${encodeURIComponent(window.location.origin + "/social/callback")}`,
-        { headers: getSupabaseHeaders(session) }
+        { headers: getHeaders(session) }
       );
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to get auth URL");
-      }
-
+      if (!res.ok) throw new Error((await res.json()).error || "Failed to get auth URL");
       const { url } = await res.json();
-
-      // Open OAuth popup
-      const popup = window.open(
-        url,
-        `${platformId}_oauth`,
-        "width=600,height=700,scrollbars=yes,resizable=yes"
-      );
-
-      if (!popup) {
-        throw new Error("Popup blocked. Please allow popups for this site.");
-      }
-
-      // Poll for popup close (fallback if postMessage fails)
-      const pollTimer = setInterval(async () => {
+      const popup = window.open(url, `${platformId}_oauth`, "width=600,height=700,scrollbars=yes");
+      if (!popup) throw new Error("Popup blocked. Please allow popups for this site.");
+      const poll = setInterval(async () => {
         if (popup.closed) {
-          clearInterval(pollTimer);
+          clearInterval(poll);
           setConnecting(null);
-          // Re-load settings to check if token was saved
           await refreshConnections();
         }
       }, 500);
-
     } catch (err) {
       setError(err.message);
       setConnecting(null);
     }
   }, [session]);
 
-  // ── Disconnect platform ─────────────────────────────────────────────────────
-
+  // ── Disconnect ────────────────────────────────────────────────────────────
   const handleDisconnect = useCallback(async (platformId) => {
     if (!session) return;
-    setError(null);
-
     const platform = PLATFORMS[platformId];
     const update = { [platform.tokenKey]: null };
     if (platform.pageIdKey) update[platform.pageIdKey] = null;
-
-    try {
-      const { error } = await supabase
-        .from("settings")
-        .update(update)
-        .eq("user_id", session.user.id);
-
-      if (error) throw error;
-
-      setConnections((prev) => ({ ...prev, [platformId]: false }));
-      setSettings((prev) => {
-        const next = { ...prev };
-        delete next[platform.tokenKey];
-        if (platform.pageIdKey) delete next[platform.pageIdKey];
-        return next;
-      });
-    } catch (err) {
-      setError(`Failed to disconnect ${platform.label}: ${err.message}`);
-    }
+    const { error } = await supabase.from("settings").update(update).eq("user_id", session.user.id);
+    if (error) { setError(`Failed to disconnect: ${error.message}`); return; }
+    setConnections(prev => ({ ...prev, [platformId]: false }));
+    setPosts(prev => { const n = { ...prev }; delete n[platformId]; return n; });
+    setSelectedPlatforms(prev => prev.filter(p => p !== platformId));
   }, [session]);
 
-  // ── Save token (called after OAuth success) ─────────────────────────────────
-
+  // ── Save token ────────────────────────────────────────────────────────────
   const saveToken = useCallback(async (platformId, token, pageId) => {
     if (!session) return;
     const platform = PLATFORMS[platformId];
     const update = { [platform.tokenKey]: token };
     if (platform.pageIdKey && pageId) update[platform.pageIdKey] = pageId;
-
-    try {
-      const { error } = await supabase
-        .from("settings")
-        .upsert({ user_id: session.user.id, ...update }, { onConflict: "user_id" });
-
-      if (error) throw error;
-
-      setConnections((prev) => ({ ...prev, [platformId]: true }));
-      setSettings((prev) => ({ ...prev, [platform.tokenKey]: token }));
-    } catch (err) {
-      setError(`Failed to save ${platform.label} token: ${err.message}`);
-    } finally {
-      setConnecting(null);
-    }
+    await supabase.from("settings").upsert({ user_id: session.user.id, ...update }, { onConflict: "user_id" });
+    setConnections(prev => ({ ...prev, [platformId]: true }));
+    setConnecting(null);
   }, [session]);
 
-  // ── Refresh connections from DB ─────────────────────────────────────────────
-
+  // ── Refresh connections ───────────────────────────────────────────────────
   const refreshConnections = useCallback(async () => {
     if (!session) return;
     const { data } = await supabase
-      .from("settings")
-      .select("fb_token, fb_page_id, linkedin_token")
-      .eq("user_id", session.user.id)
-      .single();
-
-    if (data) {
-      setSettings(data);
-      setConnections({
-        facebook: !!data.fb_token,
-        linkedin: !!data.linkedin_token,
-      });
-    }
+      .from("settings").select("fb_token, fb_page_id, linkedin_token")
+      .eq("user_id", session.user.id).single();
+    if (data) setConnections({ facebook: !!data.fb_token, linkedin: !!data.linkedin_token });
   }, [session]);
 
-  // ── Publish ─────────────────────────────────────────────────────────────────
+  // ── AI Generate ───────────────────────────────────────────────────────────
+  const handleGenerate = useCallback(async () => {
+    if (!topic.trim()) { setError("Please enter a topic or message first."); return; }
+    const connectedList = Object.values(PLATFORMS).filter(p => connections[p.id]);
+    if (connectedList.length === 0) { setError("Connect at least one platform first."); return; }
 
-  const handlePublish = useCallback(async ({ content, platforms }) => {
-    if (!session) return;
+    setGenerating(true);
+    setError(null);
+    setPublishResult(null);
+
+    try {
+      const newPosts = {};
+
+      for (const platform of connectedList) {
+        const prompt = `You are a social media expert writing for a local business.
+
+Business name: ${businessName || "the business"}
+Platform: ${platform.label}
+Tone: ${platform.tone}
+Character limit: ${platform.charLimit}
+
+Topic / message to post about:
+${topic}
+
+Write a single social media post for ${platform.label}. 
+- Stay under ${platform.id === "linkedin" ? 1300 : 500} characters for best engagement
+- Do not include quotation marks around the post
+- Do not add any explanation, just the post text itself`;
+
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: CLAUDE_MODEL,
+            max_tokens: 1000,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        });
+
+        const data = await res.json();
+        const text = data.content?.[0]?.text || "";
+        newPosts[platform.id] = text.trim();
+      }
+
+      setPosts(newPosts);
+      setSelectedPlatforms(connectedList.map(p => p.id));
+    } catch (err) {
+      setError(`AI generation failed: ${err.message}`);
+    } finally {
+      setGenerating(false);
+    }
+  }, [topic, businessName, connections]);
+
+  // ── Publish ───────────────────────────────────────────────────────────────
+  const handlePublish = useCallback(async () => {
+    if (!session || selectedPlatforms.length === 0) return;
     setPublishing(true);
     setPublishResult(null);
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/social-publish`, {
-        method: "POST",
-        headers: getSupabaseHeaders(session),
-        body: JSON.stringify({ content, platforms }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setPublishResult({
-          success: false,
-          message: data.error || "Publish failed. Please try again.",
+      const results = [];
+      for (const pid of selectedPlatforms) {
+        const content = posts[pid];
+        if (!content) continue;
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/social-publish`, {
+          method: "POST",
+          headers: getHeaders(session),
+          body: JSON.stringify({ content, platforms: [pid] }),
         });
-      } else {
-        setPublishResult({
-          success: data.allSucceeded,
-          message: data.allSucceeded
-            ? "Your post was published successfully!"
-            : "Some platforms failed. See details below.",
-          results: data.results,
-        });
+        const data = await res.json();
+        if (data.results) results.push(...data.results);
       }
+      const allOk = results.every(r => r.success);
+      setPublishResult({ success: allOk, results });
+      if (allOk) { setTopic(""); setPosts({}); }
     } catch (err) {
-      setPublishResult({
-        success: false,
-        message: `Network error: ${err.message}`,
-      });
+      setPublishResult({ success: false, results: [{ platform: "All", success: false, message: err.message }] });
     } finally {
       setPublishing(false);
     }
-  }, [session]);
+  }, [session, selectedPlatforms, posts]);
 
-  // ── Back navigation ─────────────────────────────────────────────────────────
-
+  // ── Back ──────────────────────────────────────────────────────────────────
   function handleBack() {
-    const clientId = sessionStorage.getItem("rf_client");
-    if (clientId) {
-      window.location.href = `/?client=${clientId}`;
-    } else {
-      window.location.href = "/";
-    }
+    window.location.href = "/";
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  const connectedPlatforms = Object.values(PLATFORMS).filter(p => connections[p.id]);
+  const hasPosts = Object.keys(posts).length > 0;
 
-  if (!session) {
-    return (
-      <div className="sp-page sp-centered">
-        <div className="sp-loader">
-          <i className="ti ti-loader-2 sp-spin"></i>
-          <p>Checking authentication…</p>
-        </div>
+  if (!session) return (
+    <div style={{ minHeight: "100vh", background: "#0f1117", display: "flex",
+      alignItems: "center", justifyContent: "center", color: "#64748b",
+      fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      <div style={{ textAlign: "center" }}>
+        <i className="ti ti-loader-2" style={{ fontSize: 32, animation: "sp-spin 0.8s linear infinite", display: "block", marginBottom: 10 }}></i>
+        Checking authentication…
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
     <>
-      <style>{STYLES}</style>
-      <div className="sp-page">
+      <style>{CSS}</style>
+      <div style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0",
+        fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+
         {/* Header */}
-        <div className="sp-header">
-          <div className="sp-header-left">
-            <button className="sp-back-btn" onClick={handleBack}>
-              <i className="ti ti-arrow-left"></i>
-              Back to RankForged
+        <div style={{ background: "#161b27", borderBottom: "1px solid #1e2740",
+          padding: "14px 24px", display: "flex", alignItems: "center",
+          justifyContent: "space-between", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <button onClick={handleBack} style={{ background: "none", border: "1px solid #2d3748",
+              color: "#94a3b8", padding: "6px 12px", borderRadius: 6, cursor: "pointer",
+              fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+              <i className="ti ti-arrow-left"></i> Back
             </button>
-            <div className="sp-title">
-              <div className="sp-logo">
-                <i className="ti ti-share-2"></i>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#4a90d9,#7c5fc7)",
+                borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+                <i className="ti ti-share-2" style={{ color: "white" }}></i>
               </div>
               <div>
-                <h1>Social Publisher</h1>
-                <p>Connect your accounts and publish posts directly</p>
+                <div style={{ fontWeight: 700, fontSize: 16, color: "#f1f5f9" }}>Social Publisher</div>
+                <div style={{ fontSize: 11, color: "#64748b" }}>AI-powered posting to all your platforms</div>
               </div>
             </div>
           </div>
-          <button className="sp-refresh-btn" onClick={refreshConnections} title="Refresh connections">
+          <button onClick={refreshConnections} style={{ background: "none", border: "1px solid #2d3748",
+            color: "#64748b", width: 34, height: 34, borderRadius: 8, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}
+            title="Refresh connections">
             <i className="ti ti-refresh"></i>
           </button>
         </div>
 
-        {/* Error banner */}
+        {/* Error */}
         {error && (
-          <div className="sp-error-banner">
+          <div style={{ background: "#2d1515", borderBottom: "1px solid #7f1d1d",
+            color: "#fca5a5", padding: "10px 24px", fontSize: 13,
+            display: "flex", alignItems: "center", gap: 10 }}>
             <i className="ti ti-alert-triangle"></i>
             {error}
-            <button onClick={() => setError(null)}>
+            <button onClick={() => setError(null)} style={{ background: "none", border: "none",
+              color: "#fca5a5", cursor: "pointer", marginLeft: "auto", fontSize: 16 }}>
               <i className="ti ti-x"></i>
             </button>
           </div>
         )}
 
-        <div className="sp-body">
-          {/* Left column — connections */}
-          <div className="sp-left">
-            <div className="sp-section-title">
-              <i className="ti ti-plug-connected"></i>
-              Connected Accounts
-            </div>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: 24, display: "flex",
+          flexDirection: "column", gap: 20 }}>
 
+          {/* STEP 1 — Connected Accounts */}
+          <div style={{ background: "#161b27", border: "1px solid #1e2740", borderRadius: 12, padding: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase",
+              letterSpacing: "0.08em", color: "#64748b", marginBottom: 14,
+              display: "flex", alignItems: "center", gap: 6 }}>
+              <i className="ti ti-plug-connected"></i> Step 1 — Connect Your Accounts
+            </div>
             {loading ? (
-              <div className="sp-loading-cards">
-                <div className="sp-skeleton"></div>
-                <div className="sp-skeleton"></div>
-              </div>
+              <div style={{ color: "#475569", fontSize: 13 }}>Loading…</div>
             ) : (
-              <div className="sp-platform-list">
-                {Object.values(PLATFORMS).map((platform) => (
-                  <PlatformCard
-                    key={platform.id}
-                    platform={platform}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {Object.values(PLATFORMS).map(platform => (
+                  <PlatformCard key={platform.id} platform={platform}
                     connected={connections[platform.id]}
-                    pageId={platform.pageIdKey ? settings[platform.pageIdKey] : null}
-                    onConnect={handleConnect}
-                    onDisconnect={handleDisconnect}
-                    connecting={connecting}
-                  />
+                    onConnect={handleConnect} onDisconnect={handleDisconnect}
+                    connecting={connecting} />
                 ))}
               </div>
             )}
-
-            {/* Help box */}
-            <div className="sp-help-box">
-              <i className="ti ti-info-circle"></i>
-              <div>
-                <strong>How it works</strong>
-                <p>Click Connect, log into your account, and approve RankForged AI. Your credentials are stored securely and never shared.</p>
+            {connectedPlatforms.length === 0 && !loading && (
+              <div style={{ fontSize: 12, color: "#475569", marginTop: 10,
+                padding: "8px 12px", background: "#0f1117", borderRadius: 8 }}>
+                <i className="ti ti-info-circle"></i> Connect at least one platform to start publishing.
               </div>
+            )}
+          </div>
+
+          {/* STEP 2 — AI Generate */}
+          <div style={{ background: "#161b27", border: "1px solid #1e2740", borderRadius: 12, padding: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase",
+              letterSpacing: "0.08em", color: "#64748b", marginBottom: 14,
+              display: "flex", alignItems: "center", gap: 6 }}>
+              <i className="ti ti-sparkles"></i> Step 2 — Tell AI What to Post About
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 12, color: "#94a3b8", display: "block", marginBottom: 6 }}>
+                Business Name (optional)
+              </label>
+              <input value={businessName} onChange={e => setBusinessName(e.target.value)}
+                placeholder="e.g. Austin Plumbing Pros"
+                style={{ width: "100%", background: "#0f1117", border: "1px solid #1e2740",
+                  borderRadius: 8, color: "#e2e8f0", fontSize: 13, padding: "9px 12px",
+                  outline: "none", boxSizing: "border-box" }} />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, color: "#94a3b8", display: "block", marginBottom: 6 }}>
+                What do you want to post about? <span style={{ color: "#475569" }}>(describe in a few words or sentences)</span>
+              </label>
+              <textarea value={topic} onChange={e => setTopic(e.target.value)}
+                placeholder="e.g. We just added same-day AC repair to our services. Summer special — 10% off first visit."
+                rows={4} style={{ width: "100%", background: "#0f1117", border: "1px solid #1e2740",
+                  borderRadius: 8, color: "#e2e8f0", fontSize: 13, padding: "10px 12px",
+                  outline: "none", resize: "vertical", fontFamily: "inherit",
+                  lineHeight: 1.6, boxSizing: "border-box" }} />
+            </div>
+
+            <button onClick={handleGenerate}
+              disabled={generating || !topic.trim() || connectedPlatforms.length === 0}
+              style={{ background: generating ? "#1e2740" : "linear-gradient(135deg,#7c3aed,#4f46e5)",
+                border: "none", color: "white", padding: "11px 24px", borderRadius: 9,
+                fontSize: 14, fontWeight: 600, cursor: generating ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center", gap: 8, opacity: generating ? 0.7 : 1 }}>
+              <i className={`ti ${generating ? "ti-loader-2" : "ti-sparkles"}`}
+                style={generating ? { animation: "sp-spin 0.8s linear infinite", display: "inline-block" } : {}}></i>
+              {generating ? "Generating posts…" : "Generate Posts with AI"}
+            </button>
+          </div>
+
+          {/* STEP 3 — Review & Publish */}
+          {hasPosts && (
+            <div style={{ background: "#161b27", border: "1px solid #1e2740", borderRadius: 12, padding: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: "0.08em", color: "#64748b", marginBottom: 14,
+                display: "flex", alignItems: "center", gap: 6 }}>
+                <i className="ti ti-pencil"></i> Step 3 — Review & Publish
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 18 }}>
+                {Object.entries(posts).map(([pid, content]) => {
+                  const platform = PLATFORMS[pid];
+                  if (!platform) return null;
+                  const isSelected = selectedPlatforms.includes(pid);
+                  return (
+                    <div key={pid} style={{ border: `1px solid ${isSelected ? platform.color + "44" : "#1e2740"}`,
+                      borderRadius: 10, overflow: "hidden" }}>
+                      <div style={{ background: isSelected ? platform.color + "18" : "#0f1117",
+                        padding: "10px 14px", display: "flex", alignItems: "center",
+                        justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <i className={platform.icon} style={{ color: platform.color, fontSize: 16 }}></i>
+                          <span style={{ fontWeight: 600, fontSize: 13, color: "#f1f5f9" }}>{platform.label}</span>
+                          <span style={{ fontSize: 11, color: "#64748b" }}>{content.length} chars</span>
+                        </div>
+                        <label style={{ display: "flex", alignItems: "center", gap: 6,
+                          cursor: "pointer", fontSize: 12, color: "#94a3b8" }}>
+                          <input type="checkbox" checked={isSelected}
+                            onChange={e => setSelectedPlatforms(prev =>
+                              e.target.checked ? [...prev, pid] : prev.filter(p => p !== pid)
+                            )}
+                            style={{ accentColor: platform.color }} />
+                          Include
+                        </label>
+                      </div>
+                      <textarea value={content}
+                        onChange={e => setPosts(prev => ({ ...prev, [pid]: e.target.value }))}
+                        rows={5} style={{ width: "100%", background: "#0f1117", border: "none",
+                          borderTop: "1px solid #1e2740", color: "#e2e8f0", fontSize: 13,
+                          padding: "12px 14px", outline: "none", resize: "vertical",
+                          fontFamily: "inherit", lineHeight: 1.6, boxSizing: "border-box" }} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                flexWrap: "wrap", gap: 12 }}>
+                <button onClick={handleGenerate} disabled={generating}
+                  style={{ background: "transparent", border: "1px solid #2d3748",
+                    color: "#94a3b8", padding: "9px 16px", borderRadius: 8,
+                    fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                  <i className="ti ti-refresh"></i> Regenerate
+                </button>
+                <button onClick={handlePublish}
+                  disabled={publishing || selectedPlatforms.length === 0}
+                  style={{ background: publishing ? "#1e2740" : "linear-gradient(135deg,#2563eb,#7c3aed)",
+                    border: "none", color: "white", padding: "11px 28px", borderRadius: 9,
+                    fontSize: 14, fontWeight: 700, cursor: publishing ? "not-allowed" : "pointer",
+                    display: "flex", alignItems: "center", gap: 8, opacity: publishing ? 0.7 : 1 }}>
+                  <i className={`ti ${publishing ? "ti-loader-2" : "ti-send"}`}
+                    style={publishing ? { animation: "sp-spin 0.8s linear infinite", display: "inline-block" } : {}}></i>
+                  {publishing ? "Publishing…" : `Publish to ${selectedPlatforms.length} Platform${selectedPlatforms.length !== 1 ? "s" : ""}`}
+                </button>
+              </div>
+
+              {/* Publish result */}
+              {publishResult && (
+                <div style={{ marginTop: 16, padding: 14, borderRadius: 8,
+                  background: publishResult.success ? "#0d2318" : "#2d1515",
+                  border: `1px solid ${publishResult.success ? "#166534" : "#7f1d1d"}` }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8,
+                    color: publishResult.success ? "#4ade80" : "#fca5a5" }}>
+                    <i className={`ti ${publishResult.success ? "ti-circle-check" : "ti-circle-x"}`}></i>
+                    {" "}{publishResult.success ? "Published successfully!" : "Some platforms failed"}
+                  </div>
+                  {publishResult.results?.map((r, i) => (
+                    <div key={i} style={{ fontSize: 12, color: r.success ? "#86efac" : "#fca5a5",
+                      display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                      <i className={`ti ${r.success ? "ti-check" : "ti-x"}`}></i>
+                      {r.platform}: {r.message}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Help */}
+          <div style={{ background: "#161b27", border: "1px solid #1e2740", borderRadius: 10,
+            padding: 14, display: "flex", gap: 10, fontSize: 12, color: "#64748b" }}>
+            <i className="ti ti-info-circle" style={{ color: "#4a90d9", fontSize: 16, flexShrink: 0 }}></i>
+            <div>
+              <strong style={{ color: "#94a3b8", display: "block", marginBottom: 3 }}>How it works</strong>
+              Connect your accounts once, then use AI to write platform-optimized posts from a simple topic.
+              Facebook gets a friendly, engaging version. LinkedIn gets a professional version.
+              Review, edit if needed, then publish to all connected platforms in one click.
             </div>
           </div>
 
-          {/* Right column — composer */}
-          <div className="sp-right">
-            <div className="sp-section-title">
-              <i className="ti ti-pencil"></i>
-              Create & Publish
-            </div>
-            <ComposerSection
-              connections={connections}
-              publishing={publishing}
-              publishResult={publishResult}
-              onPublish={handlePublish}
-            />
-          </div>
         </div>
       </div>
     </>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const STYLES = `
+const CSS = `
   @import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css');
-
-  .sp-page {
-    min-height: 100vh;
-    background: #0f1117;
-    color: #e2e8f0;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    padding: 0;
-  }
-
-  .sp-page.sp-centered {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Header */
-  .sp-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 24px;
-    background: #161b27;
-    border-bottom: 1px solid #1e2740;
-    gap: 16px;
-  }
-
-  .sp-header-left {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .sp-back-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: none;
-    border: 1px solid #2d3748;
-    color: #94a3b8;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .sp-back-btn:hover { border-color: #4a90d9; color: #4a90d9; }
-
-  .sp-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .sp-logo {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #4a90d9, #7c5fc7);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-
-  .sp-title h1 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
-    color: #f1f5f9;
-    line-height: 1.2;
-  }
-
-  .sp-title p {
-    margin: 0;
-    font-size: 12px;
-    color: #64748b;
-  }
-
-  .sp-refresh-btn {
-    background: none;
-    border: 1px solid #2d3748;
-    color: #64748b;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-  .sp-refresh-btn:hover { border-color: #4a90d9; color: #4a90d9; }
-
-  /* Error banner */
-  .sp-error-banner {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #2d1515;
-    border: 1px solid #7f1d1d;
-    color: #fca5a5;
-    padding: 10px 20px;
-    font-size: 13px;
-  }
-  .sp-error-banner button {
-    background: none;
-    border: none;
-    color: #fca5a5;
-    cursor: pointer;
-    margin-left: auto;
-    padding: 2px;
-    font-size: 16px;
-    line-height: 1;
-  }
-
-  /* Body layout */
-  .sp-body {
-    display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: 24px;
-    padding: 24px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-
-  @media (max-width: 768px) {
-    .sp-body { grid-template-columns: 1fr; }
-  }
-
-  /* Section titles */
-  .sp-section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #64748b;
-    margin-bottom: 14px;
-  }
-
-  /* Platform cards */
-  .sp-platform-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .sp-platform-card {
-    background: #161b27;
-    border: 1px solid #1e2740;
-    border-radius: 12px;
-    padding: 16px;
-    transition: border-color 0.15s;
-  }
-  .sp-platform-card[data-connected="true"] {
-    border-color: #1e3a2f;
-    background: #131e18;
-  }
-
-  .sp-platform-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
-
-  .sp-platform-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    color: white;
-    flex-shrink: 0;
-  }
-
-  .sp-platform-name {
-    font-weight: 600;
-    font-size: 15px;
-    color: #f1f5f9;
-  }
-
-  .sp-platform-status {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    margin-top: 2px;
-  }
-  .sp-platform-status.connected { color: #4ade80; }
-  .sp-platform-status.disconnected { color: #64748b; }
-
-  .sp-platform-actions {
-    display: flex;
-    gap: 8px;
-  }
-
-  /* Buttons */
-  .sp-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .sp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .sp-btn-primary {
-    background: #2563eb;
-    color: white;
-  }
-  .sp-btn-primary:hover:not(:disabled) { background: #1d4ed8; }
-
-  .sp-btn-outline {
-    background: transparent;
-    border: 1px solid #2d3748;
-    color: #94a3b8;
-  }
-  .sp-btn-outline:hover { border-color: #ef4444; color: #ef4444; }
-
-  .sp-btn-publish {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    color: white;
-    padding: 10px 20px;
-    font-size: 14px;
-  }
-  .sp-btn-publish:hover:not(:disabled) { opacity: 0.9; }
-
-  /* Help box */
-  .sp-help-box {
-    display: flex;
-    gap: 10px;
-    background: #161b27;
-    border: 1px solid #1e2740;
-    border-radius: 10px;
-    padding: 14px;
-    font-size: 12px;
-    color: #64748b;
-    align-items: flex-start;
-  }
-  .sp-help-box i { color: #4a90d9; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-  .sp-help-box strong { color: #94a3b8; display: block; margin-bottom: 4px; }
-  .sp-help-box p { margin: 0; line-height: 1.5; }
-
-  /* Composer */
-  .sp-composer {
-    background: #161b27;
-    border: 1px solid #1e2740;
-    border-radius: 12px;
-    padding: 20px;
-  }
-
-  .sp-composer-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 60px 20px;
-    color: #475569;
-    text-align: center;
-  }
-  .sp-empty-icon { font-size: 48px; opacity: 0.3; }
-
-  .sp-composer-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .sp-composer-header h3 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-    color: #f1f5f9;
-  }
-
-  .sp-platform-toggles {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .sp-toggle-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid #2d3748;
-    background: transparent;
-    color: #64748b;
-    transition: all 0.15s;
-  }
-  .sp-toggle-btn.active {
-    background: var(--platform-color, #2563eb);
-    border-color: var(--platform-color, #2563eb);
-    color: white;
-  }
-
-  .sp-textarea {
-    width: 100%;
-    background: #0f1117;
-    border: 1px solid #1e2740;
-    border-radius: 8px;
-    color: #e2e8f0;
-    font-size: 14px;
-    line-height: 1.6;
-    padding: 12px;
-    resize: vertical;
-    min-height: 140px;
-    font-family: inherit;
-    box-sizing: border-box;
-    transition: border-color 0.15s;
-  }
-  .sp-textarea:focus {
-    outline: none;
-    border-color: #2563eb;
-  }
-  .sp-textarea::placeholder { color: #334155; }
-
-  .sp-composer-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 12px;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .sp-char-count { font-size: 12px; color: #475569; }
-  .sp-char-warning {
-    font-size: 12px;
-    color: #f59e0b;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  /* Publish result */
-  .sp-result {
-    display: flex;
-    gap: 12px;
-    margin-top: 16px;
-    padding: 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    align-items: flex-start;
-  }
-  .sp-result i { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
-  .sp-result strong { display: block; margin-bottom: 3px; font-size: 14px; }
-  .sp-result p { margin: 0; color: #94a3b8; }
-
-  .sp-result-success {
-    background: #0d2318;
-    border: 1px solid #166534;
-    color: #4ade80;
-  }
-  .sp-result-error {
-    background: #2d1515;
-    border: 1px solid #7f1d1d;
-    color: #fca5a5;
-  }
-
-  .sp-result-list {
-    margin: 8px 0 0;
-    padding: 0;
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .sp-result-list li {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #94a3b8;
-  }
-  .sp-result-list li.ok i { color: #4ade80; }
-  .sp-result-list li.fail i { color: #f87171; }
-
-  /* Loading states */
-  .sp-loader {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    color: #64748b;
-    font-size: 14px;
-  }
-  .sp-loader i { font-size: 32px; }
-
-  .sp-loading-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .sp-skeleton {
-    height: 90px;
-    background: linear-gradient(90deg, #161b27 25%, #1e2740 50%, #161b27 75%);
-    background-size: 200% 100%;
-    border-radius: 12px;
-    animation: sp-shimmer 1.5s infinite;
-  }
-
-  @keyframes sp-shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  @keyframes sp-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  .sp-spin { animation: sp-spin 0.8s linear infinite; display: inline-block; }
+  @keyframes sp-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  * { box-sizing: border-box; }
+  textarea:focus, input:focus { border-color: #2563eb !important; }
+  button:hover:not(:disabled) { opacity: 0.88; }
 `;
