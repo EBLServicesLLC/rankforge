@@ -320,7 +320,10 @@ export default function SocialPublisherPage() {
               <div style={{ fontSize: 11, color: "#64748b" }}>AI-powered · Facebook · LinkedIn</div>
             </div>
           </div>
-          <button onClick={() => window.close()} style={{ background: "none",
+          <button onClick={() => {
+            if (window.opener) { window.close(); }
+            else { window.location.href = '/'; }
+          }} style={{ background: "none",
             border: "1px solid #2d3748", color: "#94a3b8", padding: "6px 14px",
             borderRadius: 6, cursor: "pointer", fontSize: 13,
             display: "flex", alignItems: "center", gap: 6 }}>
