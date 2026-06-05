@@ -1,7 +1,8 @@
 /**
  * SocialPublisherPage.jsx
- * /social — Single scrollable page
- * Apple aesthetic redesign — all logic unchanged from previous version
+ * /social — Two-tab layout: Connect Accounts | Write & Post
+ * Dark pro theme matching rankforge3
+ * All logic identical to previous version
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -33,10 +34,10 @@ const PLATFORMS = {
 };
 
 const COMING_SOON = [
-  { id: "instagram", label: "Instagram", icon: "ti ti-brand-instagram", color: "#E1306C" },
-  { id: "x",        label: "X / Twitter", icon: "ti ti-brand-x",        color: "#14171A" },
-  { id: "gbp",      label: "Google Business", icon: "ti ti-brand-google", color: "#4285F4" },
-  { id: "pinterest",label: "Pinterest",  icon: "ti ti-brand-pinterest", color: "#E60023" },
+  { id: "instagram", label: "Instagram",       icon: "ti ti-brand-instagram", color: "#E1306C" },
+  { id: "x",         label: "X / Twitter",     icon: "ti ti-brand-x",         color: "#e2e8f0" },
+  { id: "gbp",       label: "Google Business", icon: "ti ti-brand-google",    color: "#4285F4" },
+  { id: "pinterest", label: "Pinterest",        icon: "ti ti-brand-pinterest", color: "#E60023" },
 ];
 
 function getHeaders(session) {
@@ -48,31 +49,35 @@ function getHeaders(session) {
 }
 
 function handleBack() {
-  const clientId = new URLSearchParams(window.location.search).get("client");
-  if (clientId) {
-    window.location.href = "/?client=" + clientId;
+  // /social is always opened in a new tab from rankforge3
+  // so closing the tab returns the user to rankforge3 naturally
+  if (window.opener || window.history.length <= 1) {
+    window.close();
+    // fallback if window.close() is blocked
+    setTimeout(() => { window.location.href = "/"; }, 300);
   } else {
-    window.location.href = "/";
+    window.history.back();
   }
 }
 
 export default function SocialPublisherPage() {
-  const [session, setSession]                 = useState(null);
-  const [connections, setConnections]         = useState({});
-  const [loading, setLoading]                 = useState(true);
-  const [connecting, setConnecting]           = useState(null);
-  const [error, setError]                     = useState(null);
+  const [session, setSession]                     = useState(null);
+  const [connections, setConnections]             = useState({});
+  const [loading, setLoading]                     = useState(true);
+  const [connecting, setConnecting]               = useState(null);
+  const [error, setError]                         = useState(null);
+  const [activeTab, setActiveTab]                 = useState("connect");
 
-  const [businessName, setBusinessName]       = useState("");
-  const [topic, setTopic]                     = useState("");
-  const [postType, setPostType]               = useState("update");
+  const [businessName, setBusinessName]           = useState("");
+  const [topic, setTopic]                         = useState("");
+  const [postType, setPostType]                   = useState("update");
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
-  const [generating, setGenerating]           = useState(false);
-  const [posts, setPosts]                     = useState({});
-  const [publishing, setPublishing]           = useState(false);
-  const [publishResult, setPublishResult]     = useState(null);
+  const [generating, setGenerating]               = useState(false);
+  const [posts, setPosts]                         = useState({});
+  const [publishing, setPublishing]               = useState(false);
+  const [publishResult, setPublishResult]         = useState(null);
 
-  // ── Auth ─────────────────────────────────────────────────────────────────────
+  // ── Auth ──────────────────────────────────────────────────────────────────────
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
@@ -248,29 +253,27 @@ export default function SocialPublisherPage() {
     }
   }, [session, selectedPlatforms, posts]);
 
-  // ── Loading state ─────────────────────────────────────────────────────────────
+  const connectedCount = Object.values(connections).filter(Boolean).length;
+  const connectedPlatforms = Object.values(PLATFORMS).filter(p => connections[p.id]);
+  const hasPosts = Object.keys(posts).length > 0;
+
+  // ── Loading ───────────────────────────────────────────────────────────────────
   if (!session) return (
     <div style={{
-      minHeight: "100vh",
-      background: "#f5f5f7",
+      minHeight: "100vh", background: "#080e1a",
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif",
+      fontFamily: "'Segoe UI', system-ui, sans-serif",
     }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
         <div style={{
-          width: 44, height: 44,
-          border: "3px solid #e5e5ea",
-          borderTopColor: "#007AFF",
-          borderRadius: "50%",
+          width: 40, height: 40, border: "3px solid #0f2040",
+          borderTopColor: "#1a5fd4", borderRadius: "50%",
           animation: "sp-spin 0.9s linear infinite",
         }} />
-        <span style={{ fontSize: 15, color: "#8e8e93", fontWeight: 500 }}>Loading…</span>
+        <span style={{ fontSize: 13, color: "#1a3050" }}>Loading…</span>
       </div>
     </div>
   );
-
-  const connectedPlatforms = Object.values(PLATFORMS).filter(p => connections[p.id]);
-  const hasPosts = Object.keys(posts).length > 0;
 
   return (
     <>
@@ -281,142 +284,178 @@ export default function SocialPublisherPage() {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
         }
-        @keyframes sp-fade-in {
-          from { opacity: 0; transform: translateY(12px); }
+        @keyframes sp-fadein {
+          from { opacity: 0; transform: translateY(10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
+        *, *::before, *::after { box-sizing: border-box; }
 
         .sp-page {
           min-height: 100vh;
-          background: #f5f5f7;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
-          color: #1d1d1f;
+          background: #080e1a;
+          font-family: 'Segoe UI', system-ui, sans-serif;
+          color: #e2e8f0;
+          -webkit-font-smoothing: antialiased;
         }
 
-        /* ── Header ── */
+        /* ── HEADER ── */
         .sp-header {
-          background: rgba(255,255,255,0.82);
-          -webkit-backdrop-filter: blur(20px);
-          backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(0,0,0,0.08);
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          padding: 0 24px;
-          height: 52px;
+          background: #0d1f3c;
+          border-bottom: 1px solid #1a2840;
+          height: 56px;
           display: flex;
           align-items: center;
           justify-content: space-between;
+          padding: 0 28px;
+          position: sticky;
+          top: 0;
+          z-index: 100;
         }
 
         .sp-header-brand {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
         }
 
-        .sp-header-logo {
-          width: 30px;
-          height: 30px;
-          background: linear-gradient(145deg, #007AFF, #5856D6);
-          border-radius: 8px;
+        .sp-logo {
+          width: 34px;
+          height: 34px;
+          background: linear-gradient(135deg, #1a5fd4, #0e3fa8);
+          border-radius: 9px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 15px;
+          font-size: 17px;
           color: white;
           flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(26,95,212,0.4);
         }
 
         .sp-header-title {
-          font-size: 17px;
-          font-weight: 600;
-          color: #1d1d1f;
+          font-size: 15px;
+          font-weight: 700;
+          color: #f1f5f9;
           letter-spacing: -0.2px;
+        }
+
+        .sp-header-sub {
+          font-size: 11px;
+          color: #3a5070;
+          margin-top: 1px;
+          font-weight: 400;
         }
 
         .sp-back-btn {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 6px;
+          background: transparent;
+          border: 1px solid #1a2840;
+          color: #7a9cc0;
+          font-size: 13px;
+          font-family: inherit;
+          font-weight: 500;
+          cursor: pointer;
+          padding: 7px 14px;
+          border-radius: 7px;
+          transition: all 0.15s;
+          letter-spacing: -0.1px;
+        }
+        .sp-back-btn:hover {
+          border-color: #1a5fd4;
+          color: #4a90d9;
+          background: rgba(26,95,212,0.06);
+        }
+
+        /* ── TABS ── */
+        .sp-tabs {
+          background: #0a1628;
+          border-bottom: 1px solid #1a2840;
+          padding: 0 28px;
+          display: flex;
+          gap: 2px;
+        }
+
+        .sp-tab {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 14px 20px;
+          font-size: 13px;
+          font-weight: 600;
+          font-family: inherit;
+          color: #3a5070;
           background: none;
           border: none;
-          color: #007AFF;
-          font-size: 15px;
-          font-family: inherit;
-          font-weight: 400;
+          border-bottom: 2px solid transparent;
           cursor: pointer;
-          padding: 4px 0;
+          transition: all 0.15s;
           letter-spacing: -0.1px;
-          transition: opacity 0.15s;
+          position: relative;
+          bottom: -1px;
         }
-        .sp-back-btn:hover { opacity: 0.7; }
-        .sp-back-btn i { font-size: 17px; }
+        .sp-tab:hover { color: #7a9cc0; }
+        .sp-tab.active {
+          color: #4a90d9;
+          border-bottom-color: #1a5fd4;
+        }
+        .sp-tab i { font-size: 15px; }
 
-        /* ── Body ── */
-        .sp-body {
-          max-width: 720px;
-          margin: 0 auto;
-          padding: 40px 20px 80px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          animation: sp-fade-in 0.35s ease both;
-        }
-
-        /* ── Hero ── */
-        .sp-hero {
-          text-align: center;
-          padding: 8px 0 24px;
-        }
-        .sp-hero h1 {
-          font-size: 32px;
+        .sp-tab-badge {
+          background: #0f2a50;
+          color: #4a90d9;
+          font-size: 10px;
           font-weight: 700;
-          letter-spacing: -0.8px;
-          color: #1d1d1f;
-          margin-bottom: 8px;
-          line-height: 1.1;
+          padding: 2px 7px;
+          border-radius: 980px;
+          letter-spacing: 0.2px;
         }
-        .sp-hero p {
-          font-size: 16px;
-          color: #6e6e73;
-          font-weight: 400;
-          letter-spacing: -0.1px;
+        .sp-tab-badge.connected {
+          background: #0d2a1a;
+          color: #34c759;
         }
 
-        /* ── Card ── */
+        /* ── BODY ── */
+        .sp-body {
+          max-width: 780px;
+          margin: 0 auto;
+          padding: 32px 24px 80px;
+          animation: sp-fadein 0.25s ease both;
+        }
+
+        /* ── SECTION LABEL ── */
+        .sp-section-label {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: #2a4060;
+          margin-bottom: 16px;
+        }
+
+        /* ── CARD ── */
         .sp-card {
-          background: #ffffff;
-          border-radius: 18px;
+          background: #0d1f3c;
+          border: 1px solid #1a2840;
+          border-radius: 14px;
+          margin-bottom: 16px;
           overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
         }
 
-        .sp-card-header {
-          padding: 18px 20px 14px;
-          border-bottom: 1px solid #f2f2f7;
+        .sp-card-head {
+          padding: 16px 20px;
+          border-bottom: 1px solid #1a2840;
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          gap: 12px;
         }
 
-        .sp-card-header-left {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .sp-card-icon {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
+        .sp-card-head-icon {
+          width: 34px;
+          height: 34px;
+          border-radius: 9px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -424,17 +463,18 @@ export default function SocialPublisherPage() {
           flex-shrink: 0;
         }
 
-        .sp-card-title {
-          font-size: 15px;
-          font-weight: 600;
-          color: #1d1d1f;
+        .sp-card-head-text h3 {
+          font-size: 14px;
+          font-weight: 700;
+          color: #f1f5f9;
+          margin: 0 0 2px;
           letter-spacing: -0.2px;
         }
 
-        .sp-card-subtitle {
+        .sp-card-head-text p {
           font-size: 12px;
-          color: #8e8e93;
-          margin-top: 1px;
+          color: #3a5070;
+          margin: 0;
           font-weight: 400;
         }
 
@@ -442,254 +482,301 @@ export default function SocialPublisherPage() {
           padding: 20px;
         }
 
-        /* ── Platform rows ── */
+        /* ── PLATFORM ROWS ── */
         .sp-platform-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 14px 0;
-          border-bottom: 1px solid #f2f2f7;
+          padding: 14px 20px;
+          border-bottom: 1px solid #0f1a2e;
           gap: 12px;
+          transition: background 0.12s;
         }
         .sp-platform-row:last-child { border-bottom: none; }
+        .sp-platform-row:hover { background: rgba(255,255,255,0.015); }
 
-        .sp-platform-info {
+        .sp-platform-left {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 14px;
         }
 
         .sp-platform-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
+          width: 42px;
+          height: 42px;
+          border-radius: 11px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 20px;
+          font-size: 22px;
           color: white;
           flex-shrink: 0;
         }
 
         .sp-platform-name {
-          font-size: 15px;
+          font-size: 14px;
           font-weight: 600;
-          color: #1d1d1f;
-          letter-spacing: -0.2px;
+          color: #e2e8f0;
+          letter-spacing: -0.1px;
         }
 
         .sp-platform-status {
           font-size: 12px;
-          color: #8e8e93;
-          margin-top: 2px;
+          color: #2a4060;
+          margin-top: 3px;
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 5px;
+          font-weight: 500;
         }
-        .sp-platform-status.connected { color: #34C759; }
+        .sp-platform-status.ok { color: #34c759; }
 
-        /* ── Buttons ── */
+        /* ── COMING SOON GRID ── */
+        .sp-cs-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          padding: 16px 20px 20px;
+        }
+
+        .sp-cs-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 14px;
+          background: #080e1a;
+          border: 1px solid #111d33;
+          border-radius: 10px;
+        }
+
+        .sp-cs-avatar {
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 17px;
+          color: white;
+          flex-shrink: 0;
+          opacity: 0.35;
+        }
+
+        .sp-cs-label {
+          font-size: 13px;
+          font-weight: 500;
+          color: #2a4060;
+        }
+
+        .sp-soon-pill {
+          margin-left: auto;
+          background: #0a1628;
+          color: #2a4060;
+          font-size: 9px;
+          font-weight: 700;
+          padding: 3px 7px;
+          border-radius: 980px;
+          letter-spacing: 0.3px;
+          text-transform: uppercase;
+          border: 1px solid #1a2840;
+          flex-shrink: 0;
+        }
+
+        /* ── BUTTONS ── */
         .sp-btn {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           font-family: inherit;
-          font-size: 14px;
-          font-weight: 500;
-          border: none;
-          border-radius: 980px;
+          font-size: 13px;
+          font-weight: 600;
+          border-radius: 8px;
           cursor: pointer;
-          padding: 8px 18px;
-          transition: opacity 0.15s, transform 0.1s;
+          padding: 8px 16px;
+          border: none;
+          transition: all 0.15s;
           letter-spacing: -0.1px;
           white-space: nowrap;
         }
+        .sp-btn:hover:not(:disabled) { filter: brightness(1.1); }
         .sp-btn:active:not(:disabled) { transform: scale(0.97); }
-        .sp-btn:hover:not(:disabled) { opacity: 0.85; }
         .sp-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        .sp-btn-primary {
-          background: #007AFF;
+        .sp-btn-connect {
+          background: linear-gradient(135deg, #1a5fd4, #0e3fa8);
           color: white;
-        }
-        .sp-btn-secondary {
-          background: #f2f2f7;
-          color: #1d1d1f;
-        }
-        .sp-btn-danger {
-          background: #fff1f0;
-          color: #FF3B30;
-        }
-        .sp-btn-generate {
-          background: linear-gradient(135deg, #5856D6, #007AFF);
-          color: white;
-          font-size: 15px;
-          font-weight: 600;
-          padding: 13px 28px;
-          border-radius: 14px;
-          width: 100%;
-          justify-content: center;
-        }
-        .sp-btn-publish {
-          background: #34C759;
-          color: white;
-          font-size: 15px;
-          font-weight: 600;
-          padding: 13px 28px;
-          border-radius: 14px;
-          flex: 1;
-          justify-content: center;
+          box-shadow: 0 2px 8px rgba(26,95,212,0.3);
         }
 
-        /* ── Coming Soon grid ── */
-        .sp-coming-soon-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          padding: 20px;
-          padding-top: 0;
+        .sp-btn-disconnect {
+          background: transparent;
+          border: 1px solid #1a2840;
+          color: #4a5c7a;
+        }
+        .sp-btn-disconnect:hover:not(:disabled) {
+          border-color: #ff3b30;
+          color: #ff3b30;
+          background: rgba(255,59,48,0.06);
+          filter: none;
         }
 
-        .sp-coming-soon-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 12px 14px;
-          background: #f9f9fb;
-          border-radius: 12px;
-          border: 1px solid #f2f2f7;
-        }
+        /* ── FORM ── */
+        .sp-field { margin-bottom: 18px; }
+        .sp-field:last-of-type { margin-bottom: 0; }
 
-        .sp-coming-soon-avatar {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 16px;
-          color: white;
-          flex-shrink: 0;
-          opacity: 0.55;
-        }
-
-        .sp-coming-soon-label {
-          font-size: 13px;
-          font-weight: 500;
-          color: #8e8e93;
-        }
-
-        .sp-soon-badge {
-          margin-left: auto;
-          background: #f2f2f7;
-          color: #8e8e93;
-          font-size: 10px;
-          font-weight: 600;
-          padding: 2px 7px;
-          border-radius: 980px;
-          letter-spacing: 0.2px;
-          text-transform: uppercase;
-          flex-shrink: 0;
-        }
-
-        /* ── Form fields ── */
         .sp-label {
-          font-size: 13px;
-          font-weight: 500;
-          color: #3a3a3c;
+          font-size: 12px;
+          font-weight: 600;
+          color: #4a6080;
           display: block;
           margin-bottom: 7px;
-          letter-spacing: -0.1px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+
+        .sp-label span {
+          text-transform: none;
+          font-weight: 400;
+          color: #2a4060;
+          letter-spacing: 0;
+          margin-left: 6px;
+          font-size: 11px;
         }
 
         .sp-input {
           width: 100%;
-          background: #f9f9fb;
-          border: 1px solid #e5e5ea;
-          border-radius: 10px;
-          color: #1d1d1f;
-          font-size: 15px;
+          background: #080e1a;
+          border: 1px solid #1a2840;
+          border-radius: 9px;
+          color: #e2e8f0;
+          font-size: 14px;
           font-family: inherit;
-          padding: 11px 14px;
+          padding: 10px 13px;
           transition: border-color 0.15s, box-shadow 0.15s;
           -webkit-appearance: none;
         }
         .sp-input:focus {
           outline: none;
-          border-color: #007AFF;
-          box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+          border-color: #1a5fd4;
+          box-shadow: 0 0 0 3px rgba(26,95,212,0.15);
         }
-        .sp-input::placeholder { color: #c7c7cc; }
+        .sp-input::placeholder { color: #1a2840; }
 
         textarea.sp-input {
           resize: vertical;
-          line-height: 1.6;
+          line-height: 1.65;
+          min-height: 100px;
         }
 
         select.sp-input {
           cursor: pointer;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238e8e93' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%232a4060' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
           background-repeat: no-repeat;
-          background-position: right 14px center;
-          padding-right: 36px;
+          background-position: right 13px center;
+          padding-right: 34px;
         }
 
-        .sp-field-row {
+        .sp-row-2 {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          margin-bottom: 16px;
+          gap: 14px;
         }
 
-        .sp-field { margin-bottom: 16px; }
-        .sp-field:last-child { margin-bottom: 0; }
-
-        /* ── Platform checkboxes ── */
-        .sp-platform-checks {
+        /* ── PLATFORM CHECKBOXES ── */
+        .sp-checks {
           display: flex;
           gap: 10px;
+          flex-wrap: wrap;
         }
 
-        .sp-check-label {
+        .sp-check {
           flex: 1;
+          min-width: 140px;
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          padding: 11px 14px;
+          background: #080e1a;
+          border: 1.5px solid #1a2840;
+          border-radius: 9px;
+          cursor: pointer;
+          transition: all 0.15s;
+          font-size: 13px;
+          font-weight: 600;
+          color: #4a6080;
+          user-select: none;
+        }
+        .sp-check input { display: none; }
+        .sp-check:hover { border-color: #1a3560; color: #7a9cc0; }
+        .sp-check.checked {
+          border-color: #1a5fd4;
+          background: rgba(26,95,212,0.08);
+          color: #4a90d9;
+        }
+        .sp-check-tick {
+          margin-left: auto;
+          color: #1a5fd4;
+          font-size: 13px;
+          display: none;
+        }
+        .sp-check.checked .sp-check-tick { display: block; }
+
+        .sp-no-platforms {
+          background: #080e1a;
+          border: 1px solid #1a2840;
+          border-radius: 9px;
+          padding: 12px 14px;
+          font-size: 13px;
+          color: #3a5070;
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 11px 14px;
-          border-radius: 12px;
-          border: 1.5px solid #e5e5ea;
-          cursor: pointer;
-          transition: border-color 0.15s, background 0.15s;
-          background: #f9f9fb;
-          font-size: 14px;
-          font-weight: 500;
-          color: #1d1d1f;
-          user-select: none;
         }
-        .sp-check-label input[type="checkbox"] { display: none; }
-        .sp-check-label.checked {
-          border-color: #007AFF;
-          background: rgba(0,122,255,0.06);
-        }
+        .sp-no-platforms i { color: #f59e0b; }
 
-        /* ── Post editors ── */
+        /* ── GENERATE BUTTON ── */
+        .sp-btn-generate {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 9px;
+          background: linear-gradient(135deg, #1a5fd4, #5856d6);
+          color: white;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 700;
+          padding: 13px 0;
+          border-radius: 10px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.15s;
+          letter-spacing: -0.1px;
+          box-shadow: 0 4px 16px rgba(26,95,212,0.35);
+          margin-top: 20px;
+        }
+        .sp-btn-generate:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+        .sp-btn-generate:active:not(:disabled) { transform: translateY(0); }
+        .sp-btn-generate:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+        /* ── POST EDITORS ── */
+        .sp-post-editors { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
+
         .sp-post-editor {
-          border: 1.5px solid #e5e5ea;
-          border-radius: 14px;
+          border: 1px solid #1a2840;
+          border-radius: 11px;
           overflow: hidden;
-          margin-bottom: 12px;
           transition: border-color 0.15s;
         }
-        .sp-post-editor:last-child { margin-bottom: 0; }
-        .sp-post-editor:focus-within { border-color: #007AFF; }
+        .sp-post-editor:focus-within { border-color: #1a5fd4; }
 
-        .sp-post-editor-header {
+        .sp-post-editor-head {
+          background: #080e1a;
           padding: 10px 14px;
-          background: #f9f9fb;
+          border-bottom: 1px solid #1a2840;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-bottom: 1px solid #f2f2f7;
         }
 
         .sp-post-editor-platform {
@@ -697,173 +784,210 @@ export default function SocialPublisherPage() {
           align-items: center;
           gap: 8px;
           font-size: 13px;
-          font-weight: 600;
-          color: #1d1d1f;
+          font-weight: 700;
+          color: #e2e8f0;
+        }
+
+        .sp-post-editor-meta {
+          font-size: 11px;
+          color: #2a4060;
+          font-weight: 400;
         }
 
         .sp-post-editor-hint {
           font-size: 11px;
-          color: #8e8e93;
+          color: #2a4060;
         }
 
         .sp-post-editor textarea {
           width: 100%;
-          background: white;
+          background: #0d1f3c;
           border: none;
-          color: #1d1d1f;
-          font-size: 14px;
+          color: #c8d8f0;
+          font-size: 13px;
           font-family: inherit;
           padding: 14px;
           resize: vertical;
-          line-height: 1.65;
+          line-height: 1.7;
           display: block;
+          min-height: 110px;
         }
         .sp-post-editor textarea:focus { outline: none; }
 
-        /* ── Publish result ── */
-        .sp-result {
-          border-radius: 12px;
-          padding: 14px 16px;
-          margin-bottom: 14px;
+        /* ── PUBLISH ROW ── */
+        .sp-publish-row {
+          display: flex;
+          gap: 10px;
+        }
+
+        .sp-btn-regen {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-family: inherit;
           font-size: 13px;
+          font-weight: 600;
+          background: transparent;
+          border: 1px solid #1a2840;
+          color: #4a6080;
+          border-radius: 10px;
+          cursor: pointer;
+          padding: 12px 18px;
+          transition: all 0.15s;
+          white-space: nowrap;
+        }
+        .sp-btn-regen:hover { border-color: #1a3560; color: #7a9cc0; }
+
+        .sp-btn-publish {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background: linear-gradient(135deg, #1a9b4e, #16803e);
+          color: white;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 700;
+          padding: 12px 0;
+          border-radius: 10px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.15s;
+          box-shadow: 0 4px 14px rgba(26,155,78,0.3);
+          letter-spacing: -0.1px;
+        }
+        .sp-btn-publish:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+        .sp-btn-publish:active:not(:disabled) { transform: translateY(0); }
+        .sp-btn-publish:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+        /* ── RESULT ── */
+        .sp-result {
+          border-radius: 10px;
+          padding: 14px 16px;
+          margin-bottom: 16px;
+          font-size: 13px;
+          animation: sp-fadein 0.2s ease both;
         }
         .sp-result.success {
-          background: rgba(52,199,89,0.08);
-          border: 1px solid rgba(52,199,89,0.25);
+          background: rgba(52,199,89,0.07);
+          border: 1px solid rgba(52,199,89,0.2);
         }
-        .sp-result.error {
+        .sp-result.fail {
           background: rgba(255,59,48,0.06);
-          border: 1px solid rgba(255,59,48,0.2);
+          border: 1px solid rgba(255,59,48,0.18);
         }
         .sp-result-title {
-          font-weight: 600;
+          font-weight: 700;
           font-size: 14px;
           display: flex;
           align-items: center;
           gap: 6px;
           margin-bottom: 8px;
         }
+        .sp-result-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 4px;
+          font-size: 12px;
+        }
 
-        /* ── Error banner ── */
-        .sp-error-banner {
+        /* ── ERROR BANNER ── */
+        .sp-error {
           background: rgba(255,59,48,0.06);
           border-bottom: 1px solid rgba(255,59,48,0.15);
-          color: #FF3B30;
-          padding: 12px 20px;
-          font-size: 14px;
+          color: #ff6b60;
+          padding: 11px 28px;
+          font-size: 13px;
           display: flex;
           align-items: center;
           gap: 10px;
         }
-
         .sp-error-close {
           background: none;
           border: none;
-          color: #FF3B30;
+          color: #ff6b60;
           cursor: pointer;
           margin-left: auto;
-          font-size: 18px;
-          display: flex;
+          font-size: 17px;
           opacity: 0.6;
+          display: flex;
           transition: opacity 0.15s;
+          padding: 0;
         }
         .sp-error-close:hover { opacity: 1; }
 
-        /* ── Empty platform warning ── */
-        .sp-platform-warning {
-          background: rgba(255,149,0,0.07);
-          border: 1px solid rgba(255,149,0,0.2);
-          border-radius: 10px;
-          padding: 12px 14px;
-          font-size: 13px;
-          color: #c57800;
-          display: flex;
-          align-items: center;
-          gap: 8px;
+        /* ── EMPTY STATE ── */
+        .sp-write-tip {
+          text-align: center;
+          padding: 40px 20px;
+          color: #2a4060;
         }
+        .sp-write-tip i { font-size: 36px; display: block; margin-bottom: 12px; color: #1a3050; }
+        .sp-write-tip h4 { font-size: 15px; font-weight: 600; color: #3a5070; margin: 0 0 6px; }
+        .sp-write-tip p { font-size: 13px; line-height: 1.6; margin: 0; }
 
-        /* ── Divider ── */
-        .sp-divider {
-          height: 1px;
-          background: #f2f2f7;
-          margin: 4px 0;
-        }
+        /* ── SPINNER ── */
+        .sp-spin { animation: sp-spin 0.8s linear infinite; display: inline-block; }
 
-        /* ── Publish row ── */
-        .sp-publish-row {
-          display: flex;
-          gap: 10px;
-          margin-top: 4px;
-        }
-
-        .sp-regen-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          font-family: inherit;
-          font-size: 14px;
-          font-weight: 500;
-          background: #f2f2f7;
-          color: #3a3a3c;
-          border: none;
-          border-radius: 14px;
-          cursor: pointer;
-          padding: 13px 20px;
-          transition: opacity 0.15s;
-          letter-spacing: -0.1px;
-          white-space: nowrap;
-        }
-        .sp-regen-btn:hover { opacity: 0.75; }
-
-        /* ── Spinner in button ── */
-        .sp-spinner {
-          animation: sp-spin 0.8s linear infinite;
-          display: inline-block;
-        }
-
-        /* ── How it works ── */
-        .sp-howto {
-          display: flex;
-          gap: 10px;
-          padding: 16px 20px;
-          font-size: 13px;
-          color: #6e6e73;
-          line-height: 1.55;
-        }
-        .sp-howto i {
-          font-size: 17px;
-          color: #007AFF;
-          flex-shrink: 0;
-          margin-top: 1px;
-        }
-
-        @media (max-width: 600px) {
-          .sp-field-row { grid-template-columns: 1fr; }
-          .sp-coming-soon-grid { grid-template-columns: 1fr; }
-          .sp-body { padding: 24px 14px 60px; }
-          .sp-hero h1 { font-size: 26px; }
+        @media (max-width: 580px) {
+          .sp-row-2 { grid-template-columns: 1fr; }
+          .sp-cs-grid { grid-template-columns: 1fr; }
+          .sp-body { padding: 20px 14px 60px; }
+          .sp-tabs { padding: 0 14px; }
+          .sp-header { padding: 0 16px; }
         }
       `}</style>
 
       <div className="sp-page">
 
-        {/* ── Header ─────────────────────────────────────────────────────────── */}
+        {/* ── HEADER ─────────────────────────────────────────────────────────── */}
         <header className="sp-header">
           <div className="sp-header-brand">
-            <div className="sp-header-logo">
+            <div className="sp-logo">
               <i className="ti ti-share-2"></i>
             </div>
-            <span className="sp-header-title">Social Publisher</span>
+            <div>
+              <div className="sp-header-title">Social Publisher</div>
+              <div className="sp-header-sub">AI-powered · Facebook · LinkedIn</div>
+            </div>
           </div>
           <button className="sp-back-btn" onClick={handleBack}>
-            <i className="ti ti-chevron-left"></i>
-            RankForged
+            <i className="ti ti-arrow-left"></i>
+            Back to RankForged
           </button>
         </header>
 
-        {/* ── Error banner ────────────────────────────────────────────────────── */}
+        {/* ── TABS ────────────────────────────────────────────────────────────── */}
+        <nav className="sp-tabs">
+          <button
+            className={`sp-tab ${activeTab === "connect" ? "active" : ""}`}
+            onClick={() => setActiveTab("connect")}
+          >
+            <i className="ti ti-plug-connected"></i>
+            Connect Accounts
+            <span className={`sp-tab-badge ${connectedCount > 0 ? "connected" : ""}`}>
+              {connectedCount > 0 ? `${connectedCount} connected` : "None"}
+            </span>
+          </button>
+          <button
+            className={`sp-tab ${activeTab === "write" ? "active" : ""}`}
+            onClick={() => setActiveTab("write")}
+          >
+            <i className="ti ti-sparkles"></i>
+            Write &amp; Post
+            {connectedCount === 0 && (
+              <span className="sp-tab-badge" style={{ background: "#1a1500", color: "#f59e0b", borderColor: "#2a2000" }}>
+                Connect first
+              </span>
+            )}
+          </button>
+        </nav>
+
+        {/* ── ERROR BANNER ──────────────────────────────────────────────────────── */}
         {error && (
-          <div className="sp-error-banner">
+          <div className="sp-error">
             <i className="ti ti-alert-circle"></i>
             {error}
             <button className="sp-error-close" onClick={() => setError(null)}>
@@ -872,41 +996,39 @@ export default function SocialPublisherPage() {
           </div>
         )}
 
-        <div className="sp-body">
+        {/* ════════════════════════════════════════════════════════════════════════
+            TAB 1 — CONNECT ACCOUNTS
+        ════════════════════════════════════════════════════════════════════════ */}
+        {activeTab === "connect" && (
+          <div className="sp-body">
 
-          {/* ── Hero ──────────────────────────────────────────────────────────── */}
-          <div className="sp-hero">
-            <h1>Publish to Social</h1>
-            <p>AI writes platform-optimised posts. You review and publish in one click.</p>
-          </div>
-
-          {/* ── SECTION 1: Connected Accounts ─────────────────────────────────── */}
-          <div className="sp-card">
-            <div className="sp-card-header">
-              <div className="sp-card-header-left">
-                <div className="sp-card-icon" style={{ background: "rgba(0,122,255,0.1)" }}>
-                  <i className="ti ti-plug-connected" style={{ color: "#007AFF" }}></i>
+            {/* Active platforms */}
+            <div className="sp-card">
+              <div className="sp-card-head">
+                <div className="sp-card-head-icon" style={{ background: "rgba(26,95,212,0.12)" }}>
+                  <i className="ti ti-plug-connected" style={{ color: "#4a90d9", fontSize: 17 }}></i>
                 </div>
-                <div>
-                  <div className="sp-card-title">Connected Accounts</div>
-                  <div className="sp-card-subtitle">Connect once, publish any time</div>
+                <div className="sp-card-head-text">
+                  <h3>Your Social Accounts</h3>
+                  <p>Connect once — your credentials are stored securely and never shared</p>
                 </div>
+                <button
+                  onClick={refreshConnections}
+                  title="Refresh status"
+                  style={{ marginLeft: "auto", background: "none", border: "none",
+                    color: "#2a4060", cursor: "pointer", fontSize: 17, display: "flex",
+                    padding: 4, transition: "color 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.color = "#4a90d9"}
+                  onMouseLeave={e => e.currentTarget.style.color = "#2a4060"}
+                >
+                  <i className="ti ti-refresh"></i>
+                </button>
               </div>
-              <button
-                onClick={refreshConnections}
-                style={{ background: "none", border: "none", cursor: "pointer",
-                  color: "#8e8e93", fontSize: 18, display: "flex", padding: 4 }}
-                title="Refresh"
-              >
-                <i className="ti ti-refresh"></i>
-              </button>
-            </div>
 
-            <div className="sp-card-body" style={{ paddingTop: 8, paddingBottom: 8 }}>
               {loading ? (
-                <div style={{ color: "#8e8e93", fontSize: 14, padding: "12px 0",
-                  display: "flex", alignItems: "center", gap: 8 }}>
-                  <i className="ti ti-loader-2 sp-spinner"></i> Loading accounts…
+                <div style={{ padding: "24px 20px", color: "#2a4060", fontSize: 13,
+                  display: "flex", alignItems: "center", gap: 10 }}>
+                  <i className="ti ti-loader-2 sp-spin"></i> Checking connections…
                 </div>
               ) : (
                 Object.values(PLATFORMS).map(platform => {
@@ -914,33 +1036,36 @@ export default function SocialPublisherPage() {
                   const isConnecting = connecting === platform.id;
                   return (
                     <div key={platform.id} className="sp-platform-row">
-                      <div className="sp-platform-info">
-                        <div className="sp-platform-avatar" style={{ background: platform.color }}>
+                      <div className="sp-platform-left">
+                        <div
+                          className="sp-platform-avatar"
+                          style={{ background: platform.color }}
+                        >
                           <i className={platform.icon}></i>
                         </div>
                         <div>
                           <div className="sp-platform-name">{platform.label}</div>
-                          <div className={`sp-platform-status ${connected ? "connected" : ""}`}>
-                            <i className={`ti ${connected ? "ti-circle-check-filled" : "ti-circle"}`}></i>
-                            {connected ? "Connected" : "Not connected"}
+                          <div className={`sp-platform-status ${connected ? "ok" : ""}`}>
+                            <i className={`ti ${connected ? "ti-circle-check-filled" : "ti-circle-x"}`}></i>
+                            {connected ? "Connected and ready" : "Not connected"}
                           </div>
                         </div>
                       </div>
                       {connected ? (
                         <button
-                          className="sp-btn sp-btn-danger"
+                          className="sp-btn sp-btn-disconnect"
                           onClick={() => handleDisconnect(platform.id)}
                         >
                           <i className="ti ti-unlink"></i> Disconnect
                         </button>
                       ) : (
                         <button
-                          className="sp-btn sp-btn-primary"
+                          className="sp-btn sp-btn-connect"
                           onClick={() => handleConnect(platform.id)}
                           disabled={isConnecting}
                         >
-                          <i className={`ti ${isConnecting ? "ti-loader-2 sp-spinner" : "ti-link"}`}></i>
-                          {isConnecting ? "Connecting…" : `Connect`}
+                          <i className={`ti ${isConnecting ? "ti-loader-2 sp-spin" : "ti-link"}`}></i>
+                          {isConnecting ? "Connecting…" : `Connect ${platform.label}`}
                         </button>
                       )}
                     </div>
@@ -949,221 +1074,252 @@ export default function SocialPublisherPage() {
               )}
             </div>
 
-            {/* Coming soon divider */}
-            <div style={{ padding: "12px 20px 8px", borderTop: "1px solid #f2f2f7" }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#c7c7cc",
-                textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-                Coming Soon
+            {/* Coming soon */}
+            <div className="sp-card">
+              <div className="sp-card-head">
+                <div className="sp-card-head-icon" style={{ background: "rgba(255,149,0,0.1)" }}>
+                  <i className="ti ti-clock" style={{ color: "#f59e0b", fontSize: 17 }}></i>
+                </div>
+                <div className="sp-card-head-text">
+                  <h3>Coming Soon</h3>
+                  <p>More platforms are on the way</p>
+                </div>
+              </div>
+              <div className="sp-cs-grid">
+                {COMING_SOON.map(p => (
+                  <div key={p.id} className="sp-cs-item">
+                    <div className="sp-cs-avatar" style={{ background: p.color }}>
+                      <i className={p.icon}></i>
+                    </div>
+                    <span className="sp-cs-label">{p.label}</span>
+                    <span className="sp-soon-pill">Soon</span>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="sp-coming-soon-grid" style={{ paddingTop: 0 }}>
-              {COMING_SOON.map(p => (
-                <div key={p.id} className="sp-coming-soon-item">
-                  <div className="sp-coming-soon-avatar" style={{ background: p.color }}>
-                    <i className={p.icon}></i>
-                  </div>
-                  <span className="sp-coming-soon-label">{p.label}</span>
-                  <span className="sp-soon-badge">Soon</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ height: 8 }}></div>
+
+            {/* CTA to write tab */}
+            {connectedCount > 0 && (
+              <div style={{ textAlign: "center", marginTop: 8 }}>
+                <button
+                  onClick={() => setActiveTab("write")}
+                  className="sp-btn-generate"
+                  style={{ maxWidth: 280, margin: "0 auto" }}
+                >
+                  <i className="ti ti-arrow-right"></i>
+                  Go to Write &amp; Post
+                </button>
+              </div>
+            )}
+
           </div>
+        )}
 
-          {/* ── SECTION 2: Write Your Post ─────────────────────────────────────── */}
-          <div className="sp-card">
-            <div className="sp-card-header">
-              <div className="sp-card-header-left">
-                <div className="sp-card-icon" style={{ background: "rgba(88,86,214,0.1)" }}>
-                  <i className="ti ti-sparkles" style={{ color: "#5856D6" }}></i>
-                </div>
-                <div>
-                  <div className="sp-card-title">Write Your Post</div>
-                  <div className="sp-card-subtitle">Describe your message — AI does the rest</div>
-                </div>
-              </div>
-            </div>
+        {/* ════════════════════════════════════════════════════════════════════════
+            TAB 2 — WRITE & POST
+        ════════════════════════════════════════════════════════════════════════ */}
+        {activeTab === "write" && (
+          <div className="sp-body">
 
-            <div className="sp-card-body">
-              <div className="sp-field-row">
-                <div>
-                  <label className="sp-label">Business Name</label>
-                  <input
-                    className="sp-input"
-                    value={businessName}
-                    onChange={e => setBusinessName(e.target.value)}
-                    placeholder="e.g. Austin Plumbing Pros"
-                  />
-                </div>
-                <div>
-                  <label className="sp-label">Post Type</label>
-                  <select
-                    className="sp-input"
-                    value={postType}
-                    onChange={e => setPostType(e.target.value)}
-                  >
-                    <option value="update">Business Update</option>
-                    <option value="offer">Special Offer / Promotion</option>
-                    <option value="tip">Expert Tip / Educational</option>
-                    <option value="review">Customer Review Spotlight</option>
-                    <option value="event">Event / Announcement</option>
-                    <option value="service">Service Spotlight</option>
-                  </select>
+            {connectedCount === 0 ? (
+              /* No platforms connected yet */
+              <div className="sp-card">
+                <div className="sp-write-tip">
+                  <i className="ti ti-plug-connected"></i>
+                  <h4>No accounts connected yet</h4>
+                  <p>
+                    Go to the <strong style={{ color: "#4a90d9", cursor: "pointer" }}
+                      onClick={() => setActiveTab("connect")}>Connect Accounts</strong> tab
+                    and connect at least one platform before writing posts.
+                  </p>
                 </div>
               </div>
-
-              <div className="sp-field">
-                <label className="sp-label">
-                  What do you want to post about?
-                  <span style={{ fontWeight: 400, color: "#8e8e93", marginLeft: 6 }}>
-                    (plain English — AI writes the posts)
-                  </span>
-                </label>
-                <textarea
-                  className="sp-input"
-                  value={topic}
-                  onChange={e => setTopic(e.target.value)}
-                  placeholder="e.g. We just added same-day AC repair. Summer special — 10% off for new customers this month."
-                  rows={4}
-                />
-              </div>
-
-              <div className="sp-field">
-                <label className="sp-label">Publish to</label>
-                {connectedPlatforms.length === 0 ? (
-                  <div className="sp-platform-warning">
-                    <i className="ti ti-alert-triangle"></i>
-                    No platforms connected. Connect Facebook or LinkedIn above first.
+            ) : (
+              <>
+                {/* ── Step 1: Tell us about your post ── */}
+                <div className="sp-card">
+                  <div className="sp-card-head">
+                    <div className="sp-card-head-icon" style={{ background: "rgba(88,86,214,0.12)" }}>
+                      <i className="ti ti-pencil" style={{ color: "#7c7ae8", fontSize: 17 }}></i>
+                    </div>
+                    <div className="sp-card-head-text">
+                      <h3>Step 1 — Describe Your Post</h3>
+                      <p>Tell the AI what you want to say in plain English</p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="sp-platform-checks">
-                    {connectedPlatforms.map(platform => {
-                      const checked = selectedPlatforms.includes(platform.id);
-                      return (
-                        <label
-                          key={platform.id}
-                          className={`sp-check-label ${checked ? "checked" : ""}`}
-                          onClick={() => setSelectedPlatforms(prev =>
-                            checked ? prev.filter(p => p !== platform.id) : [...prev, platform.id]
-                          )}
-                        >
-                          <input type="checkbox" readOnly checked={checked} />
-                          <i className={platform.icon} style={{ color: platform.color, fontSize: 17 }}></i>
-                          {platform.label}
-                          {checked && <i className="ti ti-check" style={{ marginLeft: "auto", color: "#007AFF", fontSize: 14 }}></i>}
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <button
-                className="sp-btn sp-btn-generate"
-                onClick={handleGenerate}
-                disabled={generating || !topic.trim() || selectedPlatforms.length === 0}
-              >
-                <i className={`ti ${generating ? "ti-loader-2 sp-spinner" : "ti-sparkles"}`}></i>
-                {generating ? "Writing your posts…" : "Generate with AI"}
-              </button>
-            </div>
-          </div>
-
-          {/* ── SECTION 3: Review & Publish ─────────────────────────────────────── */}
-          {hasPosts && (
-            <div className="sp-card" style={{ animation: "sp-fade-in 0.3s ease both" }}>
-              <div className="sp-card-header">
-                <div className="sp-card-header-left">
-                  <div className="sp-card-icon" style={{ background: "rgba(52,199,89,0.1)" }}>
-                    <i className="ti ti-pencil" style={{ color: "#34C759" }}></i>
-                  </div>
-                  <div>
-                    <div className="sp-card-title">Review & Edit</div>
-                    <div className="sp-card-subtitle">Edit if needed — then publish</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="sp-card-body">
-                {selectedPlatforms.map(pid => {
-                  const platform = PLATFORMS[pid];
-                  if (!platform || !posts[pid]) return null;
-                  return (
-                    <div key={pid} className="sp-post-editor">
-                      <div className="sp-post-editor-header">
-                        <div className="sp-post-editor-platform">
-                          <i className={platform.icon} style={{ color: platform.color, fontSize: 16 }}></i>
-                          {platform.label}
-                          <span style={{ fontWeight: 400, color: "#8e8e93", fontSize: 12 }}>
-                            · {posts[pid].length} chars
-                          </span>
-                        </div>
-                        <span className="sp-post-editor-hint">{platform.hint}</span>
+                  <div className="sp-card-body">
+                    <div className="sp-row-2" style={{ marginBottom: 18 }}>
+                      <div>
+                        <label className="sp-label">Business Name</label>
+                        <input
+                          className="sp-input"
+                          value={businessName}
+                          onChange={e => setBusinessName(e.target.value)}
+                          placeholder="e.g. Austin Plumbing Pros"
+                        />
                       </div>
+                      <div>
+                        <label className="sp-label">Post Type</label>
+                        <select
+                          className="sp-input"
+                          value={postType}
+                          onChange={e => setPostType(e.target.value)}
+                        >
+                          <option value="update">Business Update</option>
+                          <option value="offer">Special Offer / Promotion</option>
+                          <option value="tip">Expert Tip / Educational</option>
+                          <option value="review">Customer Review Spotlight</option>
+                          <option value="event">Event / Announcement</option>
+                          <option value="service">Service Spotlight</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="sp-field">
+                      <label className="sp-label">
+                        What do you want to post about?
+                        <span>Write in plain English — AI handles the rest</span>
+                      </label>
                       <textarea
-                        value={posts[pid]}
-                        onChange={e => setPosts(prev => ({ ...prev, [pid]: e.target.value }))}
-                        rows={5}
+                        className="sp-input"
+                        value={topic}
+                        onChange={e => setTopic(e.target.value)}
+                        placeholder="e.g. We just added same-day AC repair. Summer special — 10% off for new customers this month."
+                        rows={4}
                       />
                     </div>
-                  );
-                })}
+                  </div>
+                </div>
 
-                {publishResult && (
-                  <div className={`sp-result ${publishResult.success ? "success" : "error"}`}>
-                    <div className="sp-result-title" style={{ color: publishResult.success ? "#34C759" : "#FF3B30" }}>
-                      <i className={`ti ${publishResult.success ? "ti-circle-check-filled" : "ti-circle-x"}`}></i>
-                      {publishResult.success ? "Published successfully!" : "Some platforms failed"}
+                {/* ── Step 2: Choose platforms ── */}
+                <div className="sp-card">
+                  <div className="sp-card-head">
+                    <div className="sp-card-head-icon" style={{ background: "rgba(26,95,212,0.12)" }}>
+                      <i className="ti ti-share" style={{ color: "#4a90d9", fontSize: 17 }}></i>
                     </div>
-                    {publishResult.results?.map((r, i) => (
-                      <div key={i} style={{ fontSize: 13, color: r.success ? "#34C759" : "#FF3B30",
-                        display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                        <i className={`ti ${r.success ? "ti-check" : "ti-x"}`}></i>
-                        <strong>{r.platform}:</strong> {r.message}
+                    <div className="sp-card-head-text">
+                      <h3>Step 2 — Choose Where to Post</h3>
+                      <p>Select one or more connected platforms</p>
+                    </div>
+                  </div>
+                  <div className="sp-card-body">
+                    <div className="sp-checks">
+                      {connectedPlatforms.map(platform => {
+                        const checked = selectedPlatforms.includes(platform.id);
+                        return (
+                          <label
+                            key={platform.id}
+                            className={`sp-check ${checked ? "checked" : ""}`}
+                            onClick={() => setSelectedPlatforms(prev =>
+                              checked
+                                ? prev.filter(p => p !== platform.id)
+                                : [...prev, platform.id]
+                            )}
+                          >
+                            <input type="checkbox" readOnly checked={checked} />
+                            <i className={platform.icon} style={{ color: platform.color, fontSize: 18 }}></i>
+                            {platform.label}
+                            <i className="ti ti-check sp-check-tick"></i>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Step 3: Generate ── */}
+                <button
+                  className="sp-btn-generate"
+                  onClick={handleGenerate}
+                  disabled={generating || !topic.trim() || selectedPlatforms.length === 0}
+                >
+                  <i className={`ti ${generating ? "ti-loader-2 sp-spin" : "ti-sparkles"}`}></i>
+                  {generating ? "AI is writing your posts…" : "Generate Posts with AI"}
+                </button>
+
+                {/* ── Step 4: Review & publish (appears after generation) ── */}
+                {hasPosts && (
+                  <div className="sp-card" style={{ animation: "sp-fadein 0.25s ease both" }}>
+                    <div className="sp-card-head">
+                      <div className="sp-card-head-icon" style={{ background: "rgba(52,199,89,0.1)" }}>
+                        <i className="ti ti-eye" style={{ color: "#34c759", fontSize: 17 }}></i>
                       </div>
-                    ))}
+                      <div className="sp-card-head-text">
+                        <h3>Step 3 — Review &amp; Publish</h3>
+                        <p>Edit if needed, then hit Publish</p>
+                      </div>
+                    </div>
+                    <div className="sp-card-body">
+                      <div className="sp-post-editors">
+                        {selectedPlatforms.map(pid => {
+                          const platform = PLATFORMS[pid];
+                          if (!platform || !posts[pid]) return null;
+                          return (
+                            <div key={pid} className="sp-post-editor">
+                              <div className="sp-post-editor-head">
+                                <div className="sp-post-editor-platform">
+                                  <i className={platform.icon} style={{ color: platform.color, fontSize: 16 }}></i>
+                                  {platform.label}
+                                  <span className="sp-post-editor-meta">· {posts[pid].length} chars</span>
+                                </div>
+                                <span className="sp-post-editor-hint">{platform.hint}</span>
+                              </div>
+                              <textarea
+                                value={posts[pid]}
+                                onChange={e => setPosts(prev => ({ ...prev, [pid]: e.target.value }))}
+                                rows={5}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {publishResult && (
+                        <div className={`sp-result ${publishResult.success ? "success" : "fail"}`}>
+                          <div
+                            className="sp-result-title"
+                            style={{ color: publishResult.success ? "#34c759" : "#ff6b60" }}
+                          >
+                            <i className={`ti ${publishResult.success ? "ti-circle-check-filled" : "ti-circle-x"}`}></i>
+                            {publishResult.success ? "Published successfully!" : "Some platforms failed"}
+                          </div>
+                          {publishResult.results?.map((r, i) => (
+                            <div key={i} className="sp-result-row"
+                              style={{ color: r.success ? "#34c759" : "#ff6b60" }}>
+                              <i className={`ti ${r.success ? "ti-check" : "ti-x"}`}></i>
+                              <strong>{r.platform}:</strong> {r.message}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="sp-publish-row">
+                        <button
+                          className="sp-btn-regen"
+                          onClick={() => { setPosts({}); setPublishResult(null); }}
+                        >
+                          <i className="ti ti-refresh"></i> Regenerate
+                        </button>
+                        <button
+                          className="sp-btn-publish"
+                          onClick={handlePublish}
+                          disabled={publishing || selectedPlatforms.length === 0}
+                        >
+                          <i className={`ti ${publishing ? "ti-loader-2 sp-spin" : "ti-send"}`}></i>
+                          {publishing
+                            ? "Publishing…"
+                            : `Publish to ${selectedPlatforms.length} Platform${selectedPlatforms.length !== 1 ? "s" : ""}`
+                          }
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
-
-                <div className="sp-publish-row">
-                  <button
-                    className="sp-regen-btn"
-                    onClick={() => { setPosts({}); setPublishResult(null); }}
-                  >
-                    <i className="ti ti-refresh"></i> Regenerate
-                  </button>
-                  <button
-                    className="sp-btn sp-btn-publish"
-                    onClick={handlePublish}
-                    disabled={publishing || selectedPlatforms.length === 0}
-                  >
-                    <i className={`ti ${publishing ? "ti-loader-2 sp-spinner" : "ti-send"}`}></i>
-                    {publishing
-                      ? "Publishing…"
-                      : `Publish to ${selectedPlatforms.length} Platform${selectedPlatforms.length !== 1 ? "s" : ""}`
-                    }
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── How it works ────────────────────────────────────────────────────── */}
-          <div className="sp-card">
-            <div className="sp-howto">
-              <i className="ti ti-info-circle"></i>
-              <div>
-                <strong style={{ color: "#3a3a3c", display: "block", marginBottom: 3, fontWeight: 600 }}>
-                  How it works
-                </strong>
-                Connect your accounts once. Describe what you want to post in plain English —
-                AI writes a platform-optimised version for each channel. Review and edit if needed,
-                then publish in one click.
-              </div>
-            </div>
+              </>
+            )}
           </div>
+        )}
 
-        </div>
       </div>
     </>
   );
