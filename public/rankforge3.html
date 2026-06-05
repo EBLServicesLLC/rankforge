@@ -6572,6 +6572,32 @@ if(window.self===window.top){
     window.location.href=window.location.origin+'/';
   }
 }
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  var sbUrl=sessionStorage.getItem("rf_sb_url");
+  var sbKey=sessionStorage.getItem("rf_sb_key");
+  var userId=sessionStorage.getItem("rf_user_id");
+  if(!sbUrl||!sbKey||!userId)return;
+  var _authKey=sbKey;
+  try{var _ref=sbUrl.replace("https://","").split(".")[0];var _authData=localStorage.getItem("sb-"+_ref+"-auth-token");if(_authData){var _token=JSON.parse(_authData).access_token;if(_token)_authKey=_token;}}catch(e){}
+  var h={"apikey":sbKey,"Authorization":"Bearer "+_authKey,"Content-Type":"application/json"};
+  fetch(sbUrl+"/rest/v1/settings?user_id=eq."+userId+"&limit=1",{headers:h}).then(function(r){return r.json();}).then(function(rows){
+    if(!rows||!rows.length)return;
+    var s=rows[0];
+    var keyToS={anthropic_key:"anthropic",openai_key:"openai",gemini_key:"gemini",google_key:"google",indexnow_key:"indexnow",yext_key:"yext",yext_account:"yextAccount",moz_id:"mozId",moz_secret:"mozSecret",brightlocal_key:"brightlocal",brightlocal_cid:"brightlocalCid",gmail_token:"gmail",fb_token:"fb",fb_page_id:"fbPage",linkedin_token:"linkedin"};
+    var waited=0;
+    function syncKeys(){
+      if(typeof S!=="undefined"&&S.keys){
+        Object.keys(keyToS).forEach(function(col){if(s[col])S.keys[keyToS[col]]=s[col];});
+        if(typeof updateKeyIndicators==="function")updateKeyIndicators();
+        if(typeof updateAIStatus==="function")updateAIStatus();
+        if(typeof persist==="function")persist();
+      } else if(waited++<20){setTimeout(syncKeys,150);}
+    }
+    syncKeys();
+  }).catch(function(e){console.warn("[RF] sync failed:",e);});
+});
+</script>
 </script>
 
 </body>
