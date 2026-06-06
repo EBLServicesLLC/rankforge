@@ -23,6 +23,7 @@ import { useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 const SUPABASE_URL = 'https://ybhpbpahhywiokhqpldj.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3ODc5MjAsImV4cCI6MjA5NDM2MzkyMH0.adIhREcxG5uzKTjSOCuikPMdUxX_Y-PQtWut423OuwQ'
 
 // ── Prospect types ────────────────────────────────────────────────────────────
 const PROSPECT_TYPES = [
@@ -245,7 +246,7 @@ export default function LocalLinksPage({ session }) {
         method:'POST',
         headers:{ 'Content-Type':'application/json',
           Authorization:`Bearer ${session.access_token}`,
-          apikey:session.access_token },
+          apikey:SUPABASE_ANON_KEY },
         body:JSON.stringify({ city, service, types:selectedTypes, model:aiModel }),
       })
       const data = await res.json()
@@ -327,7 +328,7 @@ export default function LocalLinksPage({ session }) {
         method:'POST',
         headers:{ 'Content-Type':'application/json',
           Authorization:`Bearer ${session.access_token}`,
-          apikey:session.access_token },
+          apikey:SUPABASE_ANON_KEY },
         body:JSON.stringify({
           prospect:selectedProspect, city, service,
           tone:emailTone, model:aiModel,
