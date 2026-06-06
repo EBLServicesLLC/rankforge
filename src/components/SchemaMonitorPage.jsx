@@ -567,9 +567,79 @@ export default function SchemaMonitorPage({ session, clientId }) {
                     </div>
                   )}
                   {fixedSchema && (
-                    <div style={{ padding: '10px 18px', borderTop: `1px solid ${T.border}`, background: 'rgba(16,185,129,.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ color: T.green, fontWeight: 700 }}>✓</span>
-                      <span style={{ fontSize: 12, color: T.green, fontWeight: 600 }}>Fixed schema generated from your profile — copy it below and send to your developer</span>
+                    <div style={{ padding: '14px 18px', borderTop: `1px solid ${T.border}`, background: 'rgba(16,185,129,.04)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: T.green, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>✓</span> Schema generated — fill in any missing fields below, then copy
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {/* Phone */}
+                        <div>
+                          <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>
+                            Phone Number {!fixedSchema.telephone && <span style={{ color: T.red }}>← Missing</span>}
+                          </div>
+                          <input
+                            value={fixedSchema.telephone || ''}
+                            onChange={e => setFixedSchema(prev => ({ ...prev, telephone: e.target.value }))}
+                            placeholder="e.g. +1-252-555-0100"
+                            style={{ width: '100%', background: T.cardBg2, border: `1.5px solid ${fixedSchema.telephone ? T.border2 : T.red}`, borderRadius: 7, padding: '8px 11px', fontSize: 12, color: T.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+                          />
+                        </div>
+                        {/* Street Address */}
+                        <div>
+                          <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>
+                            Street Address {!fixedSchema.address?.streetAddress && <span style={{ color: T.red }}>← Missing</span>}
+                          </div>
+                          <input
+                            value={fixedSchema.address?.streetAddress || ''}
+                            onChange={e => setFixedSchema(prev => ({ ...prev, address: { ...prev.address, streetAddress: e.target.value } }))}
+                            placeholder="e.g. 123 Main St"
+                            style={{ width: '100%', background: T.cardBg2, border: `1.5px solid ${fixedSchema.address?.streetAddress ? T.border2 : T.red}`, borderRadius: 7, padding: '8px 11px', fontSize: 12, color: T.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+                          />
+                        </div>
+                        {/* City / State / Zip in a row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 100px', gap: 8 }}>
+                          <div>
+                            <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>City</div>
+                            <input
+                              value={fixedSchema.address?.addressLocality || ''}
+                              onChange={e => setFixedSchema(prev => ({ ...prev, address: { ...prev.address, addressLocality: e.target.value } }))}
+                              placeholder="e.g. Emerald Isle"
+                              style={{ width: '100%', background: T.cardBg2, border: `1.5px solid ${T.border2}`, borderRadius: 7, padding: '8px 11px', fontSize: 12, color: T.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>State</div>
+                            <input
+                              value={fixedSchema.address?.addressRegion || ''}
+                              onChange={e => setFixedSchema(prev => ({ ...prev, address: { ...prev.address, addressRegion: e.target.value } }))}
+                              placeholder="NC"
+                              style={{ width: '100%', background: T.cardBg2, border: `1.5px solid ${T.border2}`, borderRadius: 7, padding: '8px 11px', fontSize: 12, color: T.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>ZIP</div>
+                            <input
+                              value={fixedSchema.address?.postalCode || ''}
+                              onChange={e => setFixedSchema(prev => ({ ...prev, address: { ...prev.address, postalCode: e.target.value } }))}
+                              placeholder="28594"
+                              style={{ width: '100%', background: T.cardBg2, border: `1.5px solid ${T.border2}`, borderRadius: 7, padding: '8px 11px', fontSize: 12, color: T.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+                            />
+                          </div>
+                        </div>
+                        {/* Description */}
+                        <div>
+                          <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>Business Description</div>
+                          <input
+                            value={fixedSchema.description || ''}
+                            onChange={e => setFixedSchema(prev => ({ ...prev, description: e.target.value }))}
+                            placeholder="Brief description of your business"
+                            style={{ width: '100%', background: T.cardBg2, border: `1.5px solid ${T.border2}`, borderRadius: 7, padding: '8px 11px', fontSize: 12, color: T.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+                          />
+                        </div>
+                        <div style={{ fontSize: 11, color: T.muted, marginTop: 2, lineHeight: 1.5 }}>
+                          ✏️ Edit any field above — the schema code below updates instantly as you type.
+                        </div>
+                      </div>
                     </div>
                   )}
                 </Card>
