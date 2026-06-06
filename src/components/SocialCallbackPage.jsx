@@ -45,7 +45,9 @@ export default function SocialCallbackPage() {
       }
 
       // Determine platform from state param (set by edge function on initiation)
-      const platform = state.startsWith("fb_") ? "facebook" : "linkedin";
+      const platform = state.startsWith("fb_") ? "facebook"
+                     : state.startsWith("gsc_") ? "gsc"
+                     : "linkedin";
 
       try {
         // Get current session to authenticate the edge function call
@@ -57,6 +59,8 @@ export default function SocialCallbackPage() {
 
         const endpoint = platform === "facebook"
           ? `${SUPABASE_URL}/functions/v1/social-auth-facebook`
+          : platform === "gsc"
+          ? `${SUPABASE_URL}/functions/v1/gsc-auth`
           : `${SUPABASE_URL}/functions/v1/social-auth-linkedin`;
 
         // Exchange code for token via edge function
@@ -81,9 +85,13 @@ export default function SocialCallbackPage() {
         }
 
         // Send success to parent window
-        notifyParent(platform, true, null, data.token, data.page_id);
+        notifyParent(platform, true, null, data.token, data.page_id, data.email);
         setStatus("success");
-        setMessage(`${platform === "facebook" ? "Facebook" : "LinkedIn"} connected successfully!`);
+        setMessage(
+          platform === "facebook" ? "Facebook connected successfully!"
+          : platform === "gsc"    ? "Google Search Console connected!"
+          : "LinkedIn connected successfully!"
+        );
 
         // Auto-close after brief delay
         setTimeout(() => window.close(), 1500);
@@ -99,17 +107,10 @@ export default function SocialCallbackPage() {
     handleCallback();
   }, []);
 
-  function notifyParent(platform, success, error, token, pageId) {
+  function notifyParent(platform, success, error, token, pageId, email) {
     if (window.opener) {
       window.opener.postMessage(
-        {
-          type: "SOCIAL_AUTH_COMPLETE",
-          platform,
-          success,
-          token,
-          pageId,
-          error,
-        },
+        { type: "SOCIAL_AUTH_COMPLETE", platform, success, token, pageId, email, error },
         window.location.origin
       );
     }
