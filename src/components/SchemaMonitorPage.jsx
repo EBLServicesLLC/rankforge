@@ -246,29 +246,6 @@ export default function SchemaMonitorPage({ session, clientId }) {
             </div>
           </Card>
 
-          {/* Why This Matters */}
-          <Card>
-            <CardHead icon="ti ti-info-circle" title="Why Monitor Schema?" sub="Common causes of silent schema loss" />
-            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                { icon: 'ti-layout-2',     title: 'Theme Updates',      desc: 'A WordPress theme update can overwrite your <head> tag and remove all JSON-LD blocks.' },
-                { icon: 'ti-plug',         title: 'Plugin Conflicts',    desc: 'Caching or SEO plugin updates sometimes strip or duplicate schema, breaking validation.' },
-                { icon: 'ti-refresh',      title: 'CMS Migrations',      desc: 'Moving from one platform to another often drops schema that was manually injected.' },
-                { icon: 'ti-eye-off',      title: 'Silent Failures',     desc: 'Google stops showing rich results with no warning — you only notice from rank drops.' },
-              ].map(item => (
-                <div key={item.title} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <div style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(59,130,246,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i className={`ti ${item.icon}`} style={{ color: T.accentHi, fontSize: 12 }}></i>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{item.title}</div>
-                    <div style={{ fontSize: 11, color: T.muted, marginTop: 2, lineHeight: 1.5 }}>{item.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
           {/* Check History */}
           <Card>
             <CardHead icon="ti ti-history" title="Check History" sub="Last 10 checks" />
@@ -461,8 +438,8 @@ function SchemaResultRow({ result, index, total }) {
         <div style={{ padding: '0 20px 14px 50px' }}>
           {result.details?.map((d, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6, fontSize: 12 }}>
-              <i className={`ti ${d.pass ? 'ti-check' : 'ti-x'}`} style={{ color: d.pass ? '#34d399' : '#f87171', flexShrink: 0, marginTop: 1 }}></i>
-              <span style={{ color: d.pass ? T.textSub : T.red }}>{d.label}</span>
+              <span style={{ color: d.pass ? '#34d399' : '#f87171', flexShrink: 0, fontWeight: 700 }}>{d.pass ? '✓' : '✗'}</span>
+              <span style={{ color: d.pass ? T.textSub : '#f87171' }}>{d.label}</span>
             </div>
           ))}
           {result.fix && (
