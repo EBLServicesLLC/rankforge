@@ -239,7 +239,7 @@ export default function SchemaMonitorPage({ session, clientId }) {
   const runCheck = useCallback(async () => {
     if (!url.trim()) { setError('Enter a website URL first.'); return }
     if (!selectedTypes.length) { setError('Select at least one schema type.'); return }
-    setError(null); setChecking(true); setResults(null); setSelected(null)
+    setError(null); setChecking(true); setResults(null); setSelected(null); setFixedSchema(null)
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/schema-monitor`, {
         method: 'POST', headers: hdrs(session),
@@ -284,7 +284,9 @@ export default function SchemaMonitorPage({ session, clientId }) {
   const selectedResult = results?.results?.find(r => r.type === selected)
   const selectedFound  = results?.schemasFound?.find(s => {
     const t = s['@type']
-    return Array.isArray(t) ? t.includes(selected) : t === selected
+    if (Array.isArray(t)) return t.some(x => x === selected || x.includes(selected))
+    if (typeof t === 'string') return t === selected || t.includes(selected)
+    return false
   })
   const template = selected ? buildTemplate(selected, profile) : null
   const schemaToShow = fixedSchema || selectedFound || template
