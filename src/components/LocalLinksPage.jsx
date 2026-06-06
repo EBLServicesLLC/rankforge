@@ -40,7 +40,7 @@ const PROSPECT_TYPES = [
 ]
 
 const AI_MODELS = [
-  { value:'claude-sonnet-4-20250514',  label:'Claude Sonnet 4 (Recommended)' },
+  { value:'claude-sonnet-4-5',  label:'Claude Sonnet 4 (Recommended)' },
   { value:'claude-haiku-4-5-20251001', label:'Claude Haiku 4.5 (Fast)' },
   { value:'gpt-4o',                    label:'GPT-4o (OpenAI)' },
   { value:'gpt-4o-mini',               label:'GPT-4o Mini (Fast)' },
