@@ -205,6 +205,7 @@ export default function SchemaMonitorPage({ session, clientId }) {
   const [profileLoaded, setProfileLoaded] = useState(false)
   const [profile, setProfile]             = useState({})
   const [selected, setSelected]           = useState(null) // selected result row
+  const [fixedSchema, setFixedSchema]     = useState(null)
   const [copied, setCopied]               = useState('')
   const [stats, setStats]                 = useState({ runs: 0, passing: 0, failing: 0, lastCheck: 'Never' })
 
@@ -286,9 +287,50 @@ export default function SchemaMonitorPage({ session, clientId }) {
     return Array.isArray(t) ? t.includes(selected) : t === selected
   })
   const template = selected ? buildTemplate(selected, profile) : null
-  const schemaToShow = selectedFound || template
+  const schemaToShow = fixedSchema || selectedFound || template
   const schemaJson = schemaToShow ? `<script type="application/ld+json">\n${JSON.stringify(schemaToShow, null, 2)}\n</script>` : ''
   const isTemplate = !selectedFound && !!template
+  const isFixed = !!fixedSchema
+
+  // Merge found schema with missing profile fields
+  const mergeWithProfile = () => {
+    if (!selectedFound) return
+    const merged = { ...selectedFound }
+    if (selected === 'LocalBusiness' || selected === 'Organization') {
+      if (!merged.telephone && !merged.phone) merged.telephone = profile.biz_phone || ''
+      if (!merged.name) merged.name = profile.biz_name || ''
+      if (!merged.url) merged.url = profile.biz_website || ''
+      if (!merged.address) {
+        merged.address = {
+          '@type': 'PostalAddress',
+          streetAddress: profile.biz_addr || '',
+          addressLocality: profile.biz_city || '',
+          addressRegion: profile.biz_state || '',
+          postalCode: profile.biz_zip || '',
+          addressCountry: 'US',
+        }
+      } else {
+        const a = { ...merged.address }
+        if (!a.streetAddress) a.streetAddress = profile.biz_addr || ''
+        if (!a.addressLocality) a.addressLocality = profile.biz_city || ''
+        if (!a.addressRegion) a.addressRegion = profile.biz_state || ''
+        if (!a.postalCode) a.postalCode = profile.biz_zip || ''
+        merged.address = a
+      }
+      if (!merged.description) merged.description = profile.biz_desc || ''
+    }
+    if (selected === 'FAQPage') {
+      if (!merged.mainEntity || !merged.mainEntity.length) {
+        merged.mainEntity = template?.mainEntity || []
+      }
+    }
+    if (selected === 'Service') {
+      if (!merged.name) merged.name = profile.biz_cat || ''
+      if (!merged.description) merged.description = profile.biz_desc || ''
+      if (!merged.areaServed) merged.areaServed = { '@type': 'City', name: profile.biz_city || '' }
+    }
+    setFixedSchema(merged)
+  }
 
   return (
     <div style={{ background: T.pageBg, minHeight: '100vh', color: T.text, fontFamily: 'inherit' }}>
@@ -433,7 +475,7 @@ export default function SchemaMonitorPage({ session, clientId }) {
                     const statusColor = r.status === 'pass' ? T.green : r.status === 'fail' ? T.red : T.yellow
                     const statusIcon  = r.status === 'pass' ? '✓' : r.status === 'fail' ? '✗' : '!'
                     return (
-                      <div key={r.type} onClick={() => setSelected(r.type)}
+                      <div key={r.type} onClick={() => { setSelected(r.type); setFixedSchema(null) }}
                         style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: i < results.results.length - 1 ? `1px solid ${T.border}` : 'none', background: isSelected ? 'rgba(59,130,246,.08)' : 'transparent', borderLeft: isSelected ? `3px solid ${T.accent}` : '3px solid transparent', transition: 'all .15s' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                           <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{r.type}</div>
@@ -510,6 +552,24 @@ export default function SchemaMonitorPage({ session, clientId }) {
                       </div>
                     ))}
                   </div>
+                  {/* Generate Fixed Schema button — show when schema found but has missing fields */}
+                  {selectedFound && selectedResult.status !== 'pass' && !fixedSchema && (
+                    <div style={{ padding: '12px 18px', borderTop: `1px solid ${T.border}`, background: 'rgba(16,185,129,.04)' }}>
+                      <div style={{ fontSize: 12, color: T.muted, marginBottom: 10, lineHeight: 1.5 }}>
+                        Your schema exists but has missing fields. Click below to generate a corrected version pre-filled with your business profile data.
+                      </div>
+                      <button onClick={mergeWithProfile}
+                        style={{ padding: '9px 18px', background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <span>🔧</span> Generate Fixed Schema
+                      </button>
+                    </div>
+                  )}
+                  {fixedSchema && (
+                    <div style={{ padding: '10px 18px', borderTop: `1px solid ${T.border}`, background: 'rgba(16,185,129,.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ color: T.green, fontWeight: 700 }}>✓</span>
+                      <span style={{ fontSize: 12, color: T.green, fontWeight: 600 }}>Fixed schema generated from your profile — copy it below and send to your developer</span>
+                    </div>
+                  )}
                 </Card>
               )}
 
@@ -542,10 +602,12 @@ export default function SchemaMonitorPage({ session, clientId }) {
                   <div style={{ padding: '12px 18px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>
-                        {isTemplate ? `📋 ${selected} Schema Template` : `📋 ${selected} Schema (Live on your site)`}
+                        {isFixed ? `🔧 ${selected} Schema — Fixed & Ready to Use` : isTemplate ? `📋 ${selected} Schema Template` : `📋 ${selected} Schema (Live on your site)`}
                       </div>
                       <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>
-                        {isTemplate
+                        {isFixed
+                          ? `Missing fields filled from your business profile — copy and send to your web developer`
+                          : isTemplate
                           ? `Pre-filled with your business profile — copy and send to your web developer`
                           : `This is the exact code Google currently reads on your website`}
                       </div>
@@ -561,7 +623,7 @@ export default function SchemaMonitorPage({ session, clientId }) {
                       </button>
                     </div>
                   </div>
-                  {isTemplate && (
+                  {(isTemplate || isFixed) && (
                     <div style={{ padding: '10px 18px', background: 'rgba(59,130,246,.06)', borderBottom: `1px solid ${T.border}`, fontSize: 12, color: T.accentHi, lineHeight: 1.6 }}>
                       <strong>📌 How to use this:</strong> Click Copy above, then send this code to your web developer with this message: <em>"Please add this code to the &lt;head&gt; section of my website homepage."</em> That's it — they'll know exactly what to do.
                     </div>
