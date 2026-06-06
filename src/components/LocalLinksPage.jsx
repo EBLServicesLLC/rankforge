@@ -337,8 +337,10 @@ export default function LocalLinksPage({ session }) {
       const data = await res.json()
       if (!res.ok || data.error) throw new Error(data.error||'Email generation failed')
       setOutreachEmail(data.email)
-    } catch {
-      // Fallback demo email
+    } catch (err) {
+      setError(err.message || 'Email generation failed — check console')
+      console.error('[local-links-email]', err)
+      return
       setOutreachEmail(
 `Subject: Partnership Opportunity — ${service} + ${selectedProspect.name}
 
