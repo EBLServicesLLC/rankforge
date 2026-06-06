@@ -246,6 +246,29 @@ export default function SchemaMonitorPage({ session, clientId }) {
             </div>
           </Card>
 
+          {/* Why This Matters */}
+          <Card>
+            <CardHead icon="ti ti-info-circle" title="Why Monitor Schema?" sub="Common causes of silent schema loss" />
+            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                { icon: 'ti-layout-2',     title: 'Theme Updates',      desc: 'A WordPress theme update can overwrite your <head> tag and remove all JSON-LD blocks.' },
+                { icon: 'ti-plug',         title: 'Plugin Conflicts',    desc: 'Caching or SEO plugin updates sometimes strip or duplicate schema, breaking validation.' },
+                { icon: 'ti-refresh',      title: 'CMS Migrations',      desc: 'Moving from one platform to another often drops schema that was manually injected.' },
+                { icon: 'ti-eye-off',      title: 'Silent Failures',     desc: 'Google stops showing rich results with no warning — you only notice from rank drops.' },
+              ].map(item => (
+                <div key={item.title} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <div style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(59,130,246,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <i className={`ti ${item.icon}`} style={{ color: T.accentHi, fontSize: 12 }}></i>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{item.title}</div>
+                    <div style={{ fontSize: 11, color: T.muted, marginTop: 2, lineHeight: 1.5 }}>{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
           {/* Check History */}
           <Card>
             <CardHead icon="ti ti-history" title="Check History" sub="Last 10 checks" />
@@ -443,8 +466,24 @@ function SchemaResultRow({ result, index, total }) {
             </div>
           ))}
           {result.fix && (
-            <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(59,130,246,.08)', borderRadius: 7, border: `1px solid rgba(59,130,246,.15)`, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
-              <strong style={{ color: T.accentHi }}>💡 Fix: </strong>{result.fix}
+            <div style={{ marginTop: 12, borderRadius: 8, border: '1px solid rgba(245,158,11,.2)', overflow: 'hidden' }}>
+              <div style={{ background: 'rgba(245,158,11,.1)', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 14 }}>👋</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24' }}>What to do about this</span>
+              </div>
+              <div style={{ padding: '10px 12px', background: 'rgba(59,130,246,.05)', fontSize: 12, color: T.textSub, lineHeight: 1.7 }}>
+                {result.fix.steps?.map((step, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <span style={{ background: 'rgba(59,130,246,.15)', color: T.accentHi, borderRadius: '50%', width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</span>
+                    <span>{step}</span>
+                  </div>
+                ))}
+                {result.fix.note && (
+                  <div style={{ marginTop: 6, paddingTop: 8, borderTop: `1px solid ${T.border}`, color: T.muted, fontSize: 11 }}>
+                    💬 {result.fix.note}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
