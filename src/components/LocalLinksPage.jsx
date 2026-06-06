@@ -299,7 +299,7 @@ export default function LocalLinksPage({ session }) {
         `intitle:"${service}" + "${city}" + "directory"`,
         `"${city}" + "${service}" + "recommended" -site:yelp.com`,
       ])
-      setSuccessMsg(`Generated ${mock.length} prospects for ${city}`)
+      setError(`FALLBACK TRIGGERED: ${err.message}`)
       setTimeout(()=>setSuccessMsg(null), 4000)
     } finally {
       setGenerating(false)
