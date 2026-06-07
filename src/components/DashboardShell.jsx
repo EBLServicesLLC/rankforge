@@ -183,6 +183,9 @@ export default function DashboardShell({ session, subscription }) {
   // When tab changes, send postMessage to rankforge3
   useEffect(() => {
     if (!activeId || activeTab === 'clients' || activeTab === 'dash') return
+    // Skip JSX pages — they render inline, not in the iframe
+    const JSX_TABS = ['social-pub','locallinks','voice','schema-mon','pages','local','rank-tracker','meta','gbpqa','napaudit']
+    if (JSX_TABS.includes(activeTab)) return
     pendingTabRef.current = activeTab
     // postMessage is the ONLY way  contentDocument is null (cross-origin restriction)
     iframeRef.current?.contentWindow?.postMessage(
