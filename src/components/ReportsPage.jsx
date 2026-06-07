@@ -1,9 +1,9 @@
 /**
  * ReportsPage.jsx
  * Three sub-tabs:
- * 1. Analytics Dashboard — week-over-week line graph, slider, competitor comparison bar charts
- * 2. Client Report — branded downloadable HTML→PDF report
- * 3. Prospect Audit — enter any URL, 8-signal SEO audit, downloadable PDF
+ * 1. Analytics Dashboard - week-over-week line graph, slider, competitor comparison bar charts
+ * 2. Client Report - branded downloadable HTML->PDF report
+ * 3. Prospect Audit - enter any URL, 8-signal SEO audit, downloadable PDF
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -65,7 +65,7 @@ function LineChart({ history, activeMetrics, sliderWeek, onSliderChange }) {
 
   if (!history || history.length < 2) return (
     <div style={{ height: H, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.muted, fontSize: 13 }}>
-      Not enough data yet — scores will appear here as you use the platform.
+      Not enough data yet. Scores will appear here as you use the platform.
     </div>
   )
 
@@ -127,7 +127,7 @@ function LineChart({ history, activeMetrics, sliderWeek, onSliderChange }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: T.muted, marginTop: 2 }}>
           <span>{history[0]?.label || 'Oldest'}</span>
           <span style={{ color: T.accentHi, fontWeight: 700 }}>
-            {history[sliderWeek]?.label || ('Week ' + (sliderWeek + 1))} — Score: {history[sliderWeek]?.overall ?? '—'}
+            {history[sliderWeek]?.label || ('Week ' + (sliderWeek + 1))} - Score: {history[sliderWeek]?.overall ?? '-'}
           </span>
           <span>{history[history.length - 1]?.label || 'Latest'}</span>
         </div>
@@ -178,8 +178,8 @@ function AnalyticsTab({ clientId, session }) {
       .eq('client_id', clientId).eq('user_id', session.user.id)
       .order('recorded_at', { ascending: true })
       .limit(90)
-      .then(({ data }) => {
-        if (data && data.length) {
+      .then(({ data, error }) => {
+        if (!error && data && data.length) {
           const hist = data.map(r => ({
             label: new Date(r.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
             overall:     r.overall     || 0,
@@ -253,7 +253,7 @@ function AnalyticsTab({ clientId, session }) {
       {/* Metric toggles + snapshot */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }}>
         {METRICS.map(m => {
-          const val  = current[m.key] ?? '—'
+          const val  = current[m.key] ?? '-'
           const diff = typeof val === 'number' && prev[m.key] != null ? val - prev[m.key] : null
           const on   = !!activeMetrics.find(x => x.key === m.key)
           return (
@@ -365,7 +365,7 @@ function ClientReportTab({ clientId, session }) {
 
     let body = ''
 
-    if (sections.overview)    body += sectionHTML('Executive Summary', statGrid([{ val: '—', label: 'SEO Score' }, { val: '—', label: 'Citations' }, { val: '—', label: 'Links' }, { val: '—', label: 'Reviews' }]) + `<p style="font-size:13px;color:#6b7280;line-height:1.6">This report covers SEO performance for ${biz}${city ? ' in ' + city : ''}. All metrics reflect activity recorded in RankForged AI as of ${today}.</p>`)
+    if (sections.overview)    body += sectionHTML('Executive Summary & Score', statGrid([{ val: '-', label: 'SEO Score' }, { val: '-', label: 'Citations' }, { val: '-', label: 'Links' }, { val: '-', label: 'Reviews' }]) + `<p style="font-size:13px;color:#6b7280;line-height:1.6">This report covers SEO performance for ${biz}${city ? ' in ' + city : ''}. All metrics reflect activity recorded in RankForged AI as of ${today}.</p>`)
     if (sections.citations)   body += sectionHTML('Citation & Directory Report', `<p style="font-size:13px;color:#6b7280;line-height:1.6">Citations audit: submitted directories, NAP consistency status, and coverage percentage across high-DA business directories. Priority action: continue building citations toward the 75-directory target for maximum local pack visibility.</p>`)
     if (sections.backlinks)   body += sectionHTML('Backlink Campaign Progress', `<p style="font-size:13px;color:#6b7280;line-height:1.6">Outreach pipeline update: prospects pitched, links won, and win rate. Focus for next period: Tier 1 (DA 85+) placements on LinkedIn Articles, Medium, and industry publications.</p>`)
     if (sections.local)       body += sectionHTML('Local SEO Performance', `<p style="font-size:13px;color:#6b7280;line-height:1.6">Google Business Profile activity, review velocity, and service city coverage. GBP posts should be published weekly to maintain map pack visibility. Respond to all reviews within 24 hours.</p>`)
