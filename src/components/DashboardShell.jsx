@@ -461,6 +461,13 @@ export default function DashboardShell({ session, subscription }) {
           </div>
         )}
 
+        {/* KW Gap — renders inline */}
+        {activeTab === 'kwgap' && (
+          <div style={{ flex:1, overflowY:'auto', background:'#060d1a' }}>
+            <KwGapPage session={session} clientId={activeId} />
+          </div>
+        )}
+
         {/* NAP Audit — renders inline */}
         {activeTab === 'napaudit' && (
           <div style={{ flex:1, overflowY:'auto', background:'#060d1a' }}>
@@ -476,7 +483,7 @@ export default function DashboardShell({ session, subscription }) {
         )}
 
         {/* Tool iframe */}
-        {activeTab!=='clients' && activeTab!=='social-pub' && activeTab!=='locallinks' && activeTab!=='voice' && activeTab!=='schema-mon' && activeTab!=='pages' && activeTab!=='local' && activeTab!=='rank-tracker' && activeTab!=='meta' && activeTab!=='gbpqa' && activeTab!=='napaudit' && (
+        {activeTab!=='clients' && activeTab!=='social-pub' && activeTab!=='locallinks' && activeTab!=='voice' && activeTab!=='schema-mon' && activeTab!=='pages' && activeTab!=='local' && activeTab!=='rank-tracker' && activeTab!=='meta' && activeTab!=='gbpqa' && activeTab!=='napaudit' && activeTab!=='kwgap' && activeTab!=='reputation' && (
           <div style={{ flex:1,position:'relative',overflow:'hidden',margin:0,padding:0 }}>
             {/* No client */}
             {!activeId && (
