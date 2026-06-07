@@ -214,19 +214,23 @@ export default function MetaTagGeneratorPage({ session, clientId }) {
     a.click()
   }
 
+  const addCityValue = (input) => {
+    const val = input.value.trim()
+    if (val) {
+      setCities(prev => [...prev, val])
+      input.value = ''
+    }
+  }
+
   const addCity = (e) => {
-    if ((e.key === 'Enter' || e.key === ',') && e.target.value.trim()) {
-      setCities(prev => [...prev, e.target.value.trim().replace(/,$/, '')])
-      e.target.value = ''
+    if (e.key === 'Enter') {
       e.preventDefault()
+      addCityValue(e.target)
     }
   }
 
   const addCityOnBlur = (e) => {
-    if (e.target.value.trim()) {
-      setCities(prev => [...prev, e.target.value.trim()])
-      e.target.value = ''
-    }
+    addCityValue(e.target)
   }
 
   const inp = { width: '100%', background: T.cardBg2, border: `1.5px solid ${T.border2}`, borderRadius: 7, padding: '8px 11px', fontSize: 12, color: T.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }
