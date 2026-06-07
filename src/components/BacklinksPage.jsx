@@ -136,6 +136,11 @@ export default function BacklinksPage({ session, clientId }) {
   const [tone,         setTone]         = useState('Professional')
   const [profile,      setProfile]      = useState({})
   const [saving,       setSaving]       = useState(false)
+  const [toEmail,      setToEmail]      = useState('')
+  const [sending,      setSending]      = useState(false)
+  const [sendResult,   setSendResult]   = useState(null)
+  const [sendError,    setSendError]    = useState('')
+  const [gmailToken,   setGmailToken]   = useState('')
 
   useEffect(() => {
     if (!clientId || !session) return
@@ -152,6 +157,13 @@ export default function BacklinksPage({ session, clientId }) {
         const map = {}
         data.forEach(r => { map[r.prospect_id] = r.status })
         setStatuses(map)
+      })
+
+    supabase.from('settings')
+      .select('gmail_token,anthropic_key')
+      .eq('user_id', session.user.id).maybeSingle()
+      .then(({ data }) => {
+        if (data?.gmail_token) setGmailToken(data.gmail_token)
       })
   }, [clientId, session])
 
@@ -248,6 +260,82 @@ export default function BacklinksPage({ session, clientId }) {
       setEmailContent('Error generating email: ' + err.message)
     }
     setGenerating(false)
+  }
+
+  // Extract subject line from generated email text
+  function extractSubject(text) {
+    const match = text.match(/^Subject:\s*(.+)/mi)
+    return match ? match[1].trim() : 'Backlink Outreach'
+  }
+
+  // Extract body (everything after Subject: line, or full text if no subject)
+  function extractBody(text) {
+    const match = text.match(/^Subject:.*\n([\s\S]*)/mi)
+    return match ? match[1].trim() : text.trim()
+  }
+
+  async function sendEmail(prospect) {
+    if (!toEmail.trim()) { setSendError('Enter a recipient email address.'); return }
+    if (!gmailToken)     { setSendError('No Gmail token found. Add it in API Keys.'); return }
+    if (!emailContent)   { setSendError('Generate an email first.'); return }
+
+    setSending(true)
+    setSendResult(null)
+    setSendError('')
+
+    const subject = extractSubject(emailContent)
+    const body    = extractBody(emailContent)
+    const from    = session.user.email
+
+    // Build RFC 2822 message
+    const messageParts = [
+      'From: ' + from,
+      'To: ' + toEmail.trim(),
+      'Subject: ' + subject,
+      'Content-Type: text/plain; charset=utf-8',
+      '',
+      body,
+    ]
+    const raw = messageParts.join('\r\n')
+    const encoded = btoa(unescape(encodeURIComponent(raw)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+
+    try {
+      const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + gmailToken,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ raw: encoded }),
+      })
+
+      if (res.status === 401) {
+        setSendError('Gmail token expired. Refresh it in API Keys tab.')
+        setSending(false)
+        return
+      }
+
+      const data = await res.json()
+      if (data.error) {
+        setSendError(data.error.message || 'Gmail send failed.')
+        setSending(false)
+        return
+      }
+
+      // Success - mark as pitched and close after short delay
+      setSendResult('sent')
+      await saveStatus(prospect.id, 'pitched')
+      setTimeout(() => {
+        setEmailModal(null)
+        setSendResult(null)
+        setSendError('')
+        setToEmail('')
+      }, 1800)
+    } catch (err) {
+      setSendError('Send failed: ' + err.message)
+    }
+    setSending(false)
   }
 
   const FILTERS_TYPE = [
@@ -417,22 +505,77 @@ export default function BacklinksPage({ session, clientId }) {
                 <div style={{ background: T.cardBg2, border: '1px solid ' + T.border, borderRadius: 8, padding: 14, fontSize: 13, color: T.textSub, lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 12, minHeight: 160 }}>
                   {emailContent}
                 </div>
+
+                {/* Send success banner */}
+                {sendResult === 'sent' && (
+                  <div style={{ background: T.green + '18', border: '1px solid ' + T.green + '40', borderRadius: 8, padding: '10px 14px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <i className="ti ti-circle-check" style={{ color: T.green, fontSize: 18 }} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.green }}>Email sent via Gmail!</div>
+                      <div style={{ fontSize: 11, color: T.muted }}>Marked as Pitched. Closing...</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* To field + send row */}
+                {sendResult !== 'sent' && (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 11, color: T.muted, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 5 }}>
+                      Recipient email
+                      {!gmailToken && (
+                        <span style={{ marginLeft: 8, color: T.orange, fontWeight: 600 }}>
+                          (Gmail not connected - copy only)
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="email"
+                      value={toEmail}
+                      onChange={e => { setToEmail(e.target.value); setSendError('') }}
+                      placeholder="editor@domain.com"
+                      style={{
+                        width: '100%', background: T.cardBg2, border: '1px solid ' + T.border2,
+                        borderRadius: 7, color: T.text, padding: '8px 12px',
+                        fontSize: 13, fontFamily: 'inherit', outline: 'none',
+                      }}
+                    />
+                    {sendError && (
+                      <div style={{ fontSize: 11, color: T.red, marginTop: 5 }}>
+                        <i className="ti ti-alert-triangle" style={{ marginRight: 4 }} />{sendError}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     onClick={() => navigator.clipboard.writeText(emailContent)}
-                    style={{ flex: 1, padding: '9px 0', background: T.accent, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    <i className="ti ti-copy" style={{ marginRight: 5 }} />Copy Email
+                    style={{ padding: '9px 14px', background: 'transparent', color: T.muted, border: '1px solid ' + T.border2, borderRadius: 8, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className="ti ti-copy" />Copy
                   </button>
                   <button
-                    onClick={() => generateEmail(emailModal)}
+                    onClick={() => { setSendResult(null); setSendError(''); generateEmail(emailModal) }}
                     style={{ padding: '9px 14px', background: 'transparent', color: T.muted, border: '1px solid ' + T.border2, borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>
                     <i className="ti ti-refresh" />
                   </button>
-                  <button
-                    onClick={() => { saveStatus(emailModal.id, 'pitched'); setEmailModal(null) }}
-                    style={{ flex: 1, padding: '9px 0', background: T.green + '20', color: T.green, border: '1px solid ' + T.green + '40', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    <i className="ti ti-mail-forward" style={{ marginRight: 5 }} />Mark Pitched
-                  </button>
+                  {gmailToken ? (
+                    <button
+                      onClick={() => sendEmail(emailModal)}
+                      disabled={sending || sendResult === 'sent'}
+                      style={{ flex: 1, padding: '9px 0', background: sending ? T.accent + '50' : T.accent, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: sending ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      {sending ? (
+                        <><i className="ti ti-loader-2" style={{ fontSize: 14 }} />Sending...</>
+                      ) : (
+                        <><i className="ti ti-send" style={{ fontSize: 14 }} />Send via Gmail</>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { saveStatus(emailModal.id, 'pitched'); setEmailModal(null) }}
+                      style={{ flex: 1, padding: '9px 0', background: T.green + '20', color: T.green, border: '1px solid ' + T.green + '40', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      <i className="ti ti-mail-forward" style={{ fontSize: 14 }} />Mark Pitched
+                    </button>
+                  )}
                 </div>
               </>
             ) : (
