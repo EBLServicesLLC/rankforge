@@ -84,6 +84,8 @@ export default function DashboardShell({ session, subscription }) {
   useEffect(() => {
     if (!activeId) return
     setIframeReady(false)
+    setActiveTab('dash')
+    pendingTabRef.current = null
     setIframeSrc('/rankforge3.html?client=' + activeId + '&t=' + Date.now())
   }, [activeId]) // eslint-disable-line
 
