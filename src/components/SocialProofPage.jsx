@@ -107,7 +107,10 @@ export default function SocialProofPage({ session, clientId }) {
   const [inputs,  setInputs]  = useState(EMPTY_DATA)
   const [loading, setLoading] = useState(true)
   const [saving,  setSaving]  = useState(false)
-  const [saved,   setSaved]   = useState(false)
+  const [saved,       setSaved]       = useState(false)
+  const [fbFetching,  setFbFetching]  = useState(false)
+  const [fbStatus,    setFbStatus]    = useState(null)
+  const [fbCreds,     setFbCreds]     = useState({ token: '', pageId: '' })
 
   useEffect(() => {
     if (!clientId || !session) return
@@ -133,6 +136,17 @@ export default function SocialProofPage({ session, clientId }) {
       setData(d)
       setInputs(d)
     }
+
+    // Load Facebook credentials from settings
+    const { data: settings } = await supabase
+      .from('settings')
+      .select('fb_token,fb_page_id')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+    if (settings?.fb_token && settings?.fb_page_id) {
+      setFbCreds({ token: settings.fb_token, pageId: settings.fb_page_id })
+    }
+
     setLoading(false)
   }
 
@@ -189,6 +203,39 @@ export default function SocialProofPage({ session, clientId }) {
     })
 
     setInputs(next)
+  }
+
+  async function fetchFromFacebook() {
+    if (!fbCreds.token || !fbCreds.pageId) {
+      setFbStatus('No Facebook credentials. Add Page Token and Page ID in API Keys tab.')
+      return
+    }
+    setFbFetching(true)
+    setFbStatus(null)
+    try {
+      const res = await fetch(
+        'https://graph.facebook.com/v19.0/' + fbCreds.pageId +
+        '?fields=rating_count,overall_star_rating&access_token=' + fbCreds.token
+      )
+      const json = await res.json()
+      if (json.error) throw new Error(json.error.message)
+
+      const count = json.rating_count || 0
+      const avg   = json.overall_star_rating || 0
+
+      setInputs(prev => ({
+        ...prev,
+        facebook: {
+          ...prev.facebook,
+          current: count,
+          avg: parseFloat(avg.toFixed(1)),
+        }
+      }))
+      setFbStatus('Fetched ' + count + ' reviews, avg ' + avg.toFixed(1) + ' stars from Facebook.')
+    } catch (err) {
+      setFbStatus('Facebook fetch failed: ' + err.message)
+    }
+    setFbFetching(false)
   }
 
   const update = useCallback((platform, field, value) => {
@@ -275,7 +322,18 @@ export default function SocialProofPage({ session, clientId }) {
                     style={{ padding: '7px 14px', background: T.yellow + '20', color: T.yellow, border: '1px solid ' + T.yellow + '40', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
                     <i className="ti ti-download" />Import from Reputation Tab
                   </button>
+                  <button onClick={fetchFromFacebook} disabled={fbFetching || !fbCreds.token}
+                    style={{ padding: '7px 14px', background: fbCreds.token ? '#1877f2' + '20' : T.border + '20', color: fbCreds.token ? '#1877f2' : T.muted, border: '1px solid ' + (fbCreds.token ? '#1877f2' + '40' : T.border), borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: fbCreds.token ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className={fbFetching ? 'ti ti-loader-2' : 'ti ti-brand-facebook'} />
+                    {fbFetching ? 'Fetching...' : 'Fetch from Facebook'}
+                  </button>
                 </div>
+                {fbStatus && (
+                  <div style={{ marginTop: 8, fontSize: 11, color: fbStatus.includes('failed') || fbStatus.includes('No ') ? T.red : T.green, display: 'flex', alignItems: 'flex-start', gap: 5 }}>
+                    <i className={fbStatus.includes('failed') || fbStatus.includes('No ') ? 'ti ti-alert-triangle' : 'ti ti-circle-check'} style={{ flexShrink: 0, marginTop: 1 }} />
+                    {fbStatus}
+                  </div>
+                )}
               </div>
 
               {/* Trend */}
