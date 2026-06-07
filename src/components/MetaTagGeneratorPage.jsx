@@ -215,7 +215,15 @@ export default function MetaTagGeneratorPage({ session, clientId }) {
   }
 
   const addCity = (e) => {
-    if (e.key === 'Enter' && e.target.value.trim()) {
+    if ((e.key === 'Enter' || e.key === ',') && e.target.value.trim()) {
+      setCities(prev => [...prev, e.target.value.trim().replace(/,$/, '')])
+      e.target.value = ''
+      e.preventDefault()
+    }
+  }
+
+  const addCityOnBlur = (e) => {
+    if (e.target.value.trim()) {
       setCities(prev => [...prev, e.target.value.trim()])
       e.target.value = ''
     }
@@ -283,7 +291,7 @@ export default function MetaTagGeneratorPage({ session, clientId }) {
                     </span>
                   ))}
                 </div>
-                <input onKeyDown={addCity} placeholder="Type a city + Enter" style={inp} />
+                <input onKeyDown={addCity} onBlur={addCityOnBlur} placeholder="Type a city, press Enter or click away" style={inp} />
                 <button
                   onClick={() => { if (profile.biz_city && !cities.includes(profile.biz_city)) setCities(prev => [profile.biz_city, ...prev.filter(c => c !== profile.biz_city)]) }}
                   style={{ marginTop: 5, fontSize: 11, color: T.accentHi, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
