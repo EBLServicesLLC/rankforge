@@ -126,6 +126,32 @@ const API_GUIDES = [
     ],
     link:'https://developers.google.com/oauthplayground', linkLabel:'Open OAuth Playground ', placeholder:'ya29...',
   },
+  {
+    key:'facebook', label:'Facebook Page', required:false, color:'#1877f2', icon:'',
+    why:'Lets RankForged fetch your live review count and rating directly from your Facebook Business Page. Also enables posting to Facebook from the Social Publisher.',
+    steps:[
+      'Go to developers.facebook.com and log in',
+      'Open Graph API Explorer (Tools menu)',
+      'Select your app from the dropdown',
+      'Click "Add a permission" and add pages_read_engagement and pages_manage_posts',
+      'Click "Generate Access Token" and copy it',
+      'Also copy your Page ID from your Facebook Page settings > About > Page transparency',
+      'Paste both below',
+    ],
+    link:'https://developers.facebook.com/tools/explorer/', linkLabel:'Open Graph API Explorer ', placeholder:'EAAxxxxxxxx...',
+  },
+  {
+    key:'linkedin', label:'LinkedIn Page', required:false, color:'#0a66c2', icon:'',
+    why:'Enables direct posting to your LinkedIn Company Page from the Social Publisher.',
+    steps:[
+      'Go to linkedin.com/developers/apps and create an app',
+      'Add your Company Page to the app',
+      'Request the w_member_social permission',
+      'Go to the Auth tab and generate an OAuth 2.0 access token',
+      'Paste it below',
+    ],
+    link:'https://linkedin.com/developers/apps', linkLabel:'Open LinkedIn Developers ', placeholder:'AQxxxxxxxx...',
+  },
 ]
 
 
@@ -165,7 +191,8 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
   const [apiKeys, setApiKeys] = useState({
     anthropic:'', openai:'', google:'', gemini:'',
     yext:'', yextAccount:'', moz:'', mozSecret:'',
-    brightlocal:'', brightlocalCid:'', indexnow:'', gmail:''
+    brightlocal:'', brightlocalCid:'', indexnow:'', gmail:'',
+    facebook:'', fbPageId:'', linkedin:''
   })
   const [showKey, setShowKey]     = useState({})
   const [expanded, setExpanded]   = useState({ anthropic:true })
@@ -219,7 +246,8 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
           yext_account:apiKeys.yextAccount, moz_id:apiKeys.moz,
           moz_secret:apiKeys.mozSecret,    brightlocal_key:apiKeys.brightlocal,
           brightlocal_cid:apiKeys.brightlocalCid, gmail_token:apiKeys.gmail,
-          fb_token:apiKeys.fb,              linkedin_token:apiKeys.linkedin,
+          fb_token:apiKeys.facebook,         fb_page_id:apiKeys.fbPageId,
+          linkedin_token:apiKeys.linkedin,
         }, { onConflict:'user_id' })
         await supabase.from('subscriptions').update({ onboarding_step:4 }).eq('user_id', userId)
       }
@@ -566,6 +594,13 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
                           <>
                             <label style={{ ...lbl, marginTop:8 }}>BrightLocal Campaign ID <span style={{ fontWeight:400, color:'#2a4a6a' }}>(optional)</span></label>
                             <input value={apiKeys.brightlocalCid} onChange={e=>setApiKeys(k=>({...k,brightlocalCid:e.target.value}))} placeholder="campaign-id" style={inp} />
+                          </>
+                        )}
+                        {guide.key==='facebook' && (
+                          <>
+                            <label style={{ ...lbl, marginTop:8 }}>Facebook Page ID</label>
+                            <input value={apiKeys.fbPageId} onChange={e=>setApiKeys(k=>({...k,fbPageId:e.target.value}))} placeholder="123456789012345" style={inp} />
+                            <div style={{ fontSize:11, color:'#4a6080', marginTop:4 }}>Find this in your Facebook Page Settings &gt; About &gt; Page transparency</div>
                           </>
                         )}
                       </div>
