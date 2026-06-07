@@ -95,8 +95,11 @@ export default function DashboardShell({ session, subscription }) {
   }, [activeId]) // eslint-disable-line
 
   //  Switch tab by clicking the real button inside iframe 
+  const JSX_TABS_SW = ['social-pub','locallinks','voice','schema-mon','pages','local','rank-tracker','meta','gbpqa','napaudit','kwgap','reputation'];
+
   const switchTab = useCallback((tabId) => {
     setActiveTab(tabId)
+    if (JSX_TABS_SW.includes(tabId)) return
     // postMessage only  contentDocument is inaccessible (confirmed null)
     iframeRef.current?.contentWindow?.postMessage(
       { type: 'SWITCH_TAB', payload: { tab: tabId } }, '*'
