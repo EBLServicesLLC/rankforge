@@ -1,410 +1,294 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 
-const SCORE_LABELS = [
-  { key: 'overall',     label: 'Overall',     icon: 'ti-chart-bar',      color: '#f59e0b' },
-  { key: 'directories', label: 'Directories', icon: 'ti-map-pin',         color: '#3b82f6' },
-  { key: 'backlinks',   label: 'Backlinks',   icon: 'ti-link',            color: '#8b5cf6' },
-  { key: 'web2',        label: 'Web 2.0',     icon: 'ti-world',           color: '#10b981' },
-  { key: 'local',       label: 'Local SEO',   icon: 'ti-building-store',  color: '#f97316' },
-  { key: 'voice',       label: 'Voice',       icon: 'ti-microphone',      color: '#06b6d4' },
-  { key: 'indexing',    label: 'Indexing',    icon: 'ti-search',          color: '#ec4899' },
-];
+const T = {
+  pageBg:   '#060d1a',
+  cardBg:   '#0d1f3c',
+  cardBg2:  '#080f1e',
+  border:   '#0f2040',
+  border2:  '#1a3560',
+  text:     '#e2e8f0',
+  textSub:  '#c8d8f0',
+  muted:    '#4a6080',
+  accent:   '#3b82f6',
+  accentHi: '#60a5fa',
+  green:    '#10b981',
+  red:      '#f87171',
+  yellow:   '#f59e0b',
+  orange:   '#f97316',
+  purple:   '#8b5cf6',
+  cyan:     '#22d3ee',
+}
 
-const DEMO_SCORES = {
-  overall: 72, directories: 58, backlinks: 61,
-  web2: 45, local: 83, voice: 39, indexing: 77,
-};
+function Card({ children, style }) {
+  return (
+    <div style={{ background: T.cardBg, border: '1px solid ' + T.border2, borderRadius: 10, ...style }}>
+      {children}
+    </div>
+  )
+}
+
+function CardHead({ icon, title, sub, right }) {
+  return (
+    <div style={{ padding: '12px 16px', borderBottom: '1px solid ' + T.border, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(59,130,246,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>
+        <i className={icon} style={{ color: T.accentHi }}></i>
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{title}</div>
+        {sub && <div style={{ fontSize: 11, color: T.muted, marginTop: 1 }}>{sub}</div>}
+      </div>
+      {right}
+    </div>
+  )
+}
+
+const SCORE_CATS = [
+  { key: 'directories', label: 'Directories',  icon: 'ti ti-map-pin',          color: T.accent  },
+  { key: 'backlinks',   label: 'Backlinks',     icon: 'ti ti-link',             color: T.purple  },
+  { key: 'web2',        label: 'Web 2.0',       icon: 'ti ti-world',            color: T.green   },
+  { key: 'local',       label: 'Local SEO',     icon: 'ti ti-building-store',   color: T.orange  },
+  { key: 'voice',       label: 'Voice',         icon: 'ti ti-microphone',       color: T.cyan    },
+  { key: 'indexing',    label: 'Indexing',      icon: 'ti ti-search',           color: T.yellow  },
+]
 
 const QUICK_ACTIONS = [
-  { tab: 'rank-tracker',   label: 'Rank Tracker',      icon: 'ti-trending-up',       color: '#f59e0b' },
-  { tab: 'reputation',     label: 'Reputation',         icon: 'ti-star',              color: '#3b82f6' },
-  { tab: 'napaudit',       label: 'NAP Audit',          icon: 'ti-clipboard-check',   color: '#10b981' },
-  { tab: 'web2',           label: 'Web 2.0 Signals',   icon: 'ti-world',             color: '#8b5cf6' },
-  { tab: 'local',          label: 'Citations',          icon: 'ti-map-pin',           color: '#f97316' },
-  { tab: 'kwgap',          label: 'KW Gap',             icon: 'ti-git-diff',          color: '#06b6d4' },
-  { tab: 'gbpqa',          label: 'GBP Q&A',            icon: 'ti-help-circle',       color: '#ec4899' },
-  { tab: 'pdfreport',      label: 'Reports',            icon: 'ti-file-analytics',    color: '#14b8a6' },
-];
+  { tab: 'rank-tracker', label: 'Rank Tracker',     icon: 'ti ti-trending-up'      },
+  { tab: 'reputation',   label: 'Reputation',        icon: 'ti ti-star'             },
+  { tab: 'napaudit',     label: 'NAP Audit',         icon: 'ti ti-clipboard-check'  },
+  { tab: 'web2',         label: 'Web 2.0',           icon: 'ti ti-world'            },
+  { tab: 'local',        label: 'Citations',         icon: 'ti ti-map-pin'          },
+  { tab: 'kwgap',        label: 'KW Gap',            icon: 'ti ti-git-diff'         },
+  { tab: 'gbpqa',        label: 'GBP Q&A',           icon: 'ti ti-help-circle'      },
+  { tab: 'pdfreport',    label: 'Reports',           icon: 'ti ti-file-analytics'   },
+]
 
-function ScoreRing({ value, color, size = 64 }) {
-  const r = (size / 2) - 6;
-  const circ = 2 * Math.PI * r;
-  const dash = (value / 100) * circ;
-  return (
-    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#1e2d45" strokeWidth="5" />
-      <circle
-        cx={size/2} cy={size/2} r={r}
-        fill="none" stroke={color} strokeWidth="5"
-        strokeDasharray={`${dash} ${circ}`}
-        strokeLinecap="round"
-        style={{ transition: 'stroke-dasharray 1s ease' }}
-      />
-    </svg>
-  );
+const DEMO_SCORES = { overall: 72, directories: 58, backlinks: 61, web2: 45, local: 83, voice: 39, indexing: 77 }
+
+const ACTIVITY = [
+  { icon: 'ti ti-check',          color: T.green,  text: 'NAP audit completed',                  time: 'Today'      },
+  { icon: 'ti ti-star',           color: T.yellow, text: '3 new reviews detected',               time: 'Yesterday'  },
+  { icon: 'ti ti-world',          color: T.purple, text: 'Web 2.0 signal submitted to Medium',   time: '2 days ago' },
+  { icon: 'ti ti-map-pin',        color: T.accent, text: 'Citation added to Yelp',               time: '3 days ago' },
+  { icon: 'ti ti-file-analytics', color: T.cyan,   text: 'Monthly report generated',             time: '1 week ago' },
+]
+
+function gradeFromScore(s) {
+  return s >= 80 ? 'A' : s >= 65 ? 'B' : s >= 50 ? 'C' : 'D'
+}
+function gradeColor(s) {
+  return s >= 80 ? T.green : s >= 65 ? T.yellow : s >= 50 ? T.orange : T.red
+}
+function gradeLabel(s) {
+  return s >= 80 ? 'Excellent' : s >= 65 ? 'Good' : s >= 50 ? 'Fair' : 'Needs Work'
 }
 
-function ScoreCard({ label, icon, color, value }) {
-  const grade = value >= 80 ? 'A' : value >= 65 ? 'B' : value >= 50 ? 'C' : 'D';
-  const gradeColor = value >= 80 ? '#10b981' : value >= 65 ? '#f59e0b' : value >= 50 ? '#f97316' : '#ef4444';
+function ScoreBar({ value, color }) {
   return (
-    <div style={{
-      background: '#0d1b2e',
-      border: '1px solid #1e2d45',
-      borderRadius: 10,
-      padding: '16px 12px',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 8,
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-        background: color, borderRadius: '10px 10px 0 0',
-      }} />
-      <div style={{ position: 'relative', width: 64, height: 64 }}>
-        <ScoreRing value={value} color={color} size={64} />
-        <span style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 15, fontWeight: 700, color: '#e2e8f0',
-        }}>{value}</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-        <i className={`ti ${icon}`} style={{ color, fontSize: 13 }} />
-        <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>{label}</span>
-      </div>
-      <span style={{
-        fontSize: 11, fontWeight: 700, color: gradeColor,
-        background: gradeColor + '20', borderRadius: 4,
-        padding: '1px 7px', letterSpacing: 1,
-      }}>{grade}</span>
+    <div style={{ background: T.border, borderRadius: 4, height: 6, overflow: 'hidden', marginTop: 6 }}>
+      <div style={{ width: value + '%', height: '100%', background: color, borderRadius: 4, transition: 'width 1s ease' }} />
     </div>
-  );
+  )
 }
 
-function StatPill({ icon, label, value, color }) {
-  return (
-    <div style={{
-      background: '#0d1b2e',
-      border: '1px solid #1e2d45',
-      borderRadius: 8,
-      padding: '12px 16px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 12,
-      flex: '1 1 140px',
-    }}>
-      <div style={{
-        width: 36, height: 36, borderRadius: 8,
-        background: color + '20',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <i className={`ti ${icon}`} style={{ color, fontSize: 18 }} />
-      </div>
-      <div>
-        <div style={{ fontSize: 20, fontWeight: 700, color: '#e2e8f0', lineHeight: 1 }}>{value}</div>
-        <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{label}</div>
-      </div>
-    </div>
-  );
-}
-
-function QuickAction({ tab, label, icon, color, onNav }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <button
-      onClick={() => onNav(tab)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: hovered ? color + '15' : '#0d1b2e',
-        border: `1px solid ${hovered ? color + '60' : '#1e2d45'}`,
-        borderRadius: 10,
-        padding: '14px 12px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 8,
-        cursor: 'pointer',
-        transition: 'all 0.15s ease',
-        flex: '1 1 100px',
-      }}
-    >
-      <div style={{
-        width: 40, height: 40, borderRadius: 10,
-        background: color + '20',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: 'transform 0.15s ease',
-        transform: hovered ? 'scale(1.1)' : 'scale(1)',
-      }}>
-        <i className={`ti ${icon}`} style={{ color, fontSize: 20 }} />
-      </div>
-      <span style={{ fontSize: 11, color: hovered ? '#e2e8f0' : '#94a3b8', fontWeight: 500, textAlign: 'center', lineHeight: 1.3 }}>
-        {label}
-      </span>
-    </button>
-  );
-}
-
-export default function DashboardPage({ clientId, userId }) {
-  const [biz, setBiz] = useState(null);
-  const [scores, setScores] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [usingDemo, setUsingDemo] = useState(false);
+export default function DashboardPage({ clientId, userId, session }) {
+  const uid = userId || session?.user?.id
+  const [biz,      setBiz]      = useState(null)
+  const [scores,   setScores]   = useState(null)
+  const [loading,  setLoading]  = useState(true)
+  const [usingDemo,setUsingDemo]= useState(false)
 
   useEffect(() => {
-    if (!clientId || !userId) return;
-    loadData();
-  }, [clientId, userId]);
-
-  async function loadData() {
-    setLoading(true);
-    try {
-      // Load business profile
-      const { data: cd } = await supabase
-        .from('client_data')
-        .select('biz_name,biz_city,biz_state,biz_cat,biz_phone,biz_website')
-        .eq('client_id', clientId)
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (cd) setBiz(cd);
-
-      // Load latest score snapshot
-      const { data: sh } = await supabase
-        .from('score_history')
+    if (!clientId || !uid) return
+    setLoading(true)
+    Promise.all([
+      supabase.from('client_data')
+        .select('biz_name,biz_cat,biz_addr,biz_city,biz_state,biz_zip,biz_phone,biz_website,biz_kw')
+        .eq('client_id', clientId).eq('user_id', uid).maybeSingle(),
+      supabase.from('score_history')
         .select('overall,directories,backlinks,web2,local,voice,indexing,recorded_at')
-        .eq('client_id', clientId)
-        .eq('user_id', userId)
-        .order('recorded_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (sh) {
-        setScores(sh);
-        setUsingDemo(false);
-      } else {
-        setScores(DEMO_SCORES);
-        setUsingDemo(true);
-      }
-    } catch (e) {
-      setScores(DEMO_SCORES);
-      setUsingDemo(true);
-    } finally {
-      setLoading(false);
-    }
-  }
+        .eq('client_id', clientId).eq('user_id', uid)
+        .order('recorded_at', { ascending: false }).limit(1).maybeSingle(),
+    ]).then(([{ data: cd }, { data: sh }]) => {
+      if (cd) setBiz(cd)
+      if (sh) { setScores(sh); setUsingDemo(false) }
+      else    { setScores(DEMO_SCORES); setUsingDemo(true) }
+      setLoading(false)
+    }).catch(() => {
+      setScores(DEMO_SCORES); setUsingDemo(true); setLoading(false)
+    })
+  }, [clientId, uid])
 
   function navigateTo(tab) {
-    // Mirror the switchTab pattern used throughout DashboardShell
-    window.dispatchEvent(new CustomEvent('rf-switch-tab', { detail: { tab } }));
+    window.dispatchEvent(new CustomEvent('rf-switch-tab', { detail: { tab } }))
   }
 
-  const bizName = biz?.biz_name || 'Your Business';
-  const bizLoc = biz?.biz_city && biz?.biz_state
-    ? `${biz.biz_city}, ${biz.biz_state}`
-    : 'Location not set';
-  const bizCat = biz?.biz_cat || 'Category not set';
-  const overallScore = scores?.overall ?? 0;
-  const overallGrade = overallScore >= 80 ? 'A' : overallScore >= 65 ? 'B' : overallScore >= 50 ? 'C' : 'D';
-  const overallColor = overallScore >= 80 ? '#10b981' : overallScore >= 65 ? '#f59e0b' : overallScore >= 50 ? '#f97316' : '#ef4444';
+  const bizName  = biz?.biz_name || 'Your Business'
+  const bizLoc   = biz?.biz_city && biz?.biz_state ? biz.biz_city + ', ' + biz.biz_state : 'Location not set'
+  const bizCat   = biz?.biz_cat || 'Category not set'
+  const overall  = scores?.overall ?? 0
+  const oColor   = gradeColor(overall)
 
   return (
-    <div style={{
-      padding: '24px 28px',
-      minHeight: '100%',
-      color: '#e2e8f0',
-      fontFamily: 'system-ui, sans-serif',
-    }}>
+    <div style={{ padding: '20px 24px', minHeight: '100%', background: T.pageBg, color: T.text, fontFamily: "'Segoe UI',system-ui,sans-serif" }}>
 
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.3px' }}>
-              {bizName}
-            </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#64748b' }}>
-                <i className="ti ti-map-pin" style={{ fontSize: 13 }} />
-                {bizLoc}
+      {/* Page Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: T.text }}>{bizName}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 5, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, color: T.muted, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <i className="ti ti-map-pin" style={{ fontSize: 12 }} />{bizLoc}
+            </span>
+            <span style={{ fontSize: 12, color: T.muted, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <i className="ti ti-tag" style={{ fontSize: 12 }} />{bizCat}
+            </span>
+            {usingDemo && (
+              <span style={{ fontSize: 10, color: T.yellow, background: 'rgba(245,158,11,.12)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 4, padding: '1px 7px', fontWeight: 600 }}>
+                Demo Data
               </span>
-              <span style={{ color: '#334155', fontSize: 13 }}>|</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#64748b' }}>
-                <i className="ti ti-tag" style={{ fontSize: 13 }} />
-                {bizCat}
-              </span>
-              {usingDemo && (
-                <span style={{
-                  fontSize: 11, color: '#f59e0b', background: '#f59e0b15',
-                  border: '1px solid #f59e0b40', borderRadius: 4,
-                  padding: '1px 7px', fontWeight: 500,
-                }}>Demo Data</span>
-              )}
-            </div>
+            )}
           </div>
-          <div style={{
-            background: '#0d1b2e',
-            border: `2px solid ${overallColor}40`,
-            borderRadius: 12,
-            padding: '12px 20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 14,
-          }}>
-            <div style={{ position: 'relative', width: 72, height: 72 }}>
-              <ScoreRing value={overallScore} color={overallColor} size={72} />
-              <span style={{
-                position: 'absolute', inset: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 20, fontWeight: 800, color: '#f1f5f9',
-              }}>{overallScore}</span>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, color: '#64748b', marginBottom: 2 }}>SEO Score</div>
-              <div style={{
-                fontSize: 28, fontWeight: 800, color: overallColor, lineHeight: 1,
-              }}>{overallGrade}</div>
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-                {overallScore >= 80 ? 'Excellent' : overallScore >= 65 ? 'Good' : overallScore >= 50 ? 'Fair' : 'Needs Work'}
-              </div>
-            </div>
+        </div>
+        {/* Overall score badge */}
+        <div style={{ background: T.cardBg, border: '1px solid ' + T.border2, borderRadius: 10, padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 32, fontWeight: 800, color: oColor, lineHeight: 1 }}>{gradeFromScore(overall)}</div>
+            <div style={{ fontSize: 10, color: T.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: '.06em' }}>SEO Grade</div>
+          </div>
+          <div style={{ width: 1, height: 36, background: T.border }} />
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: T.text, lineHeight: 1 }}>{overall}<span style={{ fontSize: 13, color: T.muted, fontWeight: 500 }}>/100</span></div>
+            <div style={{ fontSize: 11, color: oColor, marginTop: 2 }}>{gradeLabel(overall)}</div>
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: '#475569' }}>
+        <div style={{ textAlign: 'center', padding: '60px 0', color: T.muted }}>
           <i className="ti ti-loader-2" style={{ fontSize: 28, display: 'block', marginBottom: 8 }} />
           Loading dashboard...
         </div>
       ) : (
-        <>
-          {/* Stat Pills */}
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
-            <StatPill icon="ti-star" label="Avg Review Rating" value="4.2" color="#f59e0b" />
-            <StatPill icon="ti-link" label="Backlink Signals" value={scores?.backlinks ?? '--'} color="#8b5cf6" />
-            <StatPill icon="ti-world" label="Web 2.0 Live" value="12" color="#10b981" />
-            <StatPill icon="ti-map-pin" label="Directories" value={scores?.directories ?? '--'} color="#3b82f6" />
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Score Cards */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 12, color: '#475569', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
-              Category Scores
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-              gap: 10,
-            }}>
-              {SCORE_LABELS.filter(s => s.key !== 'overall').map(s => (
-                <ScoreCard
-                  key={s.key}
-                  label={s.label}
-                  icon={s.icon}
-                  color={s.color}
-                  value={scores?.[s.key] ?? 0}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 12, color: '#475569', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
-              Quick Actions
-            </div>
-            <div style={{
-              display: 'flex',
-              gap: 10,
-              flexWrap: 'wrap',
-            }}>
-              {QUICK_ACTIONS.map(a => (
-                <QuickAction key={a.tab} {...a} onNav={navigateTo} />
-              ))}
-            </div>
-          </div>
-
-          {/* Info Row */}
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {/* Business Info */}
-            <div style={{
-              flex: '1 1 260px',
-              background: '#0d1b2e',
-              border: '1px solid #1e2d45',
-              borderRadius: 10,
-              padding: 16,
-            }}>
-              <div style={{ fontSize: 12, color: '#475569', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
-                Business Profile
-              </div>
-              {[
-                { icon: 'ti-building-store', label: 'Category', val: bizCat },
-                { icon: 'ti-map-pin', label: 'Location', val: bizLoc },
-                { icon: 'ti-phone', label: 'Phone', val: biz?.biz_phone || 'Not set' },
-                { icon: 'ti-world-www', label: 'Website', val: biz?.biz_website || 'Not set' },
-              ].map(row => (
-                <div key={row.label} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10,
-                  paddingBottom: 10, marginBottom: 10,
-                  borderBottom: '1px solid #1e2d45',
-                }}>
-                  <i className={`ti ${row.icon}`} style={{ color: '#475569', fontSize: 14, marginTop: 1 }} />
-                  <div>
-                    <div style={{ fontSize: 10, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.8 }}>{row.label}</div>
-                    <div style={{ fontSize: 13, color: row.val === 'Not set' ? '#334155' : '#cbd5e1', marginTop: 1 }}>{row.val}</div>
-                  </div>
+          {/* Row 1: stat pills */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 10 }}>
+            {[
+              { icon: 'ti ti-chart-bar',   label: 'Overall Score',      value: overall,                    color: oColor   },
+              { icon: 'ti ti-star',         label: 'Avg Review Rating',  value: '4.2',                     color: T.yellow },
+              { icon: 'ti ti-link',         label: 'Backlink Signals',   value: scores?.backlinks ?? '--', color: T.purple },
+              { icon: 'ti ti-world',        label: 'Web 2.0 Live',       value: '12',                      color: T.green  },
+              { icon: 'ti ti-map-pin',      label: 'Directory Score',    value: scores?.directories ?? '--', color: T.accent },
+            ].map(pill => (
+              <div key={pill.label} style={{ background: T.cardBg, border: '1px solid ' + T.border2, borderRadius: 8, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 7, background: pill.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <i className={pill.icon} style={{ color: pill.color, fontSize: 16 }} />
                 </div>
-              ))}
-            </div>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: T.text, lineHeight: 1 }}>{pill.value}</div>
+                  <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>{pill.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Row 2: category scores + quick actions */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
+            {/* Category Scores */}
+            <Card>
+              <CardHead icon="ti ti-chart-bar" title="Category Scores" sub="SEO health by area" />
+              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {SCORE_CATS.map(cat => {
+                  const val = scores?.[cat.key] ?? 0
+                  return (
+                    <div key={cat.key}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <i className={cat.icon} style={{ color: cat.color, fontSize: 13 }} />
+                          <span style={{ fontSize: 12, color: T.textSub }}>{cat.label}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: cat.color }}>{val}</span>
+                          <span style={{ fontSize: 10, color: gradeColor(val), background: gradeColor(val) + '18', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>{gradeFromScore(val)}</span>
+                        </div>
+                      </div>
+                      <ScoreBar value={val} color={cat.color} />
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHead icon="ti ti-bolt" title="Quick Actions" sub="Jump to any tool" />
+              <div style={{ padding: '12px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {QUICK_ACTIONS.map(a => (
+                  <button key={a.tab} onClick={() => navigateTo(a.tab)} style={{
+                    background: T.cardBg2, border: '1px solid ' + T.border, borderRadius: 8,
+                    padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8,
+                    cursor: 'pointer', textAlign: 'left', transition: 'border-color .15s',
+                  }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = T.border2}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+                  >
+                    <i className={a.icon} style={{ color: T.accentHi, fontSize: 14, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, color: T.textSub, fontWeight: 500 }}>{a.label}</span>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          {/* Row 3: business profile + recent activity */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
+
+            {/* Business Profile */}
+            <Card>
+              <CardHead icon="ti ti-building-store" title="Business Profile" sub="From onboarding" />
+              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {[
+                  { icon: 'ti ti-tag',          label: 'Category', val: bizCat                                     },
+                  { icon: 'ti ti-map-pin',       label: 'Location', val: bizLoc                                    },
+                  { icon: 'ti ti-phone',         label: 'Phone',    val: biz?.biz_phone   || 'Not set'             },
+                  { icon: 'ti ti-world-www',     label: 'Website',  val: biz?.biz_website || 'Not set'             },
+                  { icon: 'ti ti-key',           label: 'Keywords', val: biz?.biz_kw      || 'Not set'             },
+                ].map((row, i, arr) => (
+                  <div key={row.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderBottom: i < arr.length - 1 ? '1px solid ' + T.border : 'none' }}>
+                    <i className={row.icon} style={{ color: T.muted, fontSize: 13, marginTop: 1, flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 10, color: T.muted, textTransform: 'uppercase', letterSpacing: '.07em' }}>{row.label}</div>
+                      <div style={{ fontSize: 12, color: row.val === 'Not set' ? T.border2 : T.textSub, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.val}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
 
             {/* Recent Activity */}
-            <div style={{
-              flex: '2 1 340px',
-              background: '#0d1b2e',
-              border: '1px solid #1e2d45',
-              borderRadius: 10,
-              padding: 16,
-            }}>
-              <div style={{ fontSize: 12, color: '#475569', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
-                Recent Activity
-              </div>
-              {[
-                { icon: 'ti-check', color: '#10b981', text: 'NAP audit completed', time: 'Today' },
-                { icon: 'ti-star', color: '#f59e0b', text: '3 new reviews detected', time: 'Yesterday' },
-                { icon: 'ti-world', color: '#8b5cf6', text: 'Web 2.0 signal submitted to Medium', time: '2 days ago' },
-                { icon: 'ti-map-pin', color: '#3b82f6', text: 'Citation added to Yelp', time: '3 days ago' },
-                { icon: 'ti-file-analytics', color: '#14b8a6', text: 'Monthly report generated', time: '1 week ago' },
-              ].map((item, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '9px 0',
-                  borderBottom: i < 4 ? '1px solid #1e2d45' : 'none',
-                }}>
-                  <div style={{
-                    width: 30, height: 30, borderRadius: '50%',
-                    background: item.color + '20',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <i className={`ti ${item.icon}`} style={{ color: item.color, fontSize: 14 }} />
+            <Card>
+              <CardHead icon="ti ti-activity" title="Recent Activity" sub="Latest tool actions" />
+              <div style={{ padding: '4px 16px' }}>
+                {ACTIVITY.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < ACTIVITY.length - 1 ? '1px solid ' + T.border : 'none' }}>
+                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: item.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <i className={item.icon} style={{ color: item.color, fontSize: 14 }} />
+                    </div>
+                    <div style={{ flex: 1, fontSize: 12, color: T.textSub }}>{item.text}</div>
+                    <div style={{ fontSize: 11, color: T.muted, flexShrink: 0 }}>{item.time}</div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, color: '#cbd5e1' }}>{item.text}</div>
-                  </div>
-                  <div style={{ fontSize: 11, color: '#475569', flexShrink: 0 }}>{item.time}</div>
+                ))}
+                <div style={{ padding: '10px 0', fontSize: 11, color: T.border2, textAlign: 'center' }}>
+                  Live activity tracking coming soon
                 </div>
-              ))}
-              <div style={{ marginTop: 10, fontSize: 11, color: '#334155', textAlign: 'center' }}>
-                Activity feed is illustrative - live tracking coming soon
               </div>
-            </div>
+            </Card>
           </div>
-        </>
+
+        </div>
       )}
     </div>
-  );
+  )
 }
