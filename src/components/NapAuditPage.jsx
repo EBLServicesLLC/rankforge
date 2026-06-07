@@ -1,6 +1,6 @@
 /**
  * NapAuditPage.jsx
- * NAP Audit — Submitted Directories
+ * NAP Audit - Submitted Directories
  * Checks submitted directories against canonical NAP, flags mismatches
  */
 
@@ -211,7 +211,7 @@ export default function NapAuditPage({ session, clientId }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
           <div style={{ fontSize: 22, fontWeight: 700 }}>
             <i className="ti ti-shield-check" style={{ color: T.accentHi, marginRight: 10 }} />
-            NAP Audit — Submitted Directories
+            NAP Audit - Submitted Directories
           </div>
           <button onClick={exportCSV} disabled={!results.length} style={btn(T.cardBg2, !results.length)}>
             <i className="ti ti-download" /> Export CSV
@@ -329,7 +329,7 @@ export default function NapAuditPage({ session, clientId }) {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 8 }}>
-                    {napScore >= 80 ? '✅ Strong NAP consistency' : napScore >= 60 ? '⚠️ Needs attention' : '🚨 Critical issues found'}
+                    {napScore >= 80 ? 'Strong NAP consistency' : napScore >= 60 ? 'Needs attention' : 'Critical issues found'}
                   </div>
                   {/* Field breakdown */}
                   {['Name', 'Phone', 'Address', 'Website'].map(field => {
@@ -341,7 +341,7 @@ export default function NapAuditPage({ session, clientId }) {
                           <div style={{ height: '100%', width: `${Math.round((results.length - issues) / results.length * 100)}%`, background: issues === 0 ? T.green : issues < 3 ? T.yellow : T.red, borderRadius: 2 }} />
                         </div>
                         <div style={{ fontSize: 11, fontWeight: 700, color: issues === 0 ? T.green : T.red, width: 60, textAlign: 'right' }}>
-                          {issues === 0 ? '✓ Clean' : `${issues} issue${issues > 1 ? 's' : ''}`}
+                          {issues === 0 ? 'Clean' : `${issues} issue${issues > 1 ? 's' : ''}`}
                         </div>
                       </div>
                     )
@@ -396,17 +396,17 @@ export default function NapAuditPage({ session, clientId }) {
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: r.status === 'ok' ? T.greenBg : r.status === 'error' ? T.redBg : T.yellowBg, color: statusColor }}>
                         {r.status === 'ok' ? 'Consistent' : r.status === 'error' ? 'Mismatch' : 'Missing Data'}
                       </span>
-                      <a href={r.dir.url} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.accentHi, textDecoration: 'none', fontWeight: 600 }}>Fix →</a>
+                      <a href={r.dir.url} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: T.accentHi, textDecoration: 'none', fontWeight: 600 }}>Fix &rarr;</a>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {r.fields.filter(f => f.canonical).map(f => (
                         <div key={f.field} style={{ fontSize: 11 }}>
                           {f.ok ? (
-                            <span style={{ color: T.green }}>✓ {f.field}</span>
+                            <span style={{ color: T.green }}>&#10003; {f.field}</span>
                           ) : (
                             <span style={{ color: T.red }}>
-                              ✕ {f.field}: <span style={{ textDecoration: 'line-through', color: T.muted }}>{f.listed || '[missing]'}</span>
-                              <span style={{ background: T.redBg, color: T.red, borderRadius: 4, padding: '1px 6px', marginLeft: 4 }}>→ {f.canonical}</span>
+                              &#x2715; {f.field}: <span style={{ textDecoration: 'line-through', color: T.muted }}>{f.listed || '[missing]'}</span>
+                              <span style={{ background: T.redBg, color: T.red, borderRadius: 4, padding: '1px 6px', marginLeft: 4 }}>&rarr; {f.canonical}</span>
                             </span>
                           )}
                         </div>
