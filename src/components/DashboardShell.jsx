@@ -470,6 +470,20 @@ export default function DashboardShell({ session, subscription }) {
           </div>
         )}
 
+        {/* KW Gap — renders inline */}
+        {activeTab === 'kwgap' && (
+          <div style={{ flex:1, overflowY:'auto', background:'#060d1a' }}>
+            <KwGapPage session={session} clientId={activeId} />
+          </div>
+        )}
+
+        {/* Web 2.0 — renders inline */}
+        {activeTab === 'web2' && (
+          <div style={{ flex:1, overflowY:'auto', background:'#060d1a' }}>
+            <Web2Page session={session} clientId={activeId} />
+          </div>
+        )}
+
         {/* Reputation — renders inline */}
         {activeTab === 'reputation' && (
           <div style={{ flex:1, overflowY:'auto', background:'#060d1a' }}>
