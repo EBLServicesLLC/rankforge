@@ -90,13 +90,13 @@ export default function RankTrackerPage({ session, clientId }) {
   useEffect(() => {
     if (!session) return
     supabase.from('settings')
-      .select('gsc_access_token, gsc_email, gsc_connected')
+      .select('google_key')
       .eq('user_id', session.user.id)
       .single()
       .then(({ data: s }) => {
-        if (s?.gsc_connected && s?.gsc_access_token) {
+        if (s?.google_key) {
           setConnected(true)
-          setGscEmail(s.gsc_email || '')
+          setGscEmail('')
         }
       })
     if (clientId) {
@@ -252,23 +252,16 @@ export default function RankTrackerPage({ session, clientId }) {
                   <span style={{ color: T.green, fontWeight: 700 }}>✓</span>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: T.green }}>Connected</div>
-                    {gscEmail && <div style={{ fontSize: 11, color: T.muted }}>{gscEmail}</div>}
+                    <div style={{ fontSize: 11, color: T.muted }}>Google OAuth token found</div>
                   </div>
                 </div>
               ) : (
-                <>
-                  <div style={{ fontSize: 12, color: T.muted, lineHeight: 1.6 }}>
-                    Connect Google Search Console to see real keyword rankings, clicks, and impressions for your website.
+                <div style={{ padding: '10px 12px', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)', borderRadius: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.yellow, marginBottom: 4 }}>⚠️ Not connected</div>
+                  <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.6 }}>
+                    Go to <strong style={{ color: T.accentHi }}>API Keys tab</strong> in rankforge3 and add your Google OAuth token, then return here.
                   </div>
-                  <button onClick={connecting ? null : connectGSC} disabled={connecting}
-                    style={{ width: '100%', padding: '10px', background: connecting ? T.muted : 'linear-gradient(135deg,#4285f4,#2563eb)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: connecting ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    <i className="ti ti-brand-google"></i>
-                    {connecting ? 'Connecting...' : 'Connect Google Search Console'}
-                  </button>
-                  <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.5 }}>
-                    You'll need to verify your website in Google Search Console first at <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" style={{ color: T.accentHi }}>search.google.com/search-console</a>
-                  </div>
-                </>
+                </div>
               )}
             </div>
           </Card>
