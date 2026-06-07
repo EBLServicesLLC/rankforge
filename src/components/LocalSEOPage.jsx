@@ -126,6 +126,8 @@ export default function LocalSEOPage({ session, clientId }) {
 
   useEffect(() => {
     if (!clientId || !session) return
+
+    // Load business profile
     supabase.from('client_data')
       .select('biz_name, biz_phone, biz_addr, biz_city, biz_state, biz_zip, biz_website, biz_desc, biz_cat, biz_kw')
       .eq('id', clientId).eq('user_id', session.user.id).single()
@@ -138,16 +140,33 @@ export default function LocalSEOPage({ session, clientId }) {
           generateSchemaFromProfile('LocalBusiness', data)
         }
       })
-    try {
-      const saved = JSON.parse(localStorage.getItem(`rf_localseo_tasks_${clientId}`) || '{}')
-      setCheckedTasks(saved)
-    } catch (e) {}
+
+    // Load checklist state from DB
+    const loadTasks = async () => {
+      try {
+        const { data } = await supabase
+          .from('local_seo_tasks')
+          .select('tasks')
+          .eq('user_id', session.user.id)
+          .eq('client_id', clientId)
+          .single()
+        if (data?.tasks) setCheckedTasks(data.tasks)
+      } catch (e) {}
+    }
+    loadTasks()
   }, [clientId, session])
 
-  const toggleTask = (id) => {
+  const toggleTask = async (id) => {
     const updated = { ...checkedTasks, [id]: !checkedTasks[id] }
     setCheckedTasks(updated)
-    try { localStorage.setItem(`rf_localseo_tasks_${clientId}`, JSON.stringify(updated)) } catch (e) {}
+    try {
+      await supabase
+        .from('local_seo_tasks')
+        .upsert(
+          { user_id: session.user.id, client_id: clientId, tasks: updated, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id,client_id' }
+        )
+    } catch (e) {}
   }
 
   const generateSchemaFromProfile = (type, p) => {
