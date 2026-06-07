@@ -591,67 +591,110 @@ export default function BacklinksPage({ session, clientId }) {
 }
 
 function ProspectCard({ prospect: p, status, onEmail, onMove }) {
-  const [hovered, setHovered] = useState(false)
   const tc = TYPE_COLORS[p.type] || { bg: T.muted + '18', color: T.muted }
 
-  const nextActions = {
-    new:      [{ label: 'Pitch', icon: 'ti ti-mail-forward', next: 'pitched', color: T.accent }],
-    pitched:  [
-      { label: 'Follow', icon: 'ti ti-clock',       next: 'followed', color: T.orange },
-      { label: 'Replied', icon: 'ti ti-mail-opened', next: 'replied',  color: T.cyan  },
-    ],
-    followed: [
-      { label: 'Replied', icon: 'ti ti-mail-opened', next: 'replied',  color: T.cyan },
-      { label: 'Decline', icon: 'ti ti-x',           next: 'declined', color: T.red  },
-    ],
-    replied:  [{ label: 'Won!', icon: 'ti ti-trophy', next: 'won', color: T.purple }],
-    won:      [],
+  // Each stage: what action moves you forward, and what moves you back
+  const STAGE_ACTIONS = {
+    new:      { forward: { label: 'Pitched',   icon: 'ti ti-mail-forward', next: 'pitched',  color: T.accent } },
+    pitched:  { forward: { label: 'They Replied', icon: 'ti ti-mail-opened', next: 'replied', color: T.cyan  },
+                back:    { label: 'Follow Up',  icon: 'ti ti-clock',        next: 'followed', color: T.orange } },
+    followed: { forward: { label: 'They Replied', icon: 'ti ti-mail-opened', next: 'replied', color: T.cyan  },
+                back:    { label: 'Decline',    icon: 'ti ti-x',            next: 'declined', color: T.red   } },
+    replied:  { forward: { label: 'Won Link!',  icon: 'ti ti-trophy',       next: 'won',      color: T.purple } },
+    won:      {},
   }
 
+  const actions = STAGE_ACTIONS[status] || {}
+
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: hovered ? T.cardBg : T.cardBg2,
-        border: '1px solid ' + (hovered ? T.border2 : T.border),
-        borderRadius: 8, padding: '10px 11px',
-        cursor: 'pointer', transition: 'all .12s',
-      }}
+    <div style={{
+      background: T.cardBg2,
+      border: '1px solid ' + T.border,
+      borderRadius: 8, padding: '10px 11px',
+      transition: 'border-color .12s',
+    }}
+      onMouseEnter={e => e.currentTarget.style.borderColor = T.border2}
+      onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
+      {/* Name + DA */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 4 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
           <div style={{ fontSize: 11, color: T.muted, marginTop: 1 }}>{p.domain}</div>
         </div>
-        <span style={{ fontSize: 12, fontWeight: 700, color: daColor(p.da), flexShrink: 0 }}>{p.da}</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: daColor(p.da), flexShrink: 0 }}>{p.da}</span>
       </div>
 
+      {/* Badges */}
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
+        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 10, background: tc.bg, color: tc.color }}>{p.type}</span>
+        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 10, color: DIFF_COLORS[p.diff], background: DIFF_COLORS[p.diff] + '18' }}>{p.diff}</span>
+      </div>
+
+      {/* Note */}
       {p.note && (
-        <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.4, marginBottom: 6 }}>
-          {p.note.length > 55 ? p.note.substring(0, 55) + '...' : p.note}
+        <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.4, marginBottom: 8 }}>
+          {p.note.length > 60 ? p.note.substring(0, 60) + '...' : p.note}
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
-        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: tc.bg, color: tc.color }}>{p.type}</span>
-        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 10, color: DIFF_COLORS[p.diff], background: DIFF_COLORS[p.diff] + '18' }}>{p.diff}</span>
-      </div>
+      {/* PRIMARY: Generate Email button - always visible, always prominent */}
+      <button
+        onClick={e => { e.stopPropagation(); onEmail() }}
+        style={{
+          width: '100%', padding: '7px 0', marginBottom: 6,
+          background: T.accent, color: '#fff',
+          border: 'none', borderRadius: 7,
+          fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+        }}
+      >
+        <i className="ti ti-mail" style={{ fontSize: 13 }} />
+        Write Outreach Email
+      </button>
 
-      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-        <button onClick={e => { e.stopPropagation(); onEmail() }}
-          style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid ' + T.border2, background: T.cardBg, color: T.muted, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          title="Generate email">
-          <i className="ti ti-mail" />
-        </button>
-        {(nextActions[status] || []).map(a => (
-          <button key={a.next} onClick={e => { e.stopPropagation(); onMove(p.id, a.next) }}
-            style={{ height: 26, padding: '0 8px', borderRadius: 6, border: '1px solid ' + a.color + '40', background: a.color + '15', color: a.color, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}
-            title={a.label}>
-            <i className={a.icon} style={{ fontSize: 11 }} />{a.label}
-          </button>
-        ))}
-      </div>
+      {/* SECONDARY: Stage movement buttons */}
+      {(actions.forward || actions.back) && (
+        <div style={{ display: 'flex', gap: 5 }}>
+          {actions.back && (
+            <button
+              onClick={e => { e.stopPropagation(); onMove(p.id, actions.back.next) }}
+              style={{
+                flex: 1, padding: '6px 0',
+                background: 'transparent', color: actions.back.color,
+                border: '1px solid ' + actions.back.color + '50',
+                borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              }}
+            >
+              <i className={actions.back.icon} style={{ fontSize: 11 }} />
+              {actions.back.label}
+            </button>
+          )}
+          {actions.forward && (
+            <button
+              onClick={e => { e.stopPropagation(); onMove(p.id, actions.forward.next) }}
+              style={{
+                flex: actions.back ? 2 : 1, padding: '6px 0',
+                background: actions.forward.color + '22', color: actions.forward.color,
+                border: '1px solid ' + actions.forward.color + '60',
+                borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              }}
+            >
+              <i className={actions.forward.icon} style={{ fontSize: 11 }} />
+              {actions.forward.label}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Won state */}
+      {status === 'won' && (
+        <div style={{ textAlign: 'center', padding: '4px 0', fontSize: 12, fontWeight: 700, color: T.purple }}>
+          <i className="ti ti-trophy" style={{ marginRight: 4 }} />Link Won
+        </div>
+      )}
     </div>
   )
 }
