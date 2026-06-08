@@ -6623,6 +6623,28 @@ document.addEventListener('DOMContentLoaded',function(){
               .then(function(r){console.log('[RankForged] key saved to Supabase:',col,r.status);})
               .catch(function(e){console.warn('[RankForged] key save failed:',e);});
           };
+          // Patch saveKey to also write back to Supabase
+          var _origSaveKey=window.saveKey;
+          window.saveKey=function(e){
+            _origSaveKey(e);
+            var t=KEY_MAP[e];
+            if(!t)return;
+            var sbUrl=sessionStorage.getItem('rf_sb_url');
+            var sbKey=sessionStorage.getItem('rf_sb_key');
+            var userId=sessionStorage.getItem('rf_user_id');
+            if(!sbUrl||!sbKey||!userId)return;
+            var _authKey=sbKey;
+            try{var _ref=sbUrl.replace('https://','').split('.')[0];var _authData=localStorage.getItem('sb-'+_ref+'-auth-token');if(_authData){var _token=JSON.parse(_authData).access_token;if(_token)_authKey=_token;}}catch(e){}
+            var colMap={anthropic:'anthropic_key',openai:'openai_key',gemini:'gemini_key',google:'google_key',indexnow:'indexnow_key',yext:'yext_key',yextAccount:'yext_account',mozId:'moz_id',mozSecret:'moz_secret',brightlocalKey:'brightlocal_key',brightlocalCid:'brightlocal_cid',gmailToken:'gmail_token',fbToken:'fb_token',fbPageId:'fb_page_id',linkedinToken:'linkedin_token'};
+            var col=colMap[t.sk];
+            if(!col)return;
+            var body={};
+            body[col]=S.keys[t.sk];
+            body['user_id']=userId;
+            fetch(sbUrl+'/rest/v1/settings',{method:'POST',headers:{'apikey':sbKey,'Authorization':'Bearer '+_authKey,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify(body)})
+              .then(function(r){console.log('[RankForged] key saved to Supabase:',col,r.status);})
+              .catch(function(e){console.warn('[RankForged] key save failed:',e);});
+          };
         } else if(waited++<20){setTimeout(syncKeys,150);}
       }
       syncKeys();

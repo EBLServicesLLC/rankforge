@@ -11,10 +11,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function getPlanFromPriceId(priceId: string): string {
+  const map: Record<string, string> = {
+    // Live price IDs
+    'price_1TdJajLQRnOj0qLPQmbNz2kN': 'solopreneur',
+    'price_1TdJbkLQRnOj0qLPJPfsQsJI': 'deluxe',
+    'price_1TdJczLQRnOj0qLPa7nat9Hi': 'pro',
+    'price_1TdJdnLQRnOj0qLPv56ml87r': 'agency',
+    // Test price IDs
+    'price_1TegQ5LQRnOj0qLPTa30h9aV': 'solopreneur',
+    'price_1TegQLLQRnOj0qLPVIkeOkH5': 'deluxe',
+    'price_1TegQbLQRnOj0qLPiEPGi74n': 'pro',
+    'price_1TegQwLQRnOj0qLPDTeqAOTV': 'agency',
+  }
+  return map[priceId] || 'unknown'
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   try {
     const { price_id, user_id, user_email, success_url, cancel_url } = await req.json()
+
+    const plan = getPlanFromPriceId(price_id)
 
     let customerId
     if (user_email) {
@@ -38,7 +56,11 @@ serve(async (req) => {
       success_url: (success_url || 'https://rankforgedai-5ipq.vercel.app/?activated=1') + '&session_id={CHECKOUT_SESSION_ID}',
       cancel_url: cancel_url || 'https://rankforgedai-5ipq.vercel.app/',
       allow_promotion_codes: true,
-      metadata: { user_id: user_id || '', price_id },
+      metadata: {
+        user_id: user_id || '',
+        price_id,
+        plan,
+      },
     }
 
     if (customerId) sessionParams.customer = customerId

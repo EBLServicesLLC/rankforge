@@ -1,603 +1,1093 @@
-/**
- * LandingPageBuilder.jsx
- * Local Landing Page Builder — three column layout
- * Left: settings | Middle: combo list | Right: preview + HTML
- */
-
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-const SUPABASE_URL = 'https://ybhpbpahhywiokhqpldj.supabase.co'
-
+// ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
-  pageBg:   '#060d1a',
-  cardBg:   '#0d1f3c',
-  cardBg2:  '#080f1e',
-  border:   '#0f2040',
-  border2:  '#1a3560',
-  text:     '#e2e8f0',
-  textSub:  '#c8d8f0',
-  muted:    '#4a6080',
-  muted2:   '#3a5070',
-  accent:   '#3b82f6',
-  accentHi: '#60a5fa',
-  green:    '#10b981',
-  red:      '#f87171',
-  yellow:   '#f59e0b',
-  purple:   '#8b5cf6',
+  pageBg:'#060d1a', cardBg:'#0d1f3c', cardBg2:'#080f1e',
+  border:'#0f2040', border2:'#1a3560',
+  text:'#e2e8f0', textSub:'#c8d8f0', muted:'#4a6080',
+  accent:'#3b82f6', accentHi:'#60a5fa',
+  green:'#10b981', red:'#f87171', yellow:'#f59e0b',
+  orange:'#f97316', purple:'#8b5cf6', cyan:'#22d3ee',
 }
 
-const TONES = [
-  { value: 'professional', label: 'Professional & trustworthy' },
-  { value: 'friendly',     label: 'Friendly & approachable' },
-  { value: 'urgent',       label: 'Urgent & action-focused' },
-  { value: 'premium',      label: 'Premium & expert' },
-]
-
-const PAGE_FOCUS = [
-  { value: 'seo',       label: 'SEO optimised (keyword-rich, long-form)' },
-  { value: 'conversion', label: 'Conversion focused (CTA-heavy)' },
-  { value: 'local',     label: 'Hyper-local (neighbourhood-specific)' },
-  { value: 'balanced',  label: 'Balanced (SEO + conversion)' },
-]
-
-const SECTIONS = [
-  { id: 'meta',     label: 'Title tag & meta description' },
-  { id: 'hero',     label: 'H1 & intro paragraph' },
-  { id: 'services', label: 'Services bullet list' },
-  { id: 'faq',      label: 'FAQ section (3 questions)' },
-  { id: 'cta',      label: 'Local CTA section' },
-  { id: 'schema',   label: 'JSON-LD schema markup' },
-]
-
-function hdrs(session) {
-  return { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }
+const PC = {
+  google:    { bg:'#0d1f14', border:'#10b981', color:'#10b981', icon:'ti-brand-google'    },
+  facebook:  { bg:'#0d1221', border:'#3b82f6', color:'#60a5fa', icon:'ti-brand-facebook'  },
+  instagram: { bg:'#1a0d21', border:'#8b5cf6', color:'#a78bfa', icon:'ti-brand-instagram' },
+  linkedin:  { bg:'#0d1a21', border:'#22d3ee', color:'#22d3ee', icon:'ti-brand-linkedin'  },
+  blog:      { bg:'#1f0d05', border:'#f97316', color:'#fb923c', icon:'ti-file-text'       },
+  email:     { bg:'#1f0d0d', border:'#f87171', color:'#fca5a5', icon:'ti-mail'            },
 }
 
-function Card({ children, style }) {
-  return <div style={{ background: T.cardBg, border: `1px solid ${T.border2}`, borderRadius: 10, ...style }}>{children}</div>
+const PLATFORMS  = ['google','facebook','instagram','linkedin','blog','email']
+const MONTHS     = ['January','February','March','April','May','June','July','August','September','October','November','December']
+const DAYS       = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+const TONES      = ['Professional','Friendly','Urgent','Inspirational','Humorous','Educational','Promotional']
+const LENGTHS    = ['Short (50-100 words)','Medium (100-200 words)','Long (200-400 words)']
+
+const STATUS_MAP = {
+  draft:     { label:'Draft',     bg:'#0d1a2a', color:'#4a6080' },
+  scheduled: { label:'Scheduled', bg:'#0d1f14', color:'#10b981' },
+  published: { label:'Published', bg:'#0d1430', color:'#60a5fa' },
 }
 
-function CardHead({ icon, title, sub, right }) {
-  return (
-    <div style={{ padding: '12px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(59,130,246,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>
-        <i className={icon} style={{ color: T.accentHi }}></i>
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{title}</div>
-        {sub && <div style={{ fontSize: 11, color: T.muted, marginTop: 1 }}>{sub}</div>}
-      </div>
-      {right}
-    </div>
-  )
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function getDays(y,m)  { return new Date(y,m+1,0).getDate() }
+function getFirst(y,m) { return new Date(y,m,1).getDay() }
+function pad(n)        { return String(n).padStart(2,'0') }
+function toDS(y,m,d)   { return `${y}-${pad(m+1)}-${pad(d)}` }
+function fmtDate(ds)   {
+  return new Date(ds+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})
 }
 
-export default function LandingPageBuilder({ session, clientId }) {
-  const [services, setServices]       = useState('')
-  const [cities, setCities]           = useState([])
-  const [cityInput, setCityInput]     = useState('')
-  const [tone, setTone]               = useState('professional')
-  const [focus, setFocus]             = useState('seo')
-  const [sections, setSections]       = useState(['meta','hero','services','faq','cta','schema'])
-  const [combos, setCombos]           = useState([]) // { service, city, status, html, score, words }
-  const [selected, setSelected]       = useState(null) // index
-  const [generating, setGenerating]   = useState(false)
-  const [previewTab, setPreviewTab]   = useState('preview') // preview | html
-  const [copied, setCopied]           = useState('')
-  const [profile, setProfile]         = useState({})
-  const [error, setError]             = useState(null)
-  const iframeRef                     = useRef(null)
+const inp = {
+  background:'#060d1a', border:'1px solid #1a3560', borderRadius:8,
+  color:'#e2e8f0', padding:'8px 12px', fontSize:13,
+  width:'100%', boxSizing:'border-box', outline:'none',
+}
+const lbl = { color:'#c8d8f0', fontSize:12, fontWeight:600, marginBottom:4, display:'block' }
 
-  // Stats
-  const totalCombos   = combos.length
-  const totalGenerated = combos.filter(c => c.status === 'done').length
-  const avgScore      = totalGenerated ? Math.round(combos.filter(c => c.status === 'done').reduce((a, c) => a + (c.score || 0), 0) / totalGenerated) : 0
-  const totalWords    = combos.filter(c => c.status === 'done').reduce((a, c) => a + (c.words || 0), 0)
+function Badge({ status }) {
+  const m = STATUS_MAP[status] || STATUS_MAP.draft
+  return <span style={{ background:m.bg, color:m.color, borderRadius:10, padding:'2px 9px', fontSize:10, fontWeight:700 }}>{m.label}</span>
+}
 
-  // Load profile
+// ─── API call helper ──────────────────────────────────────────────────────────
+async function callClaude(apiKey, prompt, maxTokens=4000) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true',
+      'x-api-key': apiKey,
+    },
+    body: JSON.stringify({
+      model:'claude-sonnet-4-5',
+      max_tokens: maxTokens,
+      messages:[{ role:'user', content: prompt }],
+    }),
+  })
+  if (!res.ok) {
+    const txt = await res.text()
+    throw new Error(`API ${res.status}: ${txt.slice(0,200)}`)
+  }
+  const data = await res.json()
+  return (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('')
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+export default function ContentCalendarPage({ clientId, userId, bizName }) {
+  const now      = new Date()
+  const todayStr = toDS(now.getFullYear(), now.getMonth(), now.getDate())
+
+  // Navigation
+  const [tab,         setTab]         = useState('calendar')
+  const [viewYear,    setViewYear]    = useState(now.getFullYear())
+  const [viewMonth,   setViewMonth]   = useState(now.getMonth())
+  const [selectedDay, setSelectedDay] = useState(null)
+
+  // Data
+  const [posts,     setPosts]     = useState({})
+  const [allPosts,  setAllPosts]  = useState([])
+  const [loading,   setLoading]   = useState(true)
+  const [apiKey,    setApiKey]    = useState('')
+  const [biz,       setBiz]       = useState({})
+
+  // Generate panel
+  const [genOpen,      setGenOpen]      = useState(false)
+  const [genTopic,     setGenTopic]     = useState('')
+  const [genPlatforms, setGenPlatforms] = useState(['google','facebook','instagram'])
+  const [genTone,      setGenTone]      = useState('Professional')
+  const [genKw,        setGenKw]        = useState('')
+  const [generating,   setGenerating]   = useState(false)
+  const [genStatus,    setGenStatus]    = useState(null) // {type:'ok'|'err'|'info', msg}
+
+  // Repurpose panel
+  const [repurposeOpen,    setRepurposeOpen]    = useState(false)
+  const [articleText,      setArticleText]      = useState('')
+  const [repPlatforms,     setRepPlatforms]     = useState(['facebook','instagram','linkedin'])
+  const [repTone,          setRepTone]          = useState('Professional')
+  const [repurposing,      setRepurposing]      = useState(false)
+  const [repurposeStatus,  setRepurposeStatus]  = useState(null)
+
+  // Post modal
+  const [modal,   setModal]   = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [aiDraft, setAiDraft] = useState(false)  // generating content inside modal
+  const [saving,  setSaving]  = useState(false)
+
+  // View post drawer
+  const [viewPost, setViewPost] = useState(null)
+
+  // Load API key + biz profile
   useEffect(() => {
-    if (!clientId || !session) return
-    supabase
-      .from('client_data')
-      .select('biz_name, biz_cat, biz_city, biz_state, biz_phone, biz_website, biz_addr, biz_zip, biz_desc, biz_kw')
-      .eq('id', clientId)
-      .eq('user_id', session.user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setProfile(data)
-          if (data.biz_cat) setServices(data.biz_cat)
-          if (data.biz_city) {
-            const city = data.biz_city + (data.biz_state ? ', ' + data.biz_state : '')
-            setCities([city])
-          }
-        }
-      })
-  }, [clientId, session])
-
-  // Build combos when services/cities change
-  useEffect(() => {
-    if (!services.trim() || !cities.length) { setCombos([]); return }
-    const serviceList = services.split(',').map(s => s.trim()).filter(Boolean)
-    const newCombos = []
-    for (const svc of serviceList) {
-      for (const city of cities) {
-        const existing = combos.find(c => c.service === svc && c.city === city)
-        newCombos.push(existing || { service: svc, city, status: 'pending', html: '', score: 0, words: 0 })
-      }
+    if (!userId) return
+    supabase.from('settings').select('anthropic_key').eq('user_id', userId).single()
+      .then(({ data }) => { if (data?.anthropic_key) setApiKey(data.anthropic_key) })
+    if (clientId) {
+      supabase.from('client_data').select('*').eq('client_id', clientId).single()
+        .then(({ data }) => { if (data) setBiz(data) })
     }
-    setCombos(newCombos)
-    if (selected !== null && selected >= newCombos.length) setSelected(null)
-  }, [services, cities])
+  }, [userId, clientId])
 
-  // Update iframe when selected combo html changes
-  useEffect(() => {
-    const combo = selected !== null ? combos[selected] : null
-    if (iframeRef.current && combo?.html) {
-      const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document
-      doc.open(); doc.write(combo.html); doc.close()
-    }
-  }, [selected, combos])
+  // Load posts for current month
+  const loadPosts = useCallback(async () => {
+    if (!clientId || !userId) return
+    setLoading(true)
+    const start = toDS(viewYear, viewMonth, 1)
+    const end   = toDS(viewYear, viewMonth, getDays(viewYear, viewMonth))
+    const { data } = await supabase
+      .from('content_calendar').select('*')
+      .eq('user_id', userId).eq('client_id', clientId)
+      .gte('post_date', start).lte('post_date', end)
+      .order('post_date')
+    const flat = data || []
+    const grouped = {}
+    flat.forEach(p => {
+      if (!grouped[p.post_date]) grouped[p.post_date] = []
+      grouped[p.post_date].push(p)
+    })
+    setPosts(grouped)
+    setAllPosts(flat)
+    setLoading(false)
+  }, [clientId, userId, viewYear, viewMonth])
 
-  const addCity = () => {
-    const c = cityInput.trim()
-    if (c && !cities.includes(c)) setCities(prev => [...prev, c])
-    setCityInput('')
+  useEffect(() => { loadPosts() }, [loadPosts])
+
+  // ── Biz context string for prompts ────────────────────────────────────────
+  function bizCtx() {
+    return [
+      (biz.biz_name||bizName) && `Business: ${biz.biz_name||bizName}`,
+      biz.biz_cat   && `Category: ${biz.biz_cat}`,
+      biz.biz_city  && `Location: ${biz.biz_city}${biz.biz_state?', '+biz.biz_state:''}`,
+      biz.biz_phone && `Phone: ${biz.biz_phone}`,
+      biz.biz_website && `Website: ${biz.biz_website}`,
+      biz.biz_kw    && `Keywords: ${biz.biz_kw}`,
+      biz.biz_desc  && `About: ${biz.biz_desc}`,
+    ].filter(Boolean).join('\n') || `Business: ${bizName||'Local Business'}`
   }
 
-  const removeCity = (city) => setCities(prev => prev.filter(c => c !== city))
+  // ── Save / update post ────────────────────────────────────────────────────
+  const savePost = async (post) => {
+    setSaving(true)
+    const row = {
+      user_id:userId, client_id:clientId,
+      post_date:post.post_date, platform:post.platform,
+      content:post.content, topic:post.topic||'',
+      status:post.status||'draft',
+      keywords:post.keywords||'', tone:post.tone||'', length:post.length||'',
+    }
+    if (post.id) {
+      await supabase.from('content_calendar').update(row).eq('id', post.id)
+    } else {
+      await supabase.from('content_calendar').insert(row)
+    }
+    setSaving(false)
+    setModal(false)
+    setEditing(null)
+    loadPosts()
+  }
 
-  const toggleSection = (id) =>
-    setSections(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])
+  const deletePost = async (id) => {
+    if (!window.confirm('Delete this post?')) return
+    await supabase.from('content_calendar').delete().eq('id', id)
+    if (viewPost?.id === id) setViewPost(null)
+    loadPosts()
+  }
 
-  const generateCombo = useCallback(async (index) => {
-    const combo = combos[index]
-    if (!combo || combo.status === 'generating') return
-    setError(null)
-    setCombos(prev => prev.map((c, i) => i === index ? { ...c, status: 'generating' } : c))
-    setSelected(index)
+  const updateStatus = async (post, status) => {
+    await supabase.from('content_calendar').update({ status }).eq('id', post.id)
+    if (viewPost?.id === post.id) setViewPost({ ...post, status })
+    loadPosts()
+  }
+
+  // ── AI: Generate full month ───────────────────────────────────────────────
+  const generateMonth = async () => {
+    if (!apiKey) { setGenStatus({ type:'err', msg:'No Anthropic API key found. Add it in API Keys tab.' }); return }
+    if (!genPlatforms.length) { setGenStatus({ type:'err', msg:'Select at least one platform.' }); return }
+    setGenerating(true)
+    setGenStatus({ type:'info', msg:'Calling Claude...' })
+
+    const prompt = `You are a local SEO content strategist.
+
+${bizCtx()}
+${genTopic ? `Campaign focus: ${genTopic}` : ''}
+${genKw    ? `Target keywords: ${genKw}`   : ''}
+Tone: ${genTone}
+Month: ${MONTHS[viewMonth]} ${viewYear}
+Platforms: ${genPlatforms.join(', ')}
+
+Generate 16-20 social posts spread evenly across the month.
+Return ONLY a valid JSON array, no markdown fences, no explanation.
+Each object must have exactly:
+- post_date: "YYYY-MM-DD" within ${MONTHS[viewMonth]} ${viewYear}
+- platform: one of ${genPlatforms.join(', ')}
+- content: full post text in ${genTone} tone, appropriate length per platform
+- topic: 2-4 word label
+
+Spread dates evenly. Vary topics. Use a local, authentic voice.`
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/landing-page-generate`, {
-        method: 'POST',
-        headers: hdrs(session),
-        body: JSON.stringify({
-          service: combo.service,
-          city: combo.city,
-          tone, focus, sections,
-          client_id: clientId,
-          profile: {
-            biz_name:    profile.biz_name    || '',
-            biz_phone:   profile.biz_phone   || '',
-            biz_website: profile.biz_website || '',
-            biz_addr:    profile.biz_addr    || '',
-            biz_city:    profile.biz_city    || '',
-            biz_state:   profile.biz_state   || '',
-            biz_zip:     profile.biz_zip     || '',
-            biz_desc:    profile.biz_desc    || '',
-            biz_kw:      profile.biz_kw      || '',
-          },
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok || data.error) throw new Error(data.error || 'Generation failed')
+      const raw   = await callClaude(apiKey, prompt, 4000)
+      const clean = raw.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim()
+      let parsed
+      try { parsed = JSON.parse(clean) } catch { throw new Error('JSON parse failed - try again') }
+      if (!Array.isArray(parsed) || !parsed.length) throw new Error('AI returned no posts - try again')
 
-      const words = (data.html.match(/\b\w+\b/g) || []).length
-      const score = data.score || calculateScore(data.html, combo.service, combo.city)
+      const rows = parsed
+        .filter(p => p.post_date && p.platform && p.content)
+        .map(p => ({
+          user_id:userId, client_id:clientId,
+          post_date:p.post_date, platform:p.platform,
+          content:p.content, topic:p.topic||'',
+          status:'draft', keywords:genKw, tone:genTone, length:'',
+        }))
 
-      setCombos(prev => prev.map((c, i) => i === index
-        ? { ...c, status: 'done', html: data.html, score, words }
-        : c
-      ))
+      if (!rows.length) throw new Error('No valid posts in response - try again')
+      await supabase.from('content_calendar').insert(rows)
+      setGenStatus({ type:'ok', msg:`${rows.length} draft posts saved. View them in the calendar or Drafts tab.` })
+      setGenOpen(false)
+      loadPosts()
     } catch (err) {
-      setError(err.message)
-      setCombos(prev => prev.map((c, i) => i === index ? { ...c, status: 'error' } : c))
-    }
-  }, [combos, tone, focus, sections, session, clientId, profile])
-
-  const generateAll = async () => {
-    setGenerating(true)
-    for (let i = 0; i < combos.length; i++) {
-      if (combos[i].status !== 'done') await generateCombo(i)
+      setGenStatus({ type:'err', msg: err.message })
     }
     setGenerating(false)
   }
 
-  const calculateScore = (html, service, city) => {
-    let score = 0
-    const lower = html.toLowerCase()
-    const svcLower = service.toLowerCase()
-    const cityLower = city.toLowerCase()
-    if (lower.includes('<title>')) score += 15
-    if (lower.includes('meta name="description"')) score += 15
-    if (lower.includes('<h1')) score += 10
-    if (lower.includes(svcLower)) score += 10
-    if (lower.includes(cityLower)) score += 10
-    if (lower.includes('application/ld+json')) score += 15
-    if (lower.includes('faqpage')) score += 10
-    if (lower.includes('<ul') || lower.includes('<li')) score += 5
-    if ((lower.match(new RegExp(cityLower, 'g')) || []).length >= 3) score += 10
-    return Math.min(score, 100)
+  // ── AI: Repurpose article ─────────────────────────────────────────────────
+  const repurposeArticle = async () => {
+    if (!apiKey)        { setRepurposeStatus({ type:'err', msg:'No Anthropic API key found.' }); return }
+    if (!articleText.trim()) { setRepurposeStatus({ type:'err', msg:'Paste an article first.' }); return }
+    if (!repPlatforms.length) { setRepurposeStatus({ type:'err', msg:'Select at least one platform.' }); return }
+    setRepurposing(true)
+    setRepurposeStatus({ type:'info', msg:'Repurposing article...' })
+
+    const prompt = `You are a social media content strategist.
+
+${bizCtx()}
+
+ORIGINAL ARTICLE:
+${articleText.slice(0, 3000)}
+
+Repurpose this article into social media posts.
+Tone: ${repTone}
+Platforms: ${repPlatforms.join(', ')}
+
+Create one post per platform, each adapted to that platform's style and character limits.
+Schedule them across the next 7 days starting from today (${todayStr}).
+
+Return ONLY a valid JSON array, no markdown fences:
+- post_date: "YYYY-MM-DD"
+- platform: one of ${repPlatforms.join(', ')}
+- content: platform-appropriate post adapted from the article
+- topic: 2-4 word label`
+
+    try {
+      const raw   = await callClaude(apiKey, prompt, 2000)
+      const clean = raw.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim()
+      let parsed
+      try { parsed = JSON.parse(clean) } catch { throw new Error('JSON parse failed - try again') }
+      if (!Array.isArray(parsed)||!parsed.length) throw new Error('AI returned no posts')
+
+      const rows = parsed
+        .filter(p => p.post_date && p.platform && p.content)
+        .map(p => ({
+          user_id:userId, client_id:clientId,
+          post_date:p.post_date, platform:p.platform,
+          content:p.content, topic:p.topic||'Repurposed',
+          status:'draft', keywords:'', tone:repTone, length:'',
+        }))
+
+      await supabase.from('content_calendar').insert(rows)
+      setRepurposeStatus({ type:'ok', msg:`${rows.length} repurposed posts saved as drafts.` })
+      setArticleText('')
+      setRepurposeOpen(false)
+      loadPosts()
+    } catch (err) {
+      setRepurposeStatus({ type:'err', msg: err.message })
+    }
+    setRepurposing(false)
   }
 
-  const copyText = (text, key) => {
-    navigator.clipboard.writeText(text)
-    setCopied(key)
-    setTimeout(() => setCopied(''), 2000)
+  // ── AI: Generate single post content inside modal ─────────────────────────
+  const generateSinglePost = async () => {
+    if (!apiKey) { alert('No Anthropic API key found. Add it in API Keys tab.'); return }
+    if (!editing) return
+    setAiDraft(true)
+
+    const lenMap = {
+      'Short (50-100 words)':'50-100 words',
+      'Medium (100-200 words)':'100-200 words',
+      'Long (200-400 words)':'200-400 words',
+    }
+    const prompt = `Write a single social media post for ${editing.platform}.
+
+${bizCtx()}
+${editing.topic   ? `Topic: ${editing.topic}` : ''}
+${editing.keywords? `Keywords to include: ${editing.keywords}` : ''}
+Tone: ${editing.tone||'Professional'}
+Length: ${lenMap[editing.length]||'100-200 words'}
+
+Write only the post text, no labels or explanation.`
+
+    try {
+      const content = await callClaude(apiKey, prompt, 800)
+      setEditing(p => ({ ...p, content: content.trim() }))
+    } catch (err) {
+      alert('Error: ' + err.message)
+    }
+    setAiDraft(false)
   }
 
-  const downloadHTML = (html, service, city) => {
-    const blob = new Blob([html], { type: 'text/html' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `${city.toLowerCase().replace(/[\s,]+/g, '-')}-${service.toLowerCase().replace(/\s+/g, '-')}.html`
-    a.click()
+  // ── Calendar nav ──────────────────────────────────────────────────────────
+  function prevMonth() {
+    if (viewMonth===0) { setViewYear(y=>y-1); setViewMonth(11) }
+    else setViewMonth(m=>m-1)
+    setSelectedDay(null)
+  }
+  function nextMonth() {
+    if (viewMonth===11) { setViewYear(y=>y+1); setViewMonth(0) }
+    else setViewMonth(m=>m+1)
+    setSelectedDay(null)
   }
 
-  const downloadAllZip = async () => {
-    const done = combos.filter(c => c.status === 'done')
-    if (!done.length) return
-    // Simple approach: download each file individually
-    done.forEach((c, i) => {
-      setTimeout(() => downloadHTML(c.html, c.service, c.city), i * 300)
-    })
+  const daysInMonth = getDays(viewYear, viewMonth)
+  const firstDay    = getFirst(viewYear, viewMonth)
+
+  // ── Status action label ───────────────────────────────────────────────────
+  function nextStatusAction(status) {
+    if (status==='draft')     return { label:'Mark Scheduled', next:'scheduled' }
+    if (status==='scheduled') return { label:'Mark Published',  next:'published'  }
+    return null
   }
 
-  const selectedCombo = selected !== null ? combos[selected] : null
-
-  const statusColor = (status) => ({
-    pending:    T.muted,
-    generating: T.yellow,
-    done:       T.green,
-    error:      T.red,
-  }[status] || T.muted)
-
-  const statusLabel = (status) => ({
-    pending:    'Pending',
-    generating: 'Generating...',
-    done:       'Generated',
-    error:      'Error',
-  }[status] || 'Pending')
-
+  // ══════════════════════════════════════════════════════════════════════════
   return (
-    <div style={{ background: T.pageBg, minHeight: '100vh', color: T.text, fontFamily: 'inherit' }}>
+    <div style={{ padding:24, background:T.pageBg, minHeight:'100%', fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .cal-day:hover{border-color:#3b82f6 !important}`}</style>
 
-      {/* ── Page header ── */}
-      <div style={{ padding: '24px 28px 0' }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: T.text, marginBottom: 6 }}>
-          <i className="ti ti-file-text" style={{ color: T.accentHi, marginRight: 10 }}></i>
-          Local Landing Page Builder
-        </div>
-        <div style={{ fontSize: 13, color: T.muted, marginBottom: 20, maxWidth: 800 }}>
-          Generate complete, publish-ready landing pages for every service × city combination.
-          Each page includes an SEO title, meta description, H1, services list, FAQ, schema markup, and a local CTA.
-        </div>
-
-        {/* Stats bar */}
-        <div style={{ display: 'flex', gap: 40, paddingBottom: 20, borderBottom: `1px solid ${T.border2}`, alignItems: 'flex-end' }}>
-          {[
-            { label: 'TOTAL PAGES',  value: totalCombos,   color: T.accentHi },
-            { label: 'GENERATED',    value: totalGenerated, color: T.green },
-            { label: 'AVG SEO SCORE', value: avgScore ? `${avgScore}` : '—', color: T.yellow },
-            { label: 'TOTAL WORDS',  value: totalWords || '—', color: T.purple },
-          ].map(s => (
-            <div key={s.label}>
-              <div style={{ fontSize: 28, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: T.muted, marginTop: 4, letterSpacing: '.5px' }}>{s.label}</div>
-            </div>
-          ))}
-          {/* Bulk actions */}
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            {totalGenerated > 0 && (
-              <>
-                <button onClick={downloadAllZip}
-                  style={{ padding: '7px 14px', background: T.cardBg, border: `1px solid ${T.border2}`, color: T.muted, borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <i className="ti ti-download"></i> Download All
-                </button>
-                <button onClick={() => {
-                  const allSchema = combos.filter(c => c.status === 'done').map(c => {
-                    const m = c.html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)
-                    return m ? m.join('\n') : ''
-                  }).join('\n\n')
-                  copyText(allSchema, 'allschema')
-                }}
-                  style={{ padding: '7px 14px', background: T.cardBg, border: `1px solid ${T.border2}`, color: T.muted, borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <i className="ti ti-copy"></i> {copied === 'allschema' ? '✓ Copied' : 'Copy All Schema'}
-                </button>
-              </>
-            )}
+      {/* ── Header ── */}
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:20 }}>
+        <div>
+          <div style={{ fontSize:22, fontWeight:800, color:T.text, letterSpacing:'-0.5px' }}>
+            <i className="ti ti-calendar-event" style={{ color:T.accent, marginRight:10 }} />
+            Content Calendar
           </div>
+          {bizName && <div style={{ color:T.muted, fontSize:13, marginTop:3 }}>{bizName} - {MONTHS[viewMonth]} {viewYear}</div>}
+          {!apiKey && (
+            <div style={{ marginTop:8, padding:'6px 12px', background:'#1f0d05', border:'1px solid #f97316',
+              borderRadius:8, color:'#fb923c', fontSize:12 }}>
+              <i className="ti ti-alert-circle" style={{ marginRight:6 }} />
+              No Anthropic API key found. Add it in the API Keys tab to use AI features.
+            </div>
+          )}
+        </div>
+        <div style={{ display:'flex', gap:10, flexWrap:'wrap', justifyContent:'flex-end' }}>
+          <button onClick={() => { setRepurposeOpen(o=>!o); setRepurposeStatus(null) }}
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 16px',
+              background:'transparent', color:T.cyan, border:`1px solid ${T.cyan}33`,
+              borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer' }}>
+            <i className="ti ti-refresh" /> Repurpose Article
+          </button>
+          <button onClick={() => { setEditing({ post_date:todayStr, platform:'google', content:'', topic:'', status:'draft', keywords:'', tone:'Professional', length:'Medium (100-200 words)' }); setModal(true) }}
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 16px',
+              background:'transparent', color:T.accentHi, border:`1px solid ${T.border2}`,
+              borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer' }}>
+            <i className="ti ti-plus" /> New Post
+          </button>
+          <button onClick={() => { setGenOpen(o=>!o); setGenStatus(null) }}
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 16px',
+              background:'linear-gradient(135deg,#3b82f6,#1d4ed8)', color:'#fff',
+              border:'none', borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer' }}>
+            <i className="ti ti-sparkles" /> AI Generate Month
+          </button>
         </div>
       </div>
 
-      {/* ── Three column layout ── */}
-      <div style={{ display: 'flex', gap: 14, padding: '20px 28px', alignItems: 'flex-start' }}>
+      {/* ── Status after generate ── */}
+      {genStatus && !genOpen && (
+        <div style={{ marginBottom:16, padding:'10px 16px', borderRadius:8,
+          background: genStatus.type==='ok'?'#0d1f14':genStatus.type==='info'?T.cardBg:'#1f0d0d',
+          border:`1px solid ${genStatus.type==='ok'?T.green:genStatus.type==='info'?T.border2:T.red}`,
+          color: genStatus.type==='ok'?T.green:genStatus.type==='info'?T.muted:T.red,
+          display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <span><i className={`ti ${genStatus.type==='ok'?'ti-check':'genStatus.type==="info"?ti-loader-2':'ti-alert-circle'}`} style={{ marginRight:8 }} />{genStatus.msg}</span>
+          <button onClick={()=>setGenStatus(null)} style={{ background:'none', border:'none', color:'inherit', cursor:'pointer' }}>
+            <i className="ti ti-x" />
+          </button>
+        </div>
+      )}
 
-        {/* ── COL 1: Settings ── */}
-        <div style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* ── Repurpose status ── */}
+      {repurposeStatus && !repurposeOpen && (
+        <div style={{ marginBottom:16, padding:'10px 16px', borderRadius:8,
+          background: repurposeStatus.type==='ok'?'#0d1f14':'#1f0d0d',
+          border:`1px solid ${repurposeStatus.type==='ok'?T.green:T.red}`,
+          color: repurposeStatus.type==='ok'?T.green:T.red,
+          display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <span><i className={`ti ${repurposeStatus.type==='ok'?'ti-check':'ti-alert-circle'}`} style={{ marginRight:8 }} />{repurposeStatus.msg}</span>
+          <button onClick={()=>setRepurposeStatus(null)} style={{ background:'none', border:'none', color:'inherit', cursor:'pointer' }}>
+            <i className="ti ti-x" />
+          </button>
+        </div>
+      )}
 
-          <Card>
-            <CardHead icon="ti ti-settings" title="Page Settings" sub="Pulled from your business profile" />
-            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-              {/* Services */}
-              <div>
-                <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>Services (comma separated)</div>
-                <input value={services} onChange={e => setServices(e.target.value)}
-                  placeholder="e.g. HR Consulting, Payroll, Recruiting"
-                  style={{ width: '100%', background: T.cardBg2, border: `1.5px solid ${T.border2}`, borderRadius: 7, padding: '8px 11px', fontSize: 12, color: T.text, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
-              </div>
-
-              {/* Cities */}
-              <div>
-                <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>Target Cities</div>
-                <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                  {cities.map(city => (
-                    <span key={city} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(59,130,246,.15)', color: T.accentHi, borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 600 }}>
-                      {city}
-                      <span onClick={() => removeCity(city)} style={{ cursor: 'pointer', color: T.muted, fontWeight: 700, fontSize: 13 }}>×</span>
-                    </span>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input value={cityInput} onChange={e => setCityInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && addCity()}
-                    placeholder="Add a city..."
-                    style={{ flex: 1, background: T.cardBg2, border: `1.5px solid ${T.border2}`, borderRadius: 7, padding: '7px 10px', fontSize: 12, color: T.text, fontFamily: 'inherit', outline: 'none' }} />
-                  <button onClick={addCity}
-                    style={{ padding: '7px 12px', background: T.accent, color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    Add
-                  </button>
-                </div>
-              </div>
-
-              {/* Tone */}
-              <div>
-                <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>Tone</div>
-                <select value={tone} onChange={e => setTone(e.target.value)}
-                  style={{ width: '100%', background: T.cardBg2, border: `1.5px solid ${T.border2}`, borderRadius: 7, padding: '8px 11px', fontSize: 12, color: T.text, fontFamily: 'inherit', outline: 'none' }}>
-                  {TONES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-
-              {/* Page focus */}
-              <div>
-                <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>Page Focus</div>
-                <select value={focus} onChange={e => setFocus(e.target.value)}
-                  style={{ width: '100%', background: T.cardBg2, border: `1.5px solid ${T.border2}`, borderRadius: 7, padding: '8px 11px', fontSize: 12, color: T.text, fontFamily: 'inherit', outline: 'none' }}>
-                  {PAGE_FOCUS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                </select>
-              </div>
-
-              {/* Sections */}
-              <div>
-                <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>Include Sections</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {SECTIONS.map(s => (
-                    <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12, color: T.textSub }}>
-                      <input type="checkbox" checked={sections.includes(s.id)} onChange={() => toggleSection(s.id)}
-                        style={{ accentColor: T.accent }} />
-                      {s.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
+      {/* ── AI Generate Panel ── */}
+      {genOpen && (
+        <div style={{ background:T.cardBg, border:`1px solid ${T.border2}`, borderRadius:12, padding:20, marginBottom:20 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <i className="ti ti-sparkles" style={{ color:T.accent, fontSize:16 }} />
+              <span style={{ fontWeight:700, color:T.text, fontSize:15 }}>
+                AI Generate - {MONTHS[viewMonth]} {viewYear}
+              </span>
             </div>
-          </Card>
+            <button onClick={()=>setGenOpen(false)} style={{ background:'none', border:'none', color:T.muted, cursor:'pointer', fontSize:18 }}>
+              <i className="ti ti-x" />
+            </button>
+          </div>
 
-          {/* How to publish */}
-          <Card>
-            <CardHead icon="ti ti-brand-wordpress" title="How to Publish" sub="Add generated pages to your website" />
-            <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[
-                { step: '1', text: 'Generate your page using the form above' },
-                { step: '2', text: 'Click Download HTML to save the file' },
-                { step: '3', text: 'In WordPress: Pages → Add New → switch to Code Editor' },
-                { step: '4', text: 'Paste the HTML and publish' },
-                { step: '5', text: 'Set URL slug to: city-service (e.g. emerald-isle-hr)' },
-              ].map(item => (
-                <div key={item.step} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <span style={{ background: 'rgba(59,130,246,.15)', color: T.accentHi, borderRadius: '50%', width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{item.step}</span>
-                  <span style={{ fontSize: 12, color: T.muted, lineHeight: 1.5 }}>{item.text}</span>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14, marginBottom:14 }}>
+            <div>
+              <label style={lbl}>Campaign topic <span style={{ color:T.muted, fontWeight:400 }}>(optional)</span></label>
+              <input value={genTopic} onChange={e=>setGenTopic(e.target.value)}
+                placeholder="e.g. summer sale, new service..." style={inp} />
+            </div>
+            <div>
+              <label style={lbl}>Target keywords <span style={{ color:T.muted, fontWeight:400 }}>(optional)</span></label>
+              <input value={genKw} onChange={e=>setGenKw(e.target.value)}
+                placeholder="e.g. plumber Austin, drain cleaning" style={inp} />
+            </div>
+            <div>
+              <label style={lbl}>Tone</label>
+              <select value={genTone} onChange={e=>setGenTone(e.target.value)} style={{ ...inp, cursor:'pointer' }}>
+                {TONES.map(t=><option key={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ marginBottom:16 }}>
+            <label style={lbl}>Platforms</label>
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+              {PLATFORMS.map(p => {
+                const c = PC[p], on = genPlatforms.includes(p)
+                return (
+                  <button key={p} onClick={()=>setGenPlatforms(prev=>on?prev.filter(x=>x!==p):[...prev,p])}
+                    style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 14px',
+                      borderRadius:20, fontSize:12, fontWeight:600, cursor:'pointer',
+                      border:`1px solid ${on?c.border:T.border}`,
+                      background:on?c.bg:'transparent', color:on?c.color:T.muted }}>
+                    <i className={`ti ${c.icon}`} />
+                    {p.charAt(0).toUpperCase()+p.slice(1)}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <button onClick={generateMonth} disabled={generating||!genPlatforms.length}
+              style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 24px',
+                borderRadius:8, fontSize:13, fontWeight:700, border:'none',
+                cursor:generating||!genPlatforms.length?'not-allowed':'pointer',
+                background:generating||!genPlatforms.length?T.cardBg2:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                color:generating||!genPlatforms.length?T.muted:'#fff', opacity:generating?0.8:1 }}>
+              {generating
+                ? <><i className="ti ti-loader-2" style={{ animation:'spin 1s linear infinite' }} /> Generating...</>
+                : <><i className="ti ti-wand" /> Generate {genPlatforms.length} platform{genPlatforms.length!==1?'s':''} for {MONTHS[viewMonth]}</>}
+            </button>
+          </div>
+
+          {genStatus && (
+            <div style={{ marginTop:14, padding:'10px 14px', borderRadius:8,
+              background:genStatus.type==='ok'?'#0d1f14':genStatus.type==='info'?T.cardBg2:'#1f0d0d',
+              border:`1px solid ${genStatus.type==='ok'?T.green:genStatus.type==='info'?T.border2:T.red}`,
+              color:genStatus.type==='ok'?T.green:genStatus.type==='info'?T.muted:T.red, fontSize:13 }}>
+              <i className={`ti ${genStatus.type==='ok'?'ti-check':'ti-alert-circle'}`} style={{ marginRight:8 }} />
+              {genStatus.msg}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Repurpose Article Panel ── */}
+      {repurposeOpen && (
+        <div style={{ background:T.cardBg, border:`1px solid ${T.cyan}33`, borderRadius:12, padding:20, marginBottom:20 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <i className="ti ti-refresh" style={{ color:T.cyan, fontSize:16 }} />
+              <span style={{ fontWeight:700, color:T.text, fontSize:15 }}>Repurpose Article into Social Posts</span>
+            </div>
+            <button onClick={()=>setRepurposeOpen(false)} style={{ background:'none', border:'none', color:T.muted, cursor:'pointer', fontSize:18 }}>
+              <i className="ti ti-x" />
+            </button>
+          </div>
+
+          <div style={{ marginBottom:14 }}>
+            <label style={lbl}>Paste your article or blog post</label>
+            <textarea value={articleText} onChange={e=>setArticleText(e.target.value)}
+              rows={8} placeholder="Paste the full article text here. Claude will adapt it for each selected platform..."
+              style={{ ...inp, resize:'vertical', lineHeight:1.65 }} />
+            <div style={{ textAlign:'right', fontSize:11, color:T.muted, marginTop:3 }}>{articleText.length} chars (first 3000 used)</div>
+          </div>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
+            <div>
+              <label style={lbl}>Tone for repurposed posts</label>
+              <select value={repTone} onChange={e=>setRepTone(e.target.value)} style={{ ...inp, cursor:'pointer' }}>
+                {TONES.map(t=><option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={lbl}>Target platforms</label>
+              <div style={{ display:'flex', gap:7, flexWrap:'wrap', marginTop:4 }}>
+                {PLATFORMS.map(p => {
+                  const c = PC[p], on = repPlatforms.includes(p)
+                  return (
+                    <button key={p} onClick={()=>setRepPlatforms(prev=>on?prev.filter(x=>x!==p):[...prev,p])}
+                      style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 11px',
+                        borderRadius:20, fontSize:12, fontWeight:600, cursor:'pointer',
+                        border:`1px solid ${on?c.border:T.border}`,
+                        background:on?c.bg:'transparent', color:on?c.color:T.muted }}>
+                      <i className={`ti ${c.icon}`} />
+                      {p.charAt(0).toUpperCase()+p.slice(1)}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <button onClick={repurposeArticle} disabled={repurposing||!articleText.trim()||!repPlatforms.length}
+              style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 24px',
+                borderRadius:8, fontSize:13, fontWeight:700, border:'none',
+                cursor:repurposing||!articleText.trim()||!repPlatforms.length?'not-allowed':'pointer',
+                background:repurposing||!articleText.trim()||!repPlatforms.length?T.cardBg2:`linear-gradient(135deg,${T.cyan},#0891b2)`,
+                color:repurposing||!articleText.trim()||!repPlatforms.length?T.muted:'#fff' }}>
+              {repurposing
+                ? <><i className="ti ti-loader-2" style={{ animation:'spin 1s linear infinite' }} /> Repurposing...</>
+                : <><i className="ti ti-refresh" /> Repurpose into {repPlatforms.length} post{repPlatforms.length!==1?'s':''}</>}
+            </button>
+          </div>
+
+          {repurposeStatus && (
+            <div style={{ marginTop:14, padding:'10px 14px', borderRadius:8,
+              background:repurposeStatus.type==='ok'?'#0d1f14':'#1f0d0d',
+              border:`1px solid ${repurposeStatus.type==='ok'?T.green:T.red}`,
+              color:repurposeStatus.type==='ok'?T.green:T.red, fontSize:13 }}>
+              <i className={`ti ${repurposeStatus.type==='ok'?'ti-check':'ti-alert-circle'}`} style={{ marginRight:8 }} />
+              {repurposeStatus.msg}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Tabs ── */}
+      <div style={{ display:'flex', gap:0, marginBottom:20, borderBottom:`1px solid ${T.border}` }}>
+        {[
+          { id:'calendar', icon:'ti-calendar',     label:'Calendar'                         },
+          { id:'drafts',   icon:'ti-list',          label:`Drafts & Scheduled (${allPosts.filter(p=>p.status!=='published').length})` },
+          { id:'published',icon:'ti-circle-check',  label:`Published (${allPosts.filter(p=>p.status==='published').length})` },
+        ].map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)}
+            style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 20px',
+              background:'transparent', border:'none', cursor:'pointer', fontSize:13, fontWeight:700,
+              borderBottom:`2px solid ${tab===t.id?T.accent:'transparent'}`,
+              color:tab===t.id?T.accentHi:T.muted, marginBottom:-1 }}>
+            <i className={`ti ${t.icon}`} />{t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ════════════ CALENDAR TAB ════════════ */}
+      {tab==='calendar' && (
+        <div style={{ display:'grid', gridTemplateColumns:selectedDay?'1fr 360px':'1fr', gap:16, alignItems:'start' }}>
+
+          {/* Calendar grid */}
+          <div style={{ background:T.cardBg, border:`1px solid ${T.border}`, borderRadius:12 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding:'14px 18px', borderBottom:`1px solid ${T.border}` }}>
+              <button onClick={prevMonth} style={{ background:'transparent', border:`1px solid ${T.border2}`,
+                borderRadius:8, color:T.textSub, padding:'6px 14px', cursor:'pointer' }}>
+                <i className="ti ti-chevron-left" />
+              </button>
+              <span style={{ fontWeight:800, color:T.text, fontSize:16 }}>{MONTHS[viewMonth]} {viewYear}</span>
+              <button onClick={nextMonth} style={{ background:'transparent', border:`1px solid ${T.border2}`,
+                borderRadius:8, color:T.textSub, padding:'6px 14px', cursor:'pointer' }}>
+                <i className="ti ti-chevron-right" />
+              </button>
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', padding:'10px 12px 0' }}>
+              {DAYS.map(d=><div key={d} style={{ textAlign:'center', color:T.muted, fontSize:11, fontWeight:700, paddingBottom:8 }}>{d}</div>)}
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3, padding:'0 12px 14px' }}>
+              {Array.from({length:firstDay}).map((_,i)=><div key={'e'+i} />)}
+              {Array.from({length:daysInMonth}).map((_,i)=>{
+                const day = i+1
+                const ds  = toDS(viewYear,viewMonth,day)
+                const dp  = posts[ds]||[]
+                const isToday    = ds===todayStr
+                const isSelected = selectedDay===day
+                return (
+                  <div key={day} className="cal-day" onClick={()=>setSelectedDay(isSelected?null:day)}
+                    style={{ minHeight:76, borderRadius:8, padding:'6px 7px', cursor:'pointer',
+                      background:isSelected?'#1a3060':isToday?'#0d1f3c':'transparent',
+                      border:`1px solid ${isSelected?T.accent:isToday?T.border2:T.border}`,
+                      transition:'border-color 0.15s' }}>
+                    <div style={{ fontSize:12, fontWeight:isToday?800:500,
+                      color:isToday?T.accentHi:T.textSub, marginBottom:4 }}>{day}</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>
+                      {dp.slice(0,8).map((p,pi)=>(
+                        <div key={pi} title={`${p.platform}: ${p.topic||p.content.slice(0,40)}`}
+                          style={{ width:7, height:7, borderRadius:'50%', background:PC[p.platform]?.border||T.muted }} />
+                      ))}
+                      {dp.length>8 && <span style={{ fontSize:9, color:T.muted }}>+{dp.length-8}</span>}
+                    </div>
+                    {dp.length>0 && <div style={{ marginTop:3, fontSize:10, color:T.muted }}>{dp.length} post{dp.length!==1?'s':''}</div>}
+                  </div>
+                )
+              })}
+            </div>
+
+            <div style={{ display:'flex', gap:14, flexWrap:'wrap', padding:'10px 16px', borderTop:`1px solid ${T.border}` }}>
+              {PLATFORMS.map(p=>(
+                <div key={p} style={{ display:'flex', alignItems:'center', gap:5 }}>
+                  <div style={{ width:8, height:8, borderRadius:'50%', background:PC[p].border }} />
+                  <span style={{ color:T.muted, fontSize:11 }}>{p.charAt(0).toUpperCase()+p.slice(1)}</span>
                 </div>
               ))}
             </div>
-          </Card>
+          </div>
 
-        </div>
-
-        {/* ── COL 2: Combo list ── */}
-        <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-          <Card>
-            <CardHead icon="ti ti-list" title="Page Combos"
-              sub={`${totalCombos} pages · ${totalGenerated} generated`}
-              right={
-                combos.length > 0 && (
-                  <button onClick={generating ? null : generateAll} disabled={generating}
-                    style={{ padding: '5px 12px', background: generating ? T.muted2 : 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: generating ? 'not-allowed' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-                    {generating ? 'Generating...' : 'Generate All'}
-                  </button>
-                )
-              }
-            />
-            {!combos.length ? (
-              <div style={{ padding: 24, textAlign: 'center', color: T.muted, fontSize: 12 }}>
-                Enter services and cities to see your page combos
+          {/* Day panel */}
+          {selectedDay && (()=>{
+            const ds = toDS(viewYear,viewMonth,selectedDay)
+            const dp = posts[ds]||[]
+            return (
+              <div style={{ background:T.cardBg, border:`1px solid ${T.border}`, borderRadius:12 }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+                  padding:'13px 16px', borderBottom:`1px solid ${T.border}` }}>
+                  <span style={{ fontWeight:700, color:T.text, fontSize:14 }}>
+                    <i className="ti ti-calendar-day" style={{ color:T.accent, marginRight:8 }} />
+                    {MONTHS[viewMonth]} {selectedDay}
+                  </span>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button onClick={()=>{ setEditing({ post_date:ds, platform:'google', content:'', topic:'', status:'draft', keywords:'', tone:'Professional', length:'Medium (100-200 words)' }); setModal(true) }}
+                      style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 12px',
+                        background:'linear-gradient(135deg,#3b82f6,#1d4ed8)', color:'#fff',
+                        border:'none', borderRadius:7, fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                      <i className="ti ti-plus" /> Add Post
+                    </button>
+                    <button onClick={()=>setSelectedDay(null)}
+                      style={{ background:'transparent', border:'none', color:T.muted, cursor:'pointer', fontSize:18 }}>
+                      <i className="ti ti-x" />
+                    </button>
+                  </div>
+                </div>
+                <div style={{ padding:12, maxHeight:540, overflowY:'auto' }}>
+                  {dp.length===0 ? (
+                    <div style={{ textAlign:'center', color:T.muted, padding:'30px 0', fontSize:13 }}>
+                      <i className="ti ti-calendar-off" style={{ fontSize:28, display:'block', marginBottom:8 }} />
+                      No posts - click Add Post to create one
+                    </div>
+                  ) : dp.map(p=>(
+                    <MiniPostCard key={p.id} post={p}
+                      onView={()=>setViewPost(p)}
+                      onEdit={()=>{ setEditing({...p}); setModal(true) }}
+                      onDelete={()=>deletePost(p.id)}
+                      onStatus={(next)=>updateStatus(p,next)}
+                      nextAction={nextStatusAction(p.status)} />
+                  ))}
+                </div>
               </div>
-            ) : (
-              <div>
-                {combos.map((combo, i) => (
-                  <div key={`${combo.service}-${combo.city}`}
-                    onClick={() => setSelected(i)}
-                    style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: i < combos.length - 1 ? `1px solid ${T.border}` : 'none', background: selected === i ? 'rgba(59,130,246,.08)' : 'transparent', borderLeft: selected === i ? `3px solid ${T.accent}` : '3px solid transparent', transition: 'all .15s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 3 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{combo.service}</div>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: statusColor(combo.status) }}>
-                        {combo.status === 'generating' ? '⏳' : combo.status === 'done' ? '✓' : combo.status === 'error' ? '✗' : '○'} {statusLabel(combo.status)}
+            )
+          })()}
+        </div>
+      )}
+
+      {/* ════════════ DRAFTS / SCHEDULED TAB ════════════ */}
+      {tab==='drafts' && (
+        <PostList
+          posts={allPosts.filter(p=>p.status!=='published')}
+          loading={loading}
+          onView={setViewPost}
+          onEdit={p=>{ setEditing({...p}); setModal(true) }}
+          onDelete={deletePost}
+          onStatus={updateStatus}
+          nextStatusAction={nextStatusAction}
+          emptyMsg="No drafts or scheduled posts this month."
+          emptyAction={()=>setGenOpen(true)}
+        />
+      )}
+
+      {/* ════════════ PUBLISHED TAB ════════════ */}
+      {tab==='published' && (
+        <PostList
+          posts={allPosts.filter(p=>p.status==='published')}
+          loading={loading}
+          onView={setViewPost}
+          onEdit={p=>{ setEditing({...p}); setModal(true) }}
+          onDelete={deletePost}
+          onStatus={updateStatus}
+          nextStatusAction={nextStatusAction}
+          emptyMsg="No published posts this month yet."
+        />
+      )}
+
+      {/* ════════════ VIEW POST DRAWER ════════════ */}
+      {viewPost && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:900,
+          display:'flex', alignItems:'center', justifyContent:'center' }}
+          onClick={e=>{if(e.target===e.currentTarget)setViewPost(null)}}>
+          <div style={{ background:'#0d1f3c', border:`1px solid ${PC[viewPost.platform]?.border||T.border2}`,
+            borderRadius:14, width:560, maxHeight:'85vh', overflowY:'auto', padding:26 }}>
+            {(() => {
+              const c = PC[viewPost.platform]||PC.blog
+              const na = nextStatusAction(viewPost.status)
+              return (
+                <>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <i className={`ti ${c.icon}`} style={{ color:c.color, fontSize:20 }} />
+                      <div>
+                        <div style={{ fontWeight:800, color:T.text, fontSize:16 }}>
+                          {viewPost.platform.charAt(0).toUpperCase()+viewPost.platform.slice(1)} Post
+                        </div>
+                        <div style={{ color:T.muted, fontSize:12, marginTop:2 }}>{fmtDate(viewPost.post_date)}</div>
+                      </div>
+                    </div>
+                    <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                      <Badge status={viewPost.status} />
+                      <button onClick={()=>setViewPost(null)}
+                        style={{ background:'transparent', border:'none', color:T.muted, cursor:'pointer', fontSize:20 }}>
+                        <i className="ti ti-x" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {viewPost.topic && (
+                    <div style={{ marginBottom:12 }}>
+                      <span style={{ color:T.muted, fontSize:11, background:T.border,
+                        borderRadius:10, padding:'2px 10px', fontWeight:600 }}>
+                        {viewPost.topic}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: T.muted }}>{combo.city}</div>
-                    {combo.status === 'done' && (
-                      <div style={{ display: 'flex', gap: 10, marginTop: 4, fontSize: 10, color: T.muted }}>
-                        <span style={{ color: T.green }}>SEO {combo.score}</span>
-                        <span>{combo.words} words</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-
-          {error && (
-            <div style={{ background: 'rgba(248,113,113,.1)', border: '1px solid rgba(248,113,113,.2)', borderRadius: 8, padding: '12px 14px', fontSize: 12, color: T.red }}>
-              <i className="ti ti-alert-circle" style={{ marginRight: 6 }}></i>{error}
-            </div>
-          )}
-
-        </div>
-
-        {/* ── COL 3: Preview + HTML ── */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-          {!selectedCombo && (
-            <Card style={{ padding: 48, textAlign: 'center' }}>
-              <i className="ti ti-file-text" style={{ fontSize: 40, color: T.muted, marginBottom: 12, display: 'block' }}></i>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 6 }}>Select a page combo</div>
-              <div style={{ fontSize: 12, color: T.muted, lineHeight: 1.6, maxWidth: 300, margin: '0 auto' }}>
-                Click any combo in the list, then click Generate to create your landing page.
-              </div>
-            </Card>
-          )}
-
-          {selectedCombo && (
-            <Card>
-              {/* Header row */}
-              <div style={{ padding: '12px 18px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>
-                    {selectedCombo.service} — {selectedCombo.city}
-                  </div>
-                  <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>
-                    {selectedCombo.status === 'done'
-                      ? `SEO Score: ${selectedCombo.score} · ${selectedCombo.words} words`
-                      : selectedCombo.status === 'generating'
-                      ? 'Generating your page...'
-                      : 'Not yet generated'}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  {/* Preview / HTML tabs */}
-                  <div style={{ display: 'flex', gap: 3, background: T.cardBg2, borderRadius: 7, padding: 3 }}>
-                    {['preview', 'html'].map(tab => (
-                      <button key={tab} onClick={() => setPreviewTab(tab)}
-                        style={{ padding: '5px 12px', borderRadius: 5, border: 'none', background: previewTab === tab ? T.cardBg : 'transparent', color: previewTab === tab ? T.text : T.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>
-                        {tab === 'preview' ? '👁 Preview' : '‹/› HTML'}
-                      </button>
-                    ))}
-                  </div>
-                  {/* Generate button */}
-                  <button
-                    onClick={() => generateCombo(selected)}
-                    disabled={selectedCombo.status === 'generating'}
-                    style={{ padding: '7px 16px', background: selectedCombo.status === 'generating' ? T.muted2 : 'linear-gradient(135deg,#3b82f6,#2563eb)', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: selectedCombo.status === 'generating' ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <i className={`ti ${selectedCombo.status === 'generating' ? 'ti-loader-2' : selectedCombo.status === 'done' ? 'ti-refresh' : 'ti-sparkles'}`}></i>
-                    {selectedCombo.status === 'generating' ? 'Generating...' : selectedCombo.status === 'done' ? 'Regenerate' : 'Generate Page'}
-                  </button>
-                  {selectedCombo.status === 'done' && (
-                    <>
-                      <button onClick={() => copyText(selectedCombo.html, 'html')}
-                        style={{ padding: '7px 14px', background: T.cardBg2, color: T.muted, border: `1px solid ${T.border2}`, borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <i className="ti ti-copy"></i> {copied === 'html' ? '✓ Copied' : 'Copy HTML'}
-                      </button>
-                      <button onClick={() => downloadHTML(selectedCombo.html, selectedCombo.service, selectedCombo.city)}
-                        style={{ padding: '7px 14px', background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <i className="ti ti-download"></i> Download HTML
-                      </button>
-                    </>
                   )}
-                </div>
-              </div>
 
-              {/* Preview / HTML content */}
-              {selectedCombo.status === 'pending' && (
-                <div style={{ padding: 48, textAlign: 'center', color: T.muted }}>
-                  <i className="ti ti-sparkles" style={{ fontSize: 36, marginBottom: 12, display: 'block', color: T.accentHi }}></i>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 6 }}>Ready to generate</div>
-                  <div style={{ fontSize: 12, color: T.muted }}>Click Generate Page to create this landing page with AI</div>
-                </div>
-              )}
-
-              {selectedCombo.status === 'generating' && (
-                <div style={{ padding: 48, textAlign: 'center' }}>
-                  <i className="ti ti-loader-2" style={{ fontSize: 36, color: T.accent, marginBottom: 12, display: 'block' }}></i>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 6 }}>Generating your landing page...</div>
-                  <div style={{ fontSize: 12, color: T.muted }}>Claude is writing SEO-optimised content for {selectedCombo.service} in {selectedCombo.city}</div>
-                </div>
-              )}
-
-              {selectedCombo.status === 'done' && previewTab === 'preview' && (
-                <div style={{ position: 'relative' }}>
-                  <iframe
-                    ref={iframeRef}
-                    style={{ width: '100%', height: 600, border: 'none', display: 'block', borderRadius: '0 0 10px 10px' }}
-                    title="Landing page preview"
-                    sandbox="allow-same-origin"
-                  />
-                </div>
-              )}
-
-              {selectedCombo.status === 'done' && previewTab === 'html' && (
-                <pre style={{ margin: 0, padding: '16px 18px', fontSize: 11, color: T.textSub, overflowX: 'auto', overflowY: 'auto', maxHeight: 600, background: T.cardBg2, lineHeight: 1.6, borderRadius: '0 0 10px 10px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                  {selectedCombo.html}
-                </pre>
-              )}
-
-              {selectedCombo.status === 'error' && (
-                <div style={{ padding: 32, textAlign: 'center', color: T.red }}>
-                  <i className="ti ti-circle-x" style={{ fontSize: 36, marginBottom: 12, display: 'block' }}></i>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>Generation failed</div>
-                  <div style={{ fontSize: 12, color: T.muted, marginTop: 6 }}>{error}</div>
-                  <button onClick={() => generateCombo(selected)} style={{ marginTop: 14, padding: '8px 16px', background: T.accent, color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    Try Again
-                  </button>
-                </div>
-              )}
-            </Card>
-          )}
-
-          {/* SEO Score breakdown */}
-          {selectedCombo?.status === 'done' && (
-            <Card>
-              <CardHead icon="ti ti-chart-bar" title="SEO Score Breakdown" sub="What this page is optimised for" />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
-                {[
-                  { label: 'Title Tag',         check: selectedCombo.html.includes('<title>'),                         points: 15 },
-                  { label: 'Meta Description',  check: selectedCombo.html.includes('meta name="description"'),          points: 15 },
-                  { label: 'H1 Heading',        check: selectedCombo.html.includes('<h1'),                              points: 10 },
-                  { label: 'Service Keywords',  check: selectedCombo.html.toLowerCase().includes(selectedCombo.service.toLowerCase()), points: 10 },
-                  { label: 'City Keywords',     check: selectedCombo.html.toLowerCase().includes(selectedCombo.city.toLowerCase()),    points: 10 },
-                  { label: 'FAQ Schema',        check: selectedCombo.html.includes('FAQPage'),                          points: 10 },
-                  { label: 'Local Schema',      check: selectedCombo.html.includes('application/ld+json'),              points: 15 },
-                  { label: 'Service List',      check: selectedCombo.html.includes('<ul') || selectedCombo.html.includes('<li'), points: 5 },
-                  { label: 'City Repetition',   check: (selectedCombo.html.toLowerCase().match(new RegExp(selectedCombo.city.toLowerCase(), 'g')) || []).length >= 3, points: 10 },
-                ].map((item, i) => (
-                  <div key={item.label} style={{ padding: '12px 16px', borderRight: i % 3 < 2 ? `1px solid ${T.border}` : 'none', borderBottom: i < 6 ? `1px solid ${T.border}` : 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ color: item.check ? T.green : T.muted, fontWeight: 700, fontSize: 14 }}>{item.check ? '✓' : '○'}</span>
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: item.check ? T.text : T.muted }}>{item.label}</div>
-                      <div style={{ fontSize: 10, color: item.check ? T.green : T.muted }}>{item.check ? `+${item.points} pts` : 'missing'}</div>
-                    </div>
+                  <div style={{ background:T.pageBg, border:`1px solid ${T.border}`, borderRadius:10,
+                    padding:16, marginBottom:16, color:T.text, fontSize:14, lineHeight:1.75,
+                    whiteSpace:'pre-wrap', minHeight:100 }}>
+                    {viewPost.content}
                   </div>
-                ))}
+
+                  {(viewPost.keywords||viewPost.tone) && (
+                    <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap' }}>
+                      {viewPost.tone && <MetaChip icon="ti-mood-smile" label="Tone" value={viewPost.tone} />}
+                      {viewPost.keywords && <MetaChip icon="ti-key" label="Keywords" value={viewPost.keywords} />}
+                    </div>
+                  )}
+
+                  {/* Platform note - about Published status */}
+                  <div style={{ background:T.cardBg2, border:`1px solid ${T.border}`, borderRadius:8,
+                    padding:'10px 14px', marginBottom:16, fontSize:12, color:T.muted, lineHeight:1.6 }}>
+                    <i className="ti ti-info-circle" style={{ marginRight:6, color:T.accent }} />
+                    <strong style={{ color:T.textSub }}>About publishing:</strong> RankForged tracks status internally.
+                    Copy this content and post it manually on {viewPost.platform.charAt(0).toUpperCase()+viewPost.platform.slice(1)},
+                    then mark it Published here to keep your records accurate.
+                    {viewPost.platform==='google' && ' Google Business Post: post.google.com'}
+                    {viewPost.platform==='facebook' && ' Facebook: facebook.com'}
+                    {viewPost.platform==='instagram' && ' Instagram: instagram.com'}
+                    {viewPost.platform==='linkedin' && ' LinkedIn: linkedin.com'}
+                  </div>
+
+                  <div style={{ display:'flex', gap:10 }}>
+                    <button onClick={()=>{ navigator.clipboard.writeText(viewPost.content) }}
+                      style={{ flex:1, padding:'9px 0', background:T.cardBg2, border:`1px solid ${T.border2}`,
+                        borderRadius:8, color:T.accentHi, fontSize:13, fontWeight:700, cursor:'pointer',
+                        display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                      <i className="ti ti-copy" /> Copy Text
+                    </button>
+                    {na && (
+                      <button onClick={()=>{ updateStatus(viewPost, na.next); setViewPost({...viewPost,status:na.next}) }}
+                        style={{ flex:1, padding:'9px 0',
+                          background: na.next==='published'?'linear-gradient(135deg,#10b981,#059669)':'linear-gradient(135deg,#f59e0b,#d97706)',
+                          border:'none', borderRadius:8, color:'#fff', fontSize:13, fontWeight:700,
+                          cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                        <i className={`ti ${na.next==='published'?'ti-check':'ti-calendar-event'}`} />
+                        {na.label}
+                      </button>
+                    )}
+                    <button onClick={()=>{ setEditing({...viewPost}); setModal(true); setViewPost(null) }}
+                      style={{ padding:'9px 14px', background:'transparent', border:`1px solid ${T.border2}`,
+                        borderRadius:8, color:T.muted, fontSize:13, cursor:'pointer' }}>
+                      <i className="ti ti-pencil" />
+                    </button>
+                    <button onClick={()=>deletePost(viewPost.id)}
+                      style={{ padding:'9px 14px', background:'transparent', border:'1px solid #2a1a1a',
+                        borderRadius:8, color:T.red, fontSize:13, cursor:'pointer' }}>
+                      <i className="ti ti-trash" />
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ NEW / EDIT POST MODAL ════════════ */}
+      {modal && editing && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', zIndex:1000,
+          display:'flex', alignItems:'center', justifyContent:'center' }}
+          onClick={e=>{if(e.target===e.currentTarget){setModal(false);setEditing(null)}}}>
+          <div style={{ background:'#0d1f3c', border:`1px solid #1a3560`, borderRadius:14,
+            width:560, maxHeight:'88vh', overflowY:'auto', padding:24 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:18 }}>
+              <span style={{ fontWeight:800, color:T.text, fontSize:17 }}>
+                {editing.id ? 'Edit Post' : 'New Post'}
+              </span>
+              <button onClick={()=>{setModal(false);setEditing(null)}}
+                style={{ background:'transparent', border:'none', color:T.muted, cursor:'pointer', fontSize:20 }}>
+                <i className="ti ti-x" />
+              </button>
+            </div>
+
+            {/* Row 1: Date + Platform */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+              <div>
+                <label style={lbl}>Date</label>
+                <input type="date" value={editing.post_date}
+                  onChange={e=>setEditing(p=>({...p,post_date:e.target.value}))} style={inp} />
               </div>
-            </Card>
+              <div>
+                <label style={lbl}>Platform</label>
+                <select value={editing.platform} onChange={e=>setEditing(p=>({...p,platform:e.target.value}))}
+                  style={{ ...inp, cursor:'pointer' }}>
+                  {PLATFORMS.map(pt=><option key={pt} value={pt}>{pt.charAt(0).toUpperCase()+pt.slice(1)}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Row 2: Topic + Status */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+              <div>
+                <label style={lbl}>Topic / Title</label>
+                <input value={editing.topic||''} onChange={e=>setEditing(p=>({...p,topic:e.target.value}))}
+                  placeholder="Short label for this post..." style={inp} />
+              </div>
+              <div>
+                <label style={lbl}>Status</label>
+                <select value={editing.status||'draft'} onChange={e=>setEditing(p=>({...p,status:e.target.value}))}
+                  style={{ ...inp, cursor:'pointer' }}>
+                  <option value="draft">Draft</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="published">Published</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Row 3: Keywords */}
+            <div style={{ marginBottom:14 }}>
+              <label style={lbl}>
+                <i className="ti ti-key" style={{ marginRight:6, color:T.accent }} />
+                Target Keywords
+                <span style={{ color:T.muted, fontWeight:400, marginLeft:6 }}>(optional - AI will weave these in)</span>
+              </label>
+              <input value={editing.keywords||''} onChange={e=>setEditing(p=>({...p,keywords:e.target.value}))}
+                placeholder="e.g. plumber Austin, emergency drain cleaning" style={inp} />
+            </div>
+
+            {/* Row 4: Tone + Length */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+              <div>
+                <label style={lbl}>
+                  <i className="ti ti-mood-smile" style={{ marginRight:6, color:T.accent }} />Tone
+                </label>
+                <select value={editing.tone||'Professional'} onChange={e=>setEditing(p=>({...p,tone:e.target.value}))}
+                  style={{ ...inp, cursor:'pointer' }}>
+                  {TONES.map(t=><option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={lbl}>
+                  <i className="ti ti-text-size" style={{ marginRight:6, color:T.accent }} />Length
+                </label>
+                <select value={editing.length||'Medium (100-200 words)'} onChange={e=>setEditing(p=>({...p,length:e.target.value}))}
+                  style={{ ...inp, cursor:'pointer' }}>
+                  {LENGTHS.map(l=><option key={l}>{l}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Content + AI button */}
+            <div style={{ marginBottom:18 }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
+                <label style={{ ...lbl, marginBottom:0 }}>Content</label>
+                <button onClick={generateSinglePost} disabled={aiDraft}
+                  style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 12px',
+                    background:aiDraft?T.cardBg2:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                    color:aiDraft?T.muted:'#fff', border:'none', borderRadius:7,
+                    fontSize:11, fontWeight:700, cursor:aiDraft?'not-allowed':'pointer' }}>
+                  {aiDraft
+                    ? <><i className="ti ti-loader-2" style={{ animation:'spin 1s linear infinite' }} /> Generating...</>
+                    : <><i className="ti ti-sparkles" /> AI Draft</>}
+                </button>
+              </div>
+              <textarea value={editing.content} onChange={e=>setEditing(p=>({...p,content:e.target.value}))}
+                rows={7} placeholder="Write your post content here, or use AI Draft above..."
+                style={{ ...inp, resize:'vertical', lineHeight:1.7 }} />
+              <div style={{ textAlign:'right', fontSize:11, color:T.muted, marginTop:3 }}>{(editing.content||'').length} chars</div>
+            </div>
+
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={()=>{setModal(false);setEditing(null)}}
+                style={{ flex:1, padding:'10px 0', background:'transparent', color:T.muted,
+                  border:`1px solid ${T.border2}`, borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={()=>savePost(editing)} disabled={saving||!(editing.content||'').trim()}
+                style={{ flex:2, padding:'10px 0', borderRadius:8, fontSize:13, fontWeight:700, border:'none',
+                  cursor:saving||!(editing.content||'').trim()?'not-allowed':'pointer',
+                  background:saving||!(editing.content||'').trim()?T.cardBg2:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                  color:saving||!(editing.content||'').trim()?T.muted:'#fff' }}>
+                {saving?'Saving...' : editing.id?'Save Changes':'Create Post'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Post list (drafts / published tabs) ─────────────────────────────────────
+function PostList({ posts, loading, onView, onEdit, onDelete, onStatus, nextStatusAction, emptyMsg, emptyAction }) {
+  if (loading) return (
+    <div style={{ textAlign:'center', padding:60, color:'#4a6080' }}>
+      <i className="ti ti-loader-2" style={{ fontSize:32, display:'block', marginBottom:10, animation:'spin 1s linear infinite' }} />
+      Loading...
+    </div>
+  )
+  if (!posts.length) return (
+    <div style={{ textAlign:'center', padding:60, color:'#4a6080' }}>
+      <i className="ti ti-calendar-off" style={{ fontSize:40, display:'block', marginBottom:12 }} />
+      <div style={{ fontSize:14, fontWeight:700, color:'#c8d8f0', marginBottom:6 }}>{emptyMsg}</div>
+      {emptyAction && (
+        <button onClick={emptyAction}
+          style={{ marginTop:8, padding:'9px 20px', background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+            color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer' }}>
+          <i className="ti ti-sparkles" style={{ marginRight:6 }} /> AI Generate Month
+        </button>
+      )}
+    </div>
+  )
+
+  // Group by date
+  const byDate = {}
+  posts.forEach(p => { if (!byDate[p.post_date]) byDate[p.post_date] = []; byDate[p.post_date].push(p) })
+
+  return (
+    <div>
+      {Object.entries(byDate).sort(([a],[b])=>a.localeCompare(b)).map(([date, dp]) => (
+        <div key={date} style={{ marginBottom:22 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:'#4a6080', marginBottom:8,
+            textTransform:'uppercase', letterSpacing:1 }}>
+            {new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:10 }}>
+            {dp.map(p => (
+              <MiniPostCard key={p.id} post={p}
+                onView={()=>onView(p)}
+                onEdit={()=>onEdit(p)}
+                onDelete={()=>onDelete(p.id)}
+                onStatus={(next)=>onStatus(p,next)}
+                nextAction={nextStatusAction(p.status)} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── MiniPostCard ─────────────────────────────────────────────────────────────
+function MiniPostCard({ post, onView, onEdit, onDelete, onStatus, nextAction }) {
+  const c = PC[post.platform]||PC.blog
+  return (
+    <div style={{ background:c.bg, border:`1px solid ${c.border}`, borderRadius:10, padding:'12px 14px' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+          <i className={`ti ${c.icon}`} style={{ color:c.color, fontSize:14 }} />
+          <span style={{ color:c.color, fontSize:12, fontWeight:700 }}>
+            {post.platform.charAt(0).toUpperCase()+post.platform.slice(1)}
+          </span>
+          {post.topic && (
+            <span style={{ color:'#4a6080', fontSize:11, background:'#0d1f3c',
+              borderRadius:10, padding:'1px 9px', border:'1px solid #0f2040' }}>
+              {post.topic}
+            </span>
           )}
         </div>
+        <Badge status={post.status} />
       </div>
+
+      {/* Preview - click to open full view */}
+      <div onClick={onView}
+        style={{ color:'#c8d8f0', fontSize:12.5, lineHeight:1.6, marginBottom:10,
+          maxHeight:64, overflow:'hidden', cursor:'pointer',
+          display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical' }}>
+        {post.content}
+      </div>
+
+      <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+        {/* View full post */}
+        <button onClick={onView}
+          style={{ flex:1, padding:'5px 0', background:'#0d1f3c', border:`1px solid ${c.border}33`,
+            borderRadius:7, color:c.color, fontSize:11, fontWeight:700, cursor:'pointer',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+          <i className="ti ti-eye" /> View
+        </button>
+        {/* Next status action */}
+        {nextAction && (
+          <button onClick={()=>onStatus(nextAction.next)}
+            style={{ flex:1, padding:'5px 0',
+              background: nextAction.next==='published'?'#0d1f14':'#0d1a14',
+              border:`1px solid ${nextAction.next==='published'?'#10b981':'#f59e0b'}`,
+              borderRadius:7,
+              color: nextAction.next==='published'?'#10b981':'#f59e0b',
+              fontSize:11, fontWeight:700, cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+            <i className={`ti ${nextAction.next==='published'?'ti-check':'ti-calendar-event'}`} />
+            {nextAction.label}
+          </button>
+        )}
+        <button onClick={onEdit}
+          style={{ padding:'5px 10px', background:'transparent', border:'1px solid #1a3560',
+            borderRadius:7, color:'#4a6080', fontSize:11, cursor:'pointer' }}>
+          <i className="ti ti-pencil" />
+        </button>
+        <button onClick={onDelete}
+          style={{ padding:'5px 10px', background:'transparent', border:'1px solid #2a1a1a',
+            borderRadius:7, color:'#f87171', fontSize:11, cursor:'pointer' }}>
+          <i className="ti ti-trash" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function MetaChip({ icon, label, value }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 12px',
+      background:'#080f1e', border:'1px solid #0f2040', borderRadius:8 }}>
+      <i className={`ti ${icon}`} style={{ color:'#4a6080', fontSize:12 }} />
+      <span style={{ color:'#4a6080', fontSize:11, fontWeight:600 }}>{label}:</span>
+      <span style={{ color:'#c8d8f0', fontSize:11 }}>{value}</span>
     </div>
   )
 }

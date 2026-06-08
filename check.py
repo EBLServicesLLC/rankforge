@@ -1,0 +1,8 @@
+﻿f = open('public/rankforge3.html', 'rb')
+c = f.read()
+f.close()
+print('ef-app count:', c.count(b'ef-app'))
+print('ef-sidebar count:', c.count(b'ef-sidebar'))
+print('syncKeys found:', b'syncKeys' in c)
+print('DOMContentLoaded found:', b'DOMContentLoaded' in c)
+print('double sidebar risk:', c.count(b'class="ef-sidebar"'))
