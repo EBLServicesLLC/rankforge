@@ -1,83 +1,69 @@
-﻿# SESSION HANDOFF — 2026-06-04 (Session 8)
+﻿# RankForged AI - Session Handoff
+**Date:** 2026-06-08 (Session 20 - Final)
+**Stack:** React + Vite | Supabase (auth + Postgres + RLS) | Vercel
+**Repo:** https://github.com/EBLServicesLLC/rankforgedai
+**Live:** https://rankforgedai-5ipq.vercel.app
+**Supabase:** https://ybhpbpahhywiokhqpldj.supabase.co
 
-## STABLE STATE AT END OF SESSION
-- Tag: stable-v3 (commit 8da048a)
-- All working: login, billing, onboarding, profile, My Businesses, full-page redirect to rankforge3, all 24 tabs
+## CRITICAL LESSONS - READ FIRST
 
-## EMERGENCY RESTORE COMMAND
-If anything breaks, run this to get back to stable-v3:
-`powershell
-git checkout stable-v3 -- public/rankforge3.html src/components/DashboardShell.jsx
-$utf8NoBom = New-Object System.Text.UTF8Encoding $false
-$content = Get-Content src/components/DashboardShell.jsx -Raw
-[System.IO.File]::WriteAllText((Resolve-Path "src/components/DashboardShell.jsx"), $content, $utf8NoBom)
-git add -f public/rankforge3.html src/components/DashboardShell.jsx
-git commit -m "restore: stable-v3 emergency"
-git push
-`
+### #1 - ALWAYS CHECK IMPORTS BEFORE ANYTHING ELSE
+### #2 - 5-part render pattern required per JSX page
+### #3 - Always upload current file from disk before patching
+### #4 - No em-dashes in JSX strings - they crash Vite
+### #5 - PowerShell is not a code editor - use here-strings
+### #6 - Downloads from Claude do not save reliably - write directly with PowerShell
+### #7 - Supabase edge functions must use Deno.serve() format NOT import { serve }
+### #8 - Content calendar insert only uses base columns (user_id, client_id, post_date, platform, content, topic, status)
 
-## WHAT HAPPENED THIS SESSION
-- Attempted to balance API Keys tab 2-column layout (cosmetic issue)
-- Multiple string replacement approaches failed silently
-- Python rewrite of rankforge3.html corrupted DashboardShell.jsx encoding (UTF-16 BOM)
-- Vercel builds failed for ~1 hour with UNLOADABLE_DEPENDENCY error
-- Emergency restored to stable-v3 — app fully working again
-- GSC + Rank Tracker (decode_rankforge.py) was NOT successfully deployed this session
+## COMPLETED SESSION 20
 
-## CRITICAL RULES LEARNED THIS SESSION
-1. NEVER use PowerShell Set-Content or Out-File to write JSX files — corrupts encoding
-2. NEVER use Python to rewrite rankforge3.html directly — use decode_rankforge.py only
-3. NEVER attempt string replacement on rankforge3.html via PowerShell
-4. Always verify Vercel deployment is green before considering any change successful
-5. API Keys layout is cosmetic — do NOT attempt to fix it
+- ContentCalendarPage.jsx - fully working (equal columns, AI generate, repurpose, rewrite, modal with View/Edit/Rewrite tabs)
+- Stripe payments - fully working (live mode, webhook registered, BillingPage wired)
+- Resend email - deployed (welcome on signup, activation key after purchase)
+- send-email edge function deployed using Deno.serve() format
+- useWelcomeEmail hook at src/hooks/useWelcomeEmail.js
+- AuthPage.jsx patched to call sendWelcomeEmail on signup
+- stripe-webhook updated to send activation key email after purchase
 
-## PENDING FOR NEXT SESSION (in order)
+## PENDING
 
-### 1. Deploy GSC + Rank Tracker
-Run decode_rankforge.py which contains the correct version:
-`powershell
-python decode_rankforge.py
-`
-Verify all 4 OKs:
-- OK: gscDashRefresh
-- OK: rt-gsc-banner
-- OK: saveGscToken
-- OK: rtFetchGSC
+- LinkedIn Developer App (user needs to create at linkedin.com/developers)
+- BrightLocal API (user needs account ~$29/mo)
+- Email custom domain in Resend (currently using onboarding@resend.dev)
+- Weekly report emails (not built yet)
 
-Then commit:
-`powershell
-git add -f public/rankforge3.html
-git commit -m "feat: GSC analytics + Rank Tracker rebuild"
-git push
-`
+## RESEND SECRETS NEEDED IN SUPABASE VAULT
+- RESEND_API_KEY = Resend API key
+- FROM_EMAIL = RankForged AI <onboarding@resend.dev>
 
-### 2. Supabase — add gsc_token column
-`sql
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS gsc_token text;
-`
+## DESIGN SYSTEM
+pageBg:#060d1a cardBg:#0d1f3c border:#0f2040 border2:#1a3560
+text:#e2e8f0 muted:#4a6080 accent:#3b82f6 green:#10b981 red:#f87171
 
-### 3. Stripe live switchover
-In BillingPage.jsx replace test price IDs with live ones:
-- Solopreneur: price_1TdJajLQRnOj0qLPQmbNz2kN
-- Deluxe: price_1TdJbkLQRnOj0qLPJPfsQsJI
-- Pro: price_1TdJczLQRnOj0qLPa7nat9Hi
-- Agency: price_1TdJdnLQRnOj0qLPv56ml87r
+## MODEL STRING
+claude-sonnet-4-5
 
-### 4. Dark/light mode button
-Wire up properly or remove until built.
+## EDGE FUNCTIONS ACTIVE
+stripe-checkout, stripe-webhook, stripe-portal, vault-keys,
+social-auth-facebook, social-auth-linkedin, social-publish,
+local-links-generate, local-links-email, voice-search-generate,
+voice-search-answers, voice-search-snippet, schema-monitor,
+landing-page-generate, gsc-data, review-message-generate,
+review-response-generate, gbp-qa-generate, meta-tag-generate,
+kw-gap-analyse, send-email
 
-## KEY REFERENCES
-- Supabase: https://ybhpbpahhywiokhqpldj.supabase.co
-- Vercel: https://rankforgedai-5ipq.vercel.app
-- GitHub: https://github.com/EBLServicesLLC/rankforgedai
-- Stable tag: stable-v3 (commit 8da048a)
+## SUPABASE TABLES
+client_data, local_seo_tasks, reputation_reviews, w2_status,
+score_history, bl_status, social_proof, indexing_checks,
+agent_states, agent_results, content_calendar
 
-## SUPABASE EDGE FUNCTIONS
-- stripe-checkout: ACTIVE
-- stripe-webhook: ACTIVE
-- vault-keys: ACTIVE v1
+## JSX TABS
+dash, bl, keys, index, social-proof, social-pub, locallinks, voice,
+schema-mon, pages, local, rank-tracker, meta, gbpqa, napaudit,
+kwgap, reputation, web2, pdfreport, agents, calendar, gsc, dir, mloc
 
-## SESSION HEALTH
-Health: Recovered — app back to stable-v3, all core features working
-Rotate Session: YES — start fresh next session
-Next priority: python decode_rankforge.py → verify 4 OKs → commit
+## NEXT SESSION START
+1. Upload current DashboardShell.jsx from disk
+2. Run check_imports.cjs to verify all pages wired
+3. Decide: LinkedIn OAuth callback, weekly report emails, or new features
