@@ -233,8 +233,8 @@ Spread dates evenly. Vary topics. Use a local, authentic voice.`
       const raw   = await callClaude(apiKey, prompt, 4000)
       const clean = raw.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim()
       let parsed
-      try { parsed = JSON.parse(clean) } catch { throw new Error('JSON parse failed — try again') }
-      if (!Array.isArray(parsed) || !parsed.length) throw new Error('AI returned no posts — try again')
+      try { parsed = JSON.parse(clean) } catch { throw new Error('JSON parse failed - try again') }
+      if (!Array.isArray(parsed) || !parsed.length) throw new Error('AI returned no posts - try again')
 
       const rows = parsed
         .filter(p => p.post_date && p.platform && p.content)
@@ -245,7 +245,7 @@ Spread dates evenly. Vary topics. Use a local, authentic voice.`
           status:'draft', keywords:genKw, tone:genTone, length:'',
         }))
 
-      if (!rows.length) throw new Error('No valid posts in response — try again')
+      if (!rows.length) throw new Error('No valid posts in response - try again')
       await supabase.from('content_calendar').insert(rows)
       setGenStatus({ type:'ok', msg:`${rows.length} draft posts saved. View them in the calendar or Drafts tab.` })
       setGenOpen(false)
@@ -288,7 +288,7 @@ Return ONLY a valid JSON array, no markdown fences:
       const raw   = await callClaude(apiKey, prompt, 2000)
       const clean = raw.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim()
       let parsed
-      try { parsed = JSON.parse(clean) } catch { throw new Error('JSON parse failed — try again') }
+      try { parsed = JSON.parse(clean) } catch { throw new Error('JSON parse failed - try again') }
       if (!Array.isArray(parsed)||!parsed.length) throw new Error('AI returned no posts')
 
       const rows = parsed
@@ -375,7 +375,7 @@ Write only the post text, no labels or explanation.`
             <i className="ti ti-calendar-event" style={{ color:T.accent, marginRight:10 }} />
             Content Calendar
           </div>
-          {bizName && <div style={{ color:T.muted, fontSize:13, marginTop:3 }}>{bizName} — {MONTHS[viewMonth]} {viewYear}</div>}
+          {bizName && <div style={{ color:T.muted, fontSize:13, marginTop:3 }}>{bizName} - {MONTHS[viewMonth]} {viewYear}</div>}
           {!apiKey && (
             <div style={{ marginTop:8, padding:'6px 12px', background:'#1f0d05', border:'1px solid #f97316',
               borderRadius:8, color:'#fb923c', fontSize:12 }}>
@@ -441,7 +441,7 @@ Write only the post text, no labels or explanation.`
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
               <i className="ti ti-sparkles" style={{ color:T.accent, fontSize:16 }} />
               <span style={{ fontWeight:700, color:T.text, fontSize:15 }}>
-                AI Generate — {MONTHS[viewMonth]} {viewYear}
+                AI Generate - {MONTHS[viewMonth]} {viewYear}
               </span>
             </div>
             <button onClick={()=>setGenOpen(false)} style={{ background:'none', border:'none', color:T.muted, cursor:'pointer', fontSize:18 }}>
@@ -693,7 +693,7 @@ Write only the post text, no labels or explanation.`
                   {dp.length===0 ? (
                     <div style={{ textAlign:'center', color:T.muted, padding:'30px 0', fontSize:13 }}>
                       <i className="ti ti-calendar-off" style={{ fontSize:28, display:'block', marginBottom:8 }} />
-                      No posts — click Add Post to create one
+                      No posts - click Add Post to create one
                     </div>
                   ) : dp.map(p=>(
                     <MiniPostCard key={p.id} post={p}
@@ -792,7 +792,7 @@ Write only the post text, no labels or explanation.`
                     </div>
                   )}
 
-                  {/* Platform note — clarify what Published means */}
+                  {/* Platform note - about Published status */}
                   <div style={{ background:T.cardBg2, border:`1px solid ${T.border}`, borderRadius:8,
                     padding:'10px 14px', marginBottom:16, fontSize:12, color:T.muted, lineHeight:1.6 }}>
                     <i className="ti ti-info-circle" style={{ marginRight:6, color:T.accent }} />
@@ -896,7 +896,7 @@ Write only the post text, no labels or explanation.`
               <label style={lbl}>
                 <i className="ti ti-key" style={{ marginRight:6, color:T.accent }} />
                 Target Keywords
-                <span style={{ color:T.muted, fontWeight:400, marginLeft:6 }}>(optional — AI will weave these in)</span>
+                <span style={{ color:T.muted, fontWeight:400, marginLeft:6 }}>(optional - AI will weave these in)</span>
               </label>
               <input value={editing.keywords||''} onChange={e=>setEditing(p=>({...p,keywords:e.target.value}))}
                 placeholder="e.g. plumber Austin, emergency drain cleaning" style={inp} />
@@ -1036,7 +1036,7 @@ function MiniPostCard({ post, onView, onEdit, onDelete, onStatus, nextAction }) 
         <Badge status={post.status} />
       </div>
 
-      {/* Preview — click to open full view */}
+      {/* Preview - click to open full view */}
       <div onClick={onView}
         style={{ color:'#c8d8f0', fontSize:12.5, lineHeight:1.6, marginBottom:10,
           maxHeight:64, overflow:'hidden', cursor:'pointer',
