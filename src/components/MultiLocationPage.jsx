@@ -411,6 +411,29 @@ export default function MultiLocationPage({ session, clientId }) {
                     )}
                   </div>
 
+                  {/* SAB Toggle - shown at top of editor */}
+                  <div style={{ background: activeLoc.isSAB ? `${T.purple}12` : T.cardBg2, border: `1px solid ${activeLoc.isSAB ? T.purple + '60' : T.border}`, borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 7, background: activeLoc.isSAB ? `${T.purple}25` : T.border + '40', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <i className="ti ti-map-pins" style={{ color: activeLoc.isSAB ? T.purple : T.muted, fontSize: 16 }} />
+                        </div>
+                        <div>
+                          <div style={{ color: T.text, fontWeight: 600, fontSize: 13 }}>Service Area Business (SAB) Mode</div>
+                          <div style={{ color: T.muted, fontSize: 11, marginTop: 2 }}>
+                            {activeLoc.isSAB ? 'Address hidden - service cities shown on GMB and Bing.' : 'Physical storefront - full address shown on GMB and Bing.'}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => updateField(activeLoc.id, 'isSAB', !activeLoc.isSAB)}
+                        style={{ width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: activeLoc.isSAB ? T.purple : T.muted + '60', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+                      >
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: activeLoc.isSAB ? 23 : 3, transition: 'left 0.2s' }} />
+                      </button>
+                    </div>
+                  </div>
+
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                     {[
                       { label: 'Location Name *', field: 'name', type: 'text', placeholder: 'e.g. Austin Main Branch', full: true },
@@ -444,36 +467,7 @@ export default function MultiLocationPage({ session, clientId }) {
                     </div>
                   </div>
 
-                  {/* SAB Toggle */}
-                  <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 16, marginTop: 4, marginBottom: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                      <div>
-                        <div style={{ color: T.text, fontWeight: 600, fontSize: 13 }}>
-                          <i className="ti ti-map-pins" style={{ color: activeLoc.isSAB ? T.purple : T.muted, marginRight: 7 }} />
-                          Service Area Business (SAB) Mode
-                        </div>
-                        <div style={{ color: T.muted, fontSize: 11, marginTop: 3 }}>
-                          {activeLoc.isSAB
-                            ? 'Address hidden from public listings. Service cities shown instead.'
-                            : 'Physical storefront — full address shown on GMB and Bing.'}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => updateField(activeLoc.id, 'isSAB', !activeLoc.isSAB)}
-                        style={{
-                          width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-                          background: activeLoc.isSAB ? T.purple : T.border,
-                          position: 'relative', transition: 'background 0.2s', flexShrink: 0,
-                        }}
-                      >
-                        <div style={{
-                          width: 18, height: 18, borderRadius: '50%', background: '#fff',
-                          position: 'absolute', top: 3,
-                          left: activeLoc.isSAB ? 23 : 3,
-                          transition: 'left 0.2s',
-                        }} />
-                      </button>
-                    </div>
+                  {/* Service Areas - shown when SAB is on */}
 
                     {activeLoc.isSAB && (
                       <div>
@@ -542,7 +536,6 @@ export default function MultiLocationPage({ session, clientId }) {
                         </div>
                       </div>
                     )}
-                  </div>
 
                   <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                     <Btn onClick={() => submitLocDirs(activeLoc.id)} disabled={submittingId === activeLoc.id}>
