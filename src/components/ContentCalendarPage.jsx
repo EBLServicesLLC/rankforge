@@ -1,92 +1,190 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react'
+import { supabase } from '../lib/supabase'
 
 const T = {
-  pageBg: '#060d1a', cardBg: '#0d1f3c', cardBg2: '#080f1e',
-  border: '#0f2040', border2: '#1a3560',
-  text: '#e2e8f0', textSub: '#c8d8f0', muted: '#4a6080',
-  accent: '#3b82f6', accentHi: '#60a5fa',
-  green: '#10b981', red: '#f87171', yellow: '#f59e0b',
-  orange: '#f97316', purple: '#8b5cf6', cyan: '#22d3ee',
-};
+  pageBg:'#060d1a', cardBg:'#0d1f3c', cardBg2:'#080f1e',
+  border:'#0f2040', border2:'#1a3560',
+  text:'#e2e8f0', textSub:'#c8d8f0', muted:'#4a6080',
+  accent:'#3b82f6', accentHi:'#60a5fa',
+  green:'#10b981', red:'#f87171', yellow:'#f59e0b',
+  orange:'#f97316', purple:'#8b5cf6', cyan:'#22d3ee',
+}
 
-const CONTENT_TYPES = [
-  { id: 'blog', label: 'Blog Post', icon: 'ti-article', color: T.accent },
-  { id: 'social', label: 'Social Post', icon: 'ti-brand-instagram', color: T.purple },
-  { id: 'gbp', label: 'GBP Update', icon: 'ti-building-store', color: T.green },
-  { id: 'email', label: 'Email', icon: 'ti-mail', color: T.orange },
-  { id: 'video', label: 'Video Script', icon: 'ti-video', color: T.cyan },
-  { id: 'faq', label: 'FAQ', icon: 'ti-help-circle', color: T.yellow },
-];
+const PLATFORM_COLORS = {
+  google:    { bg:'#1a2a1a', border:'#10b981', text:'#10b981', icon:'ti-brand-google' },
+  facebook:  { bg:'#1a1f3a', border:'#3b82f6', text:'#60a5fa', icon:'ti-brand-facebook' },
+  instagram: { bg:'#2a1a2a', border:'#8b5cf6', text:'#a78bfa', icon:'ti-brand-instagram' },
+  linkedin:  { bg:'#1a2535', border:'#22d3ee', text:'#22d3ee', icon:'ti-brand-linkedin' },
+  blog:      { bg:'#2a1a10', border:'#f97316', text:'#fb923c', icon:'ti-file-text' },
+  email:     { bg:'#2a1a1a', border:'#f87171', text:'#fca5a5', icon:'ti-mail' },
+}
 
-const STATUS_CONFIG = {
-  idea: { label: 'Idea', color: T.muted, icon: 'ti-bulb' },
-  draft: { label: 'Draft', color: T.yellow, icon: 'ti-pencil' },
-  scheduled: { label: 'Scheduled', color: T.accent, icon: 'ti-clock' },
-  published: { label: 'Published', color: T.green, icon: 'ti-circle-check' },
-};
-
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = ['January','February','March','April','May','June',
-  'July','August','September','October','November','December'];
+const POST_TYPES = ['google','facebook','instagram','linkedin','blog','email']
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 
 function getDaysInMonth(year, month) {
-  return new Date(year, month + 1, 0).getDate();
+  return new Date(year, month + 1, 0).getDate()
 }
 function getFirstDayOfMonth(year, month) {
-  return new Date(year, month, 1).getDay();
+  return new Date(year, month, 1).getDay()
 }
 
-const Card = ({ children, style = {} }) => (
-  <div style={{
-    background: T.cardBg, border: `1px solid ${T.border}`,
-    borderRadius: 10, padding: 20, ...style
-  }}>
-    {children}
-  </div>
-);
-
-const CardHead = ({ icon, title, children }) => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <i className={`ti ${icon}`} style={{ color: T.accent, fontSize: 18 }} />
-      <span style={{ color: T.text, fontWeight: 600, fontSize: 15 }}>{title}</span>
-    </div>
-    {children}
-  </div>
-);
-
-const Btn = ({ onClick, children, variant = 'primary', size = 'sm', style = {} }) => {
-  const base = {
-    border: 'none', borderRadius: 6, cursor: 'pointer',
-    fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
-    fontSize: size === 'sm' ? 12 : 13,
-    padding: size === 'sm' ? '6px 12px' : '8px 16px',
-  };
-  const variants = {
-    primary: { background: T.accent, color: '#fff' },
-    ghost: { background: 'transparent', color: T.textSub, border: `1px solid ${T.border}` },
-    danger: { background: 'rgba(248,113,113,0.15)', color: T.red, border: `1px solid ${T.red}30` },
-    success: { background: 'rgba(16,185,129,0.15)', color: T.green, border: `1px solid ${T.green}30` },
-  };
+function Card({ children, style }) {
   return (
-    <button onClick={onClick} style={{ ...base, ...variants[variant], ...style }}>
+    <div style={{ background:T.cardBg, border:`1px solid ${T.border}`, borderRadius:12, ...style }}>
       {children}
-    </button>
-  );
-};
+    </div>
+  )
+}
+function CardHead({ icon, title, right }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+      padding:'14px 18px', borderBottom:`1px solid ${T.border}` }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+        <i className={`ti ${icon}`} style={{ color:T.accent, fontSize:16 }} />
+        <span style={{ fontWeight:700, color:T.text, fontSize:14 }}>{title}</span>
+      </div>
+      {right && <div>{right}</div>}
+    </div>
+  )
+}
 
-// AI Generate modal
-function GenerateModal({ onClose, onAdd, clientId, userId, bizName }) {
-  const [topic, setTopic] = useState('');
-  const [type, setType] = useState('blog');
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState([]);
-  const [selected, setSelected] = useState([]);
+export default function ContentCalendarPage({ clientId, userId, bizName }) {
+  const now = new Date()
+  const [viewYear, setViewYear] = useState(now.getFullYear())
+  const [viewMonth, setViewMonth] = useState(now.getMonth())
+  const [posts, setPosts] = useState({})          // key: "YYYY-MM-DD", value: array of posts
+  const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
+  const [selectedDay, setSelectedDay] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [editPost, setEditPost] = useState(null)   // post being edited/created
+  const [genPlatforms, setGenPlatforms] = useState(['google','facebook','instagram'])
+  const [genTopic, setGenTopic] = useState('')
+  const [genMonthMode, setGenMonthMode] = useState(false)
+  const [aiStatus, setAiStatus] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [bizProfile, setBizProfile] = useState({})
+  const [filterPlatform, setFilterPlatform] = useState('all')
+  const [showGenPanel, setShowGenPanel] = useState(false)
 
-  const generate = async () => {
-    if (!topic.trim()) return;
-    setLoading(true);
-    setResults([]);
+  // Load business profile for AI context
+  useEffect(() => {
+    if (!clientId || !userId) return
+    supabase.from('client_data').select('*').eq('client_id', clientId).single()
+      .then(({ data }) => { if (data) setBizProfile(data) })
+  }, [clientId, userId])
+
+  // Load posts from Supabase
+  const loadPosts = useCallback(async () => {
+    if (!clientId || !userId) return
+    setLoading(true)
+    const startDate = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-01`
+    const endDate = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${getDaysInMonth(viewYear,viewMonth)}`
+    const { data } = await supabase
+      .from('content_calendar')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('client_id', clientId)
+      .gte('post_date', startDate)
+      .lte('post_date', endDate)
+      .order('post_date', { ascending: true })
+    if (data) {
+      const grouped = {}
+      data.forEach(p => {
+        if (!grouped[p.post_date]) grouped[p.post_date] = []
+        grouped[p.post_date].push(p)
+      })
+      setPosts(grouped)
+    } else {
+      setPosts({})
+    }
+    setLoading(false)
+  }, [clientId, userId, viewYear, viewMonth])
+
+  useEffect(() => { loadPosts() }, [loadPosts])
+
+  // Save / upsert a post
+  const savePost = async (post) => {
+    setSaving(true)
+    const row = {
+      user_id: userId,
+      client_id: clientId,
+      post_date: post.post_date,
+      platform: post.platform,
+      content: post.content,
+      status: post.status || 'draft',
+      topic: post.topic || '',
+    }
+    let result
+    if (post.id) {
+      result = await supabase.from('content_calendar').update(row).eq('id', post.id)
+    } else {
+      result = await supabase.from('content_calendar').insert(row)
+    }
+    setSaving(false)
+    if (!result.error) {
+      setShowModal(false)
+      setEditPost(null)
+      loadPosts()
+    }
+  }
+
+  // Delete a post
+  const deletePost = async (id) => {
+    await supabase.from('content_calendar').delete().eq('id', id)
+    loadPosts()
+  }
+
+  // AI generate posts
+  const generatePosts = async (forDate) => {
+    if (!genPlatforms.length) return
+    setGenerating(true)
+    setAiStatus('Calling Claude...')
+
+    const biz = bizProfile
+    const context = `Business: ${biz.biz_name || bizName || 'Unknown'}
+Category: ${biz.biz_cat || ''}
+Location: ${biz.biz_city || ''}, ${biz.biz_state || ''}
+Phone: ${biz.biz_phone || ''}
+Website: ${biz.biz_website || ''}
+Keywords: ${biz.biz_kw || ''}
+Description: ${biz.biz_desc || ''}`
+
+    const targetDate = forDate || `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-15`
+    const topicLine = genTopic ? `Topic/focus: ${genTopic}` : ''
+
+    const prompt = genMonthMode
+      ? `You are a local SEO content strategist. Generate a month of social posts for a local business.
+
+${context}
+${topicLine}
+Month: ${MONTHS[viewMonth]} ${viewYear}
+Platforms: ${genPlatforms.join(', ')}
+
+Return ONLY a JSON array. Each item must have exactly these fields:
+- post_date: "YYYY-MM-DD" (spread across the month, 1-2 posts per platform)
+- platform: one of ${genPlatforms.map(p=>`"${p}"`).join(', ')}
+- content: post text (platform-appropriate length and tone)
+- topic: brief topic label (2-4 words)
+
+Spread posts across the month. Return 15-20 posts total. No markdown, no explanation, just the JSON array.`
+      : `You are a local SEO content strategist. Generate social media posts for a local business.
+
+${context}
+${topicLine}
+Date: ${targetDate}
+Platforms: ${genPlatforms.join(', ')}
+
+Return ONLY a JSON array. Each item must have exactly these fields:
+- post_date: "${targetDate}"
+- platform: one of ${genPlatforms.map(p=>`"${p}"`).join(', ')}
+- content: post text (platform-appropriate length and tone)
+- topic: brief topic label (2-4 words)
+
+Return one post per platform. No markdown, no explanation, just the JSON array.`
+
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -94,682 +192,442 @@ function GenerateModal({ onClose, onAdd, clientId, userId, bizName }) {
         body: JSON.stringify({
           model: 'claude-sonnet-4-5',
           max_tokens: 1000,
-          system: `You are a local SEO content strategist. Generate content calendar ideas for a local business. 
-Return ONLY a JSON array (no markdown, no backticks) of 5 content ideas. Each idea: 
-{"title":"...","type":"${type}","description":"...","keywords":["..."],"bestDay":"Monday"}
-bestDay should be the best day of week to publish this type of content.`,
-          messages: [{
-            role: 'user',
-            content: `Business: ${bizName || 'Local Business'}. Topic: ${topic}. Content type: ${type}. Generate 5 content ideas.`
-          }]
+          messages: [{ role: 'user', content: prompt }]
         })
-      });
-      const data = await res.json();
-      const text = data.content?.[0]?.text || '[]';
+      })
+      const data = await res.json()
+      const raw = data.content?.[0]?.text || ''
+      let parsed
       try {
-        const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
-        setResults(Array.isArray(parsed) ? parsed : []);
-      } catch { setResults([]); }
-    } catch (e) {
-      console.error(e);
-    }
-    setLoading(false);
-  };
-
-  const toggleSelect = (i) => {
-    setSelected(s => s.includes(i) ? s.filter(x => x !== i) : [...s, i]);
-  };
-
-  const addSelected = () => {
-    const now = new Date();
-    const items = results.filter((_, i) => selected.includes(i)).map((r, idx) => {
-      const d = new Date(now);
-      d.setDate(d.getDate() + (idx + 1) * 3);
-      return {
-        id: Date.now() + idx,
-        title: r.title,
-        type: r.type || type,
-        description: r.description,
-        keywords: r.keywords || [],
-        status: 'idea',
-        date: d.toISOString().split('T')[0],
-        clientId, userId,
-      };
-    });
-    onAdd(items);
-    onClose();
-  };
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
-    }}>
-      <div style={{
-        background: T.cardBg, border: `1px solid ${T.border2}`, borderRadius: 12,
-        width: '100%', maxWidth: 640, maxHeight: '85vh', overflowY: 'auto', padding: 28
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <i className="ti ti-sparkles" style={{ color: T.accent, fontSize: 20 }} />
-            <span style={{ color: T.text, fontWeight: 700, fontSize: 17 }}>AI Content Ideas</span>
-          </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.muted, cursor: 'pointer', fontSize: 18 }}>
-            <i className="ti ti-x" />
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-          <input
-            value={topic}
-            onChange={e => setTopic(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && generate()}
-            placeholder="Topic or keyword (e.g. roof repair tips)"
-            style={{
-              flex: 1, background: T.cardBg2, border: `1px solid ${T.border}`,
-              borderRadius: 6, padding: '8px 12px', color: T.text, fontSize: 13
-            }}
-          />
-          <select
-            value={type}
-            onChange={e => setType(e.target.value)}
-            style={{
-              background: T.cardBg2, border: `1px solid ${T.border}`,
-              borderRadius: 6, padding: '8px 10px', color: T.text, fontSize: 13
-            }}
-          >
-            {CONTENT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-          </select>
-          <Btn onClick={generate} size="sm">
-            <i className="ti ti-sparkles" />Generate
-          </Btn>
-        </div>
-
-        {loading && (
-          <div style={{ textAlign: 'center', padding: 40, color: T.muted }}>
-            <i className="ti ti-loader-2" style={{ fontSize: 28, display: 'block', marginBottom: 8 }} />
-            Generating ideas...
-          </div>
-        )}
-
-        {results.length > 0 && (
-          <>
-            <div style={{ marginBottom: 12, color: T.muted, fontSize: 12 }}>
-              Click to select ideas to add to your calendar
-            </div>
-            {results.map((r, i) => {
-              const ct = CONTENT_TYPES.find(c => c.id === r.type) || CONTENT_TYPES[0];
-              const isSel = selected.includes(i);
-              return (
-                <div
-                  key={i}
-                  onClick={() => toggleSelect(i)}
-                  style={{
-                    background: isSel ? `${T.accent}15` : T.cardBg2,
-                    border: `1px solid ${isSel ? T.accent : T.border}`,
-                    borderRadius: 8, padding: 14, marginBottom: 8, cursor: 'pointer',
-                    transition: 'all 0.15s'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: 6, display: 'flex',
-                      alignItems: 'center', justifyContent: 'center',
-                      background: `${ct.color}20`, flexShrink: 0
-                    }}>
-                      <i className={`ti ${ct.icon}`} style={{ color: ct.color, fontSize: 14 }} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ color: T.text, fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{r.title}</div>
-                      <div style={{ color: T.textSub, fontSize: 12, marginBottom: 6 }}>{r.description}</div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {(r.keywords || []).slice(0, 4).map((kw, ki) => (
-                          <span key={ki} style={{
-                            background: `${T.accent}20`, color: T.accentHi,
-                            borderRadius: 4, padding: '2px 7px', fontSize: 11
-                          }}>{kw}</span>
-                        ))}
-                        {r.bestDay && (
-                          <span style={{
-                            background: `${T.green}15`, color: T.green,
-                            borderRadius: 4, padding: '2px 7px', fontSize: 11
-                          }}>Best: {r.bestDay}</span>
-                        )}
-                      </div>
-                    </div>
-                    {isSel && <i className="ti ti-circle-check-filled" style={{ color: T.accent, fontSize: 18 }} />}
-                  </div>
-                </div>
-              );
-            })}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-              <Btn onClick={onClose} variant="ghost">Cancel</Btn>
-              <Btn onClick={addSelected} disabled={!selected.length}>
-                <i className="ti ti-calendar-plus" />
-                Add {selected.length > 0 ? selected.length : ''} to Calendar
-              </Btn>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Add/Edit item modal
-function ItemModal({ item, onClose, onSave, onDelete }) {
-  const [form, setForm] = useState({
-    title: item?.title || '',
-    type: item?.type || 'blog',
-    description: item?.description || '',
-    status: item?.status || 'idea',
-    date: item?.date || new Date().toISOString().split('T')[0],
-    keywords: item?.keywords?.join(', ') || '',
-    notes: item?.notes || '',
-    platform: item?.platform || 'facebook',
-  });
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-
-  const handleSave = () => {
-    if (!form.title.trim()) return;
-    onSave({
-      ...item,
-      ...form,
-      keywords: form.keywords.split(',').map(k => k.trim()).filter(Boolean),
-      id: item?.id || Date.now(),
-    });
-    onClose();
-  };
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
-    }}>
-      <div style={{
-        background: T.cardBg, border: `1px solid ${T.border2}`, borderRadius: 12,
-        width: '100%', maxWidth: 520, padding: 28
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-          <span style={{ color: T.text, fontWeight: 700, fontSize: 16 }}>
-            {item?.id ? 'Edit Content' : 'New Content'}
-          </span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.muted, cursor: 'pointer' }}>
-            <i className="ti ti-x" />
-          </button>
-        </div>
-
-        {[
-          { label: 'Title', key: 'title', type: 'text', placeholder: 'Content title...' },
-          { label: 'Date', key: 'date', type: 'date' },
-          { label: 'Keywords (comma separated)', key: 'keywords', type: 'text', placeholder: 'seo, local business, ...' },
-          { label: 'Description', key: 'description', type: 'textarea', placeholder: 'Brief description...' },
-          { label: 'Notes', key: 'notes', type: 'textarea', placeholder: 'Internal notes...' },
-        ].map(f => (
-          <div key={f.key} style={{ marginBottom: 14 }}>
-            <label style={{ color: T.textSub, fontSize: 12, display: 'block', marginBottom: 5 }}>{f.label}</label>
-            {f.type === 'textarea' ? (
-              <textarea
-                value={form[f.key]}
-                onChange={e => set(f.key, e.target.value)}
-                placeholder={f.placeholder}
-                rows={2}
-                style={{
-                  width: '100%', background: T.cardBg2, border: `1px solid ${T.border}`,
-                  borderRadius: 6, padding: '8px 12px', color: T.text, fontSize: 13,
-                  resize: 'vertical', boxSizing: 'border-box'
-                }}
-              />
-            ) : (
-              <input
-                type={f.type}
-                value={form[f.key]}
-                onChange={e => set(f.key, e.target.value)}
-                placeholder={f.placeholder}
-                style={{
-                  width: '100%', background: T.cardBg2, border: `1px solid ${T.border}`,
-                  borderRadius: 6, padding: '8px 12px', color: T.text, fontSize: 13,
-                  boxSizing: 'border-box'
-                }}
-              />
-            )}
-          </div>
-        ))}
-
-        <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ color: T.textSub, fontSize: 12, display: 'block', marginBottom: 5 }}>Type</label>
-            <select value={form.type} onChange={e => set('type', e.target.value)}
-              style={{ width: '100%', background: T.cardBg2, border: `1px solid ${T.border}`, borderRadius: 6, padding: '8px 10px', color: T.text, fontSize: 13 }}>
-              {CONTENT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-            </select>
-          </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ color: T.textSub, fontSize: 12, display: 'block', marginBottom: 5 }}>Status</label>
-            <select value={form.status} onChange={e => set('status', e.target.value)}
-              style={{ width: '100%', background: T.cardBg2, border: `1px solid ${T.border}`, borderRadius: 6, padding: '8px 10px', color: T.text, fontSize: 13 }}>
-              {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-            </select>
-          </div>
-        </div>
-
-        {form.type === 'social' && (
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ color: T.textSub, fontSize: 12, display: 'block', marginBottom: 5 }}>Publish To</label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {[
-                { id: 'facebook', label: 'Facebook', icon: 'ti-brand-facebook' },
-                { id: 'linkedin', label: 'LinkedIn', icon: 'ti-brand-linkedin' },
-              ].map(p => (
-                <button key={p.id} onClick={() => set('platform', p.id)} style={{
-                  flex: 1, background: form.platform === p.id ? `${T.accent}20` : T.cardBg2,
-                  border: `1px solid ${form.platform === p.id ? T.accent : T.border}`,
-                  borderRadius: 6, padding: '7px 0', color: form.platform === p.id ? T.accentHi : T.muted,
-                  cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                }}>
-                  <i className={`ti ${p.icon}`} />{p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20 }}>
-          <div>
-            {item?.id && (
-              <Btn onClick={() => { onDelete(item.id); onClose(); }} variant="danger">
-                <i className="ti ti-trash" />Delete
-              </Btn>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Btn onClick={onClose} variant="ghost">Cancel</Btn>
-            <Btn onClick={handleSave}>
-              <i className="ti ti-check" />Save
-            </Btn>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function ContentCalendarPage({ clientId, userId, bizName }) {
-  const [view, setView] = useState('calendar'); // calendar | list
-  const [items, setItems] = useState([]);
-  const [today] = useState(new Date());
-  const [curYear, setCurYear] = useState(today.getFullYear());
-  const [curMonth, setCurMonth] = useState(today.getMonth());
-  const [showGenerate, setShowGenerate] = useState(false);
-  const [editItem, setEditItem] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [filterType, setFilterType] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [clickedDate, setClickedDate] = useState(null);
-  const [publishingId, setPublishingId] = useState(null);
-  const [publishMsg, setPublishMsg] = useState(null);
-
-  const publishToSocial = async (item) => {
-    setPublishingId(item.id);
-    setPublishMsg(null);
-    try {
-      const sbUrl = sessionStorage.getItem('rf_sb_url');
-      const sbKey = sessionStorage.getItem('rf_sb_key');
-      const platform = item.platform || 'facebook';
-      const res = await fetch(`${sbUrl}/functions/v1/social-publish`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sbKey}`,
-        },
-        body: JSON.stringify({
-          platform,
-          message: item.description || item.title,
-          client_id: clientId,
-          user_id: userId,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && !data.error) {
-        saveItem({ ...item, status: 'published', publishedAt: new Date().toISOString() });
-        setPublishMsg({ type: 'success', text: `Posted to ${platform} successfully` });
-      } else {
-        setPublishMsg({ type: 'error', text: data.error || 'Publish failed' });
+        const clean = raw.replace(/```json|```/g, '').trim()
+        parsed = JSON.parse(clean)
+      } catch {
+        setAiStatus('Parse error - try again')
+        setGenerating(false)
+        return
       }
-    } catch (e) {
-      setPublishMsg({ type: 'error', text: e.message });
+
+      setAiStatus(`Saving ${parsed.length} posts...`)
+      const rows = parsed.map(p => ({
+        user_id: userId,
+        client_id: clientId,
+        post_date: p.post_date,
+        platform: p.platform,
+        content: p.content,
+        topic: p.topic || '',
+        status: 'draft',
+      }))
+      await supabase.from('content_calendar').insert(rows)
+      setAiStatus(`Done - ${parsed.length} posts created`)
+      loadPosts()
+      setShowGenPanel(false)
+      setGenTopic('')
+    } catch (err) {
+      setAiStatus('Error: ' + err.message)
     }
-    setPublishingId(null);
-    setTimeout(() => setPublishMsg(null), 4000);
-  };
+    setGenerating(false)
+  }
 
-  // Load from localStorage (no new table needed per session handoff)
-  const storageKey = `content_calendar_${userId}_${clientId}`;
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) setItems(JSON.parse(saved));
-    } catch {}
-  }, [storageKey]);
+  // Calendar grid
+  const daysInMonth = getDaysInMonth(viewYear, viewMonth)
+  const firstDay = getFirstDayOfMonth(viewYear, viewMonth)
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
 
-  const saveItems = useCallback((newItems) => {
-    setItems(newItems);
-    try { localStorage.setItem(storageKey, JSON.stringify(newItems)); } catch {}
-  }, [storageKey]);
+  const calCells = []
+  for (let i = 0; i < firstDay; i++) calCells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) calCells.push(d)
 
-  const addItems = (newItems) => saveItems([...items, ...newItems]);
+  function dateStr(d) {
+    return `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+  }
 
-  const saveItem = (item) => {
-    const exists = items.find(i => i.id === item.id);
-    if (exists) {
-      saveItems(items.map(i => i.id === item.id ? item : i));
-    } else {
-      saveItems([...items, item]);
-    }
-  };
+  function prevMonth() {
+    if (viewMonth === 0) { setViewYear(y=>y-1); setViewMonth(11) }
+    else setViewMonth(m=>m-1)
+  }
+  function nextMonth() {
+    if (viewMonth === 11) { setViewYear(y=>y+1); setViewMonth(0) }
+    else setViewMonth(m=>m+1)
+  }
 
-  const deleteItem = (id) => saveItems(items.filter(i => i.id !== id));
+  // Count posts by platform for stats
+  const allPosts = Object.values(posts).flat()
+  const platformCounts = POST_TYPES.reduce((acc, p) => {
+    acc[p] = allPosts.filter(x => x.platform === p).length
+    return acc
+  }, {})
 
-  const prevMonth = () => {
-    if (curMonth === 0) { setCurMonth(11); setCurYear(y => y - 1); }
-    else setCurMonth(m => m - 1);
-  };
-  const nextMonth = () => {
-    if (curMonth === 11) { setCurMonth(0); setCurYear(y => y + 1); }
-    else setCurMonth(m => m + 1);
-  };
+  const inp = {
+    background:'#060d1a', border:`1px solid ${T.border2}`, borderRadius:8,
+    color:T.text, padding:'8px 12px', fontSize:13, width:'100%', boxSizing:'border-box', outline:'none'
+  }
+  const lbl = { color:T.textSub, fontSize:12, fontWeight:600, marginBottom:4, display:'block' }
 
-  const daysInMonth = getDaysInMonth(curYear, curMonth);
-  const firstDay = getFirstDayOfMonth(curYear, curMonth);
-
-  const getItemsForDate = (day) => {
-    const dateStr = `${curYear}-${String(curMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return items.filter(i => i.date === dateStr);
-  };
-
-  const filteredItems = items.filter(i => {
-    if (filterType !== 'all' && i.type !== filterType) return false;
-    if (filterStatus !== 'all' && i.status !== filterStatus) return false;
-    return true;
-  }).sort((a, b) => a.date.localeCompare(b.date));
-
-  // Stats
-  const stats = {
-    total: items.length,
-    published: items.filter(i => i.status === 'published').length,
-    scheduled: items.filter(i => i.status === 'scheduled').length,
-    draft: items.filter(i => i.status === 'draft').length,
-    idea: items.filter(i => i.status === 'idea').length,
-  };
-
-  const todayStr = today.toISOString().split('T')[0];
+  // Selected day posts (filtered)
+  const selectedDateStr = selectedDay ? dateStr(selectedDay) : null
+  const dayPosts = selectedDateStr
+    ? (posts[selectedDateStr] || []).filter(p => filterPlatform === 'all' || p.platform === filterPlatform)
+    : []
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', background: T.pageBg, padding: '24px 28px' }}>
+    <div style={{ padding:'24px', background:T.pageBg, minHeight:'100%', fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
+
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
         <div>
-          <h1 style={{ color: T.text, fontSize: 22, fontWeight: 700, margin: 0 }}>
-            <i className="ti ti-calendar-event" style={{ color: T.accent, marginRight: 10 }} />
+          <div style={{ fontSize:22, fontWeight:800, color:T.text, letterSpacing:'-0.5px' }}>
+            <i className="ti ti-calendar-event" style={{ color:T.accent, marginRight:10 }} />
             Content Calendar
-          </h1>
-          {bizName && <div style={{ color: T.muted, fontSize: 13, marginTop: 4 }}>{bizName}</div>}
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {/* View toggle */}
-          <div style={{ display: 'flex', background: T.cardBg2, border: `1px solid ${T.border}`, borderRadius: 6, overflow: 'hidden' }}>
-            {[['calendar','ti-calendar-month','Calendar'],['list','ti-list','List']].map(([v, icon, label]) => (
-              <button key={v} onClick={() => setView(v)} style={{
-                background: view === v ? T.accent : 'transparent',
-                border: 'none', color: view === v ? '#fff' : T.muted,
-                padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                display: 'flex', alignItems: 'center', gap: 5
-              }}>
-                <i className={`ti ${icon}`} />{label}
-              </button>
-            ))}
           </div>
-          <Btn onClick={() => setShowGenerate(true)}>
-            <i className="ti ti-sparkles" />AI Ideas
-          </Btn>
-          <Btn onClick={() => { setClickedDate(todayStr); setShowAddModal(true); }}>
-            <i className="ti ti-plus" />Add Content
-          </Btn>
+          {bizName && <div style={{ color:T.muted, fontSize:13, marginTop:2 }}>{bizName}</div>}
+        </div>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={() => { setShowGenPanel(p=>!p); setAiStatus('') }}
+            style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 18px',
+              background:showGenPanel?'#1d4ed8':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+              color:'#fff', border:'none', borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer' }}>
+            <i className="ti ti-sparkles" />
+            AI Generate
+          </button>
+          <button onClick={() => {
+              setEditPost({ post_date: dateStr(now.getDate()), platform:'google', content:'', status:'draft', topic:'' })
+              setShowModal(true)
+            }}
+            style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 18px',
+              background:'transparent', color:T.accentHi, border:`1px solid ${T.border2}`,
+              borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer' }}>
+            <i className="ti ti-plus" />
+            Add Post
+          </button>
         </div>
       </div>
+
+      {/* AI Generate Panel */}
+      {showGenPanel && (
+        <Card style={{ marginBottom:20, padding:18 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+            <i className="ti ti-sparkles" style={{ color:T.accent, fontSize:16 }} />
+            <span style={{ fontWeight:700, color:T.text, fontSize:14 }}>AI Content Generator</span>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
+            <div>
+              <label style={lbl}>Topic or Focus (optional)</label>
+              <input value={genTopic} onChange={e=>setGenTopic(e.target.value)}
+                placeholder="e.g. summer promotion, new service, holiday..." style={inp} />
+            </div>
+            <div>
+              <label style={lbl}>Mode</label>
+              <div style={{ display:'flex', gap:8, marginTop:2 }}>
+                {[['single','Single Day'],['month','Full Month']].map(([v,l])=>(
+                  <button key={v} onClick={()=>setGenMonthMode(v==='month')}
+                    style={{ flex:1, padding:'8px 0', borderRadius:8, fontSize:13, fontWeight:600,
+                      cursor:'pointer', border:`1px solid ${(genMonthMode===(v==='month'))?T.accent:T.border2}`,
+                      background:(genMonthMode===(v==='month'))?'#1d3a6a':'transparent',
+                      color:(genMonthMode===(v==='month'))?T.accentHi:T.muted }}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div style={{ marginBottom:14 }}>
+            <label style={lbl}>Platforms</label>
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+              {POST_TYPES.map(p => {
+                const col = PLATFORM_COLORS[p]
+                const active = genPlatforms.includes(p)
+                return (
+                  <button key={p} onClick={()=>setGenPlatforms(prev=>active?prev.filter(x=>x!==p):[...prev,p])}
+                    style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px',
+                      borderRadius:20, fontSize:12, fontWeight:600, cursor:'pointer',
+                      border:`1px solid ${active?col.border:T.border}`,
+                      background:active?col.bg:'transparent', color:active?col.text:T.muted }}>
+                    <i className={`ti ${col.icon}`} />
+                    {p.charAt(0).toUpperCase()+p.slice(1)}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <button onClick={()=>generatePosts(null)} disabled={generating || !genPlatforms.length}
+              style={{ padding:'9px 24px', borderRadius:8, fontSize:13, fontWeight:700,
+                cursor:generating||!genPlatforms.length?'not-allowed':'pointer',
+                background:generating||!genPlatforms.length?'#0d1f3c':'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                color:generating||!genPlatforms.length?T.muted:'#fff', border:'none' }}>
+              {generating ? 'Generating...' : `Generate for ${genMonthMode?MONTHS[viewMonth]:selectedDay?dateStr(selectedDay):'this month'}`}
+            </button>
+            {aiStatus && (
+              <span style={{ fontSize:12, color:aiStatus.includes('Error')||aiStatus.includes('error')?T.red:T.green }}>
+                {aiStatus}
+              </span>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 20 }}>
-        {[
-          { label: 'Total', val: stats.total, color: T.accent, icon: 'ti-files' },
-          { label: 'Ideas', val: stats.idea, color: T.muted, icon: 'ti-bulb' },
-          { label: 'Drafts', val: stats.draft, color: T.yellow, icon: 'ti-pencil' },
-          { label: 'Scheduled', val: stats.scheduled, color: T.accent, icon: 'ti-clock' },
-          { label: 'Published', val: stats.published, color: T.green, icon: 'ti-circle-check' },
-        ].map(s => (
-          <Card key={s.label} style={{ padding: '14px 16px', textAlign: 'center' }}>
-            <i className={`ti ${s.icon}`} style={{ color: s.color, fontSize: 20, display: 'block', marginBottom: 4 }} />
-            <div style={{ color: T.text, fontWeight: 700, fontSize: 20 }}>{s.val}</div>
-            <div style={{ color: T.muted, fontSize: 11 }}>{s.label}</div>
-          </Card>
-        ))}
+      <div style={{ display:'flex', gap:10, marginBottom:20, flexWrap:'wrap' }}>
+        <div style={{ background:T.cardBg, border:`1px solid ${T.border}`, borderRadius:10,
+          padding:'10px 18px', display:'flex', alignItems:'center', gap:10 }}>
+          <i className="ti ti-layout-grid" style={{ color:T.accent }} />
+          <span style={{ color:T.text, fontWeight:700, fontSize:15 }}>{allPosts.length}</span>
+          <span style={{ color:T.muted, fontSize:12 }}>total posts</span>
+        </div>
+        {POST_TYPES.filter(p=>platformCounts[p]>0).map(p=>{
+          const col = PLATFORM_COLORS[p]
+          return (
+            <div key={p} style={{ background:col.bg, border:`1px solid ${col.border}`,
+              borderRadius:10, padding:'10px 18px', display:'flex', alignItems:'center', gap:8 }}>
+              <i className={`ti ${col.icon}`} style={{ color:col.text }} />
+              <span style={{ color:col.text, fontWeight:700, fontSize:15 }}>{platformCounts[p]}</span>
+              <span style={{ color:col.text, fontSize:12, opacity:0.7 }}>{p}</span>
+            </div>
+          )
+        })}
+        <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
+          {['all',...POST_TYPES].map(p=>(
+            <button key={p} onClick={()=>setFilterPlatform(p)}
+              style={{ padding:'6px 12px', borderRadius:20, fontSize:11, fontWeight:600,
+                cursor:'pointer', border:`1px solid ${filterPlatform===p?T.accent:T.border}`,
+                background:filterPlatform===p?'#1d3a6a':'transparent',
+                color:filterPlatform===p?T.accentHi:T.muted }}>
+              {p==='all'?'All':p.charAt(0).toUpperCase()+p.slice(1)}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Calendar View */}
-      {view === 'calendar' && (
+      {/* Calendar + Side panel */}
+      <div style={{ display:'grid', gridTemplateColumns: selectedDay ? '1fr 340px' : '1fr', gap:16 }}>
+
+        {/* Calendar grid */}
         <Card>
           {/* Month nav */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <button onClick={prevMonth} style={{ background: 'none', border: `1px solid ${T.border}`, borderRadius: 6, color: T.text, cursor: 'pointer', padding: '5px 10px' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 18px', borderBottom:`1px solid ${T.border}` }}>
+            <button onClick={prevMonth} style={{ background:'transparent', border:`1px solid ${T.border2}`, borderRadius:8,
+              color:T.textSub, padding:'6px 12px', cursor:'pointer', fontSize:13 }}>
               <i className="ti ti-chevron-left" />
             </button>
-            <span style={{ color: T.text, fontWeight: 700, fontSize: 16 }}>
-              {MONTHS[curMonth]} {curYear}
+            <span style={{ fontWeight:800, color:T.text, fontSize:16 }}>
+              {MONTHS[viewMonth]} {viewYear}
             </span>
-            <button onClick={nextMonth} style={{ background: 'none', border: `1px solid ${T.border}`, borderRadius: 6, color: T.text, cursor: 'pointer', padding: '5px 10px' }}>
+            <button onClick={nextMonth} style={{ background:'transparent', border:`1px solid ${T.border2}`, borderRadius:8,
+              color:T.textSub, padding:'6px 12px', cursor:'pointer', fontSize:13 }}>
               <i className="ti ti-chevron-right" />
             </button>
           </div>
 
           {/* Day headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 4 }}>
-            {DAYS.map(d => (
-              <div key={d} style={{ textAlign: 'center', color: T.muted, fontSize: 11, fontWeight: 600, padding: '4px 0' }}>{d}</div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', padding:'10px 14px 0' }}>
+            {DAYS.map(d=>(
+              <div key={d} style={{ textAlign:'center', color:T.muted, fontSize:11, fontWeight:700, paddingBottom:8 }}>
+                {d}
+              </div>
             ))}
           </div>
 
-          {/* Calendar grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-            {/* Empty cells */}
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`e${i}`} style={{ minHeight: 80, background: `${T.cardBg2}50`, borderRadius: 6 }} />
-            ))}
-
-            {/* Day cells */}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day = i + 1;
-              const dateStr = `${curYear}-${String(curMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-              const dayItems = getItemsForDate(day);
-              const isToday = dateStr === todayStr;
+          {/* Day cells */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3, padding:'0 14px 14px' }}>
+            {calCells.map((day, i) => {
+              if (!day) return <div key={i} />
+              const ds = dateStr(day)
+              const dayPts = (posts[ds] || []).filter(p => filterPlatform==='all' || p.platform===filterPlatform)
+              const isToday = ds === todayStr
+              const isSelected = selectedDay === day
+              const hasPosts = dayPts.length > 0
 
               return (
-                <div
-                  key={day}
-                  onClick={() => { setClickedDate(dateStr); setShowAddModal(true); }}
-                  style={{
-                    minHeight: 80, background: isToday ? `${T.accent}10` : T.cardBg2,
-                    border: `1px solid ${isToday ? T.accent : T.border}`,
-                    borderRadius: 6, padding: 6, cursor: 'pointer',
-                    transition: 'border-color 0.15s',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = T.border2}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = isToday ? T.accent : T.border}
-                >
-                  <div style={{
-                    color: isToday ? T.accent : T.textSub,
-                    fontSize: 12, fontWeight: isToday ? 700 : 500,
-                    marginBottom: 4
-                  }}>{day}</div>
-                  {dayItems.slice(0, 3).map(item => {
-                    const ct = CONTENT_TYPES.find(c => c.id === item.type) || CONTENT_TYPES[0];
-                    const st = STATUS_CONFIG[item.status] || STATUS_CONFIG.idea;
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={e => { e.stopPropagation(); setEditItem(item); }}
-                        style={{
-                          background: `${ct.color}20`, border: `1px solid ${ct.color}40`,
-                          borderLeft: `3px solid ${ct.color}`,
-                          borderRadius: 4, padding: '2px 5px', marginBottom: 2,
-                          fontSize: 10, color: T.text,
-                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                          cursor: 'pointer',
-                        }}
-                        title={item.title}
-                      >
-                        <i className={`ti ${ct.icon}`} style={{ marginRight: 3, fontSize: 9 }} />
-                        {item.title}
-                      </div>
-                    );
-                  })}
-                  {dayItems.length > 3 && (
-                    <div style={{ color: T.muted, fontSize: 9, paddingLeft: 2 }}>+{dayItems.length - 3} more</div>
+                <div key={i} onClick={()=>setSelectedDay(isSelected?null:day)}
+                  style={{ minHeight:80, borderRadius:8, padding:'6px 7px',
+                    background:isSelected?'#1d3a6a':isToday?'#0d1f3c':'transparent',
+                    border:`1px solid ${isSelected?T.accent:isToday?T.border2:T.border}`,
+                    cursor:'pointer', transition:'all 0.15s' }}>
+                  <div style={{ fontSize:12, fontWeight:isToday?800:600,
+                    color:isToday?T.accentHi:T.textSub, marginBottom:4 }}>
+                    {day}
+                  </div>
+                  {/* Post dots */}
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>
+                    {dayPts.slice(0,6).map((p,pi)=>{
+                      const col = PLATFORM_COLORS[p.platform]
+                      return (
+                        <div key={pi} title={`${p.platform}: ${p.topic||p.content.slice(0,40)}`}
+                          style={{ width:8, height:8, borderRadius:'50%', background:col.border }} />
+                      )
+                    })}
+                    {dayPts.length > 6 && (
+                      <span style={{ fontSize:9, color:T.muted }}>+{dayPts.length-6}</span>
+                    )}
+                  </div>
+                  {hasPosts && (
+                    <div style={{ marginTop:3, fontSize:10, color:T.muted }}>{dayPts.length} post{dayPts.length>1?'s':''}</div>
                   )}
                 </div>
-              );
+              )
             })}
           </div>
         </Card>
-      )}
 
-      {/* List View */}
-      {view === 'list' && (
-        <Card>
-          <CardHead icon="ti-list" title="All Content">
-            <div style={{ display: 'flex', gap: 8 }}>
-              <select value={filterType} onChange={e => setFilterType(e.target.value)}
-                style={{ background: T.cardBg2, border: `1px solid ${T.border}`, borderRadius: 6, padding: '5px 8px', color: T.text, fontSize: 12 }}>
-                <option value="all">All Types</option>
-                {CONTENT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-              </select>
-              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                style={{ background: T.cardBg2, border: `1px solid ${T.border}`, borderRadius: 6, padding: '5px 8px', color: T.text, fontSize: 12 }}>
-                <option value="all">All Status</option>
-                {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
-            </div>
-          </CardHead>
-
-          {publishMsg && (
-            <div style={{
-              background: publishMsg.type === 'success' ? `${T.green}20` : `${T.red}20`,
-              border: `1px solid ${publishMsg.type === 'success' ? T.green : T.red}`,
-              borderRadius: 8, padding: '10px 14px', marginBottom: 14,
-              color: publishMsg.type === 'success' ? T.green : T.red,
-              fontSize: 13, display: 'flex', alignItems: 'center', gap: 8
-            }}>
-              <i className={`ti ${publishMsg.type === 'success' ? 'ti-circle-check' : 'ti-alert-circle'}`} />
-              {publishMsg.text}
-            </div>
-          )}
-
-          {filteredItems.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: T.muted }}>
-              <i className="ti ti-calendar-off" style={{ fontSize: 40, display: 'block', marginBottom: 12 }} />
-              No content items yet. Click "AI Ideas" or "Add Content" to get started.
-            </div>
-          ) : (
-            <div>
-              {filteredItems.map(item => {
-                const ct = CONTENT_TYPES.find(c => c.id === item.type) || CONTENT_TYPES[0];
-                const st = STATUS_CONFIG[item.status] || STATUS_CONFIG.idea;
-                const isPast = item.date < todayStr;
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => setEditItem(item)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 14,
-                      background: T.cardBg2, border: `1px solid ${T.border}`,
-                      borderRadius: 8, padding: '12px 16px', marginBottom: 8,
-                      cursor: 'pointer', transition: 'border-color 0.15s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = T.border2}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
-                  >
-                    <div style={{
-                      width: 36, height: 36, borderRadius: 8, display: 'flex',
-                      alignItems: 'center', justifyContent: 'center',
-                      background: `${ct.color}20`, flexShrink: 0
-                    }}>
-                      <i className={`ti ${ct.icon}`} style={{ color: ct.color, fontSize: 16 }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: T.text, fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{item.title}</div>
-                      {item.description && (
-                        <div style={{ color: T.muted, fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {item.description}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                      {item.type === 'social' && item.status !== 'published' && (
-                        <button
-                          onClick={e => { e.stopPropagation(); publishToSocial(item); }}
-                          disabled={publishingId === item.id}
-                          style={{
-                            background: `${T.green}15`, color: T.green,
-                            border: `1px solid ${T.green}40`, borderRadius: 5,
-                            padding: '4px 10px', fontSize: 11, fontWeight: 600,
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
-                          }}
-                        >
-                          <i className={`ti ${publishingId === item.id ? 'ti-loader-2' : 'ti-send'}`} />
-                          {publishingId === item.id ? 'Posting...' : 'Publish'}
-                        </button>
-                      )}
-                      <span style={{
-                        background: `${st.color}20`, color: st.color,
-                        border: `1px solid ${st.color}40`,
-                        borderRadius: 5, padding: '3px 9px', fontSize: 11, fontWeight: 600
-                      }}>
-                        <i className={`ti ${st.icon}`} style={{ marginRight: 4 }} />{st.label}
-                      </span>
-                      <span style={{
-                        color: isPast && item.status !== 'published' ? T.red : T.muted,
-                        fontSize: 12, minWidth: 80, textAlign: 'right'
-                      }}>
-                        {item.date}
-                      </span>
-                    </div>
+        {/* Side panel - selected day */}
+        {selectedDay && (
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            <Card>
+              <CardHead
+                icon="ti-calendar-day"
+                title={`${MONTHS[viewMonth]} ${selectedDay}, ${viewYear}`}
+                right={
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button onClick={()=>generatePosts(dateStr(selectedDay))} disabled={generating}
+                      title="AI generate for this day"
+                      style={{ padding:'5px 10px', borderRadius:8, fontSize:12, cursor:'pointer',
+                        background:'transparent', color:T.accent, border:`1px solid ${T.border2}` }}>
+                      <i className="ti ti-sparkles" />
+                    </button>
+                    <button onClick={()=>{
+                        setEditPost({ post_date:dateStr(selectedDay), platform:'google', content:'', status:'draft', topic:'' })
+                        setShowModal(true)
+                      }}
+                      style={{ padding:'5px 10px', borderRadius:8, fontSize:12, cursor:'pointer',
+                        background:'linear-gradient(135deg,#3b82f6,#1d4ed8)', color:'#fff', border:'none' }}>
+                      <i className="ti ti-plus" />
+                    </button>
                   </div>
-                );
-              })}
+                }
+              />
+              <div style={{ padding:'12px', maxHeight:480, overflowY:'auto' }}>
+                {dayPosts.length === 0 ? (
+                  <div style={{ textAlign:'center', color:T.muted, fontSize:13, padding:'20px 0' }}>
+                    <i className="ti ti-calendar-off" style={{ fontSize:28, display:'block', marginBottom:8 }} />
+                    No posts scheduled
+                  </div>
+                ) : dayPosts.map(p => {
+                  const col = PLATFORM_COLORS[p.platform] || PLATFORM_COLORS.blog
+                  return (
+                    <div key={p.id} style={{ background:col.bg, border:`1px solid ${col.border}`,
+                      borderRadius:10, padding:'10px 12px', marginBottom:8 }}>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                          <i className={`ti ${col.icon}`} style={{ color:col.text, fontSize:14 }} />
+                          <span style={{ color:col.text, fontSize:12, fontWeight:700 }}>
+                            {p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}
+                          </span>
+                          {p.topic && (
+                            <span style={{ color:T.muted, fontSize:11, background:T.border,
+                              borderRadius:10, padding:'1px 8px' }}>{p.topic}</span>
+                          )}
+                        </div>
+                        <div style={{ display:'flex', gap:4 }}>
+                          <StatusBadge status={p.status} />
+                          <button onClick={()=>{setEditPost(p);setShowModal(true)}}
+                            style={{ background:'transparent', border:'none', color:T.muted, cursor:'pointer', fontSize:13 }}>
+                            <i className="ti ti-pencil" />
+                          </button>
+                          <button onClick={()=>deletePost(p.id)}
+                            style={{ background:'transparent', border:'none', color:T.red, cursor:'pointer', fontSize:13 }}>
+                            <i className="ti ti-trash" />
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ color:T.text, fontSize:12.5, lineHeight:1.6, whiteSpace:'pre-wrap' }}>
+                        {p.content}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
+
+      {/* Edit/Create Modal */}
+      {showModal && editPost && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:1000,
+          display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div style={{ background:T.cardBg, border:`1px solid ${T.border2}`, borderRadius:14,
+            width:520, maxHeight:'80vh', overflowY:'auto', padding:24 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:18 }}>
+              <span style={{ fontWeight:800, color:T.text, fontSize:16 }}>
+                {editPost.id ? 'Edit Post' : 'New Post'}
+              </span>
+              <button onClick={()=>{setShowModal(false);setEditPost(null)}}
+                style={{ background:'transparent', border:'none', color:T.muted, cursor:'pointer', fontSize:18 }}>
+                <i className="ti ti-x" />
+              </button>
             </div>
-          )}
-        </Card>
-      )}
 
-      {/* Modals */}
-      {showGenerate && (
-        <GenerateModal
-          onClose={() => setShowGenerate(false)}
-          onAdd={addItems}
-          clientId={clientId}
-          userId={userId}
-          bizName={bizName}
-        />
-      )}
+            <div style={{ marginBottom:12 }}>
+              <label style={lbl}>Date</label>
+              <input type="date" value={editPost.post_date}
+                onChange={e=>setEditPost(p=>({...p,post_date:e.target.value}))} style={inp} />
+            </div>
 
-      {(showAddModal || editItem) && (
-        <ItemModal
-          item={editItem || (clickedDate ? { date: clickedDate } : null)}
-          onClose={() => { setShowAddModal(false); setEditItem(null); setClickedDate(null); }}
-          onSave={saveItem}
-          onDelete={deleteItem}
-        />
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+              <div>
+                <label style={lbl}>Platform</label>
+                <select value={editPost.platform} onChange={e=>setEditPost(p=>({...p,platform:e.target.value}))}
+                  style={{ ...inp, cursor:'pointer' }}>
+                  {POST_TYPES.map(pt=>(
+                    <option key={pt} value={pt}>{pt.charAt(0).toUpperCase()+pt.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={lbl}>Status</label>
+                <select value={editPost.status || 'draft'} onChange={e=>setEditPost(p=>({...p,status:e.target.value}))}
+                  style={{ ...inp, cursor:'pointer' }}>
+                  <option value="draft">Draft</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="published">Published</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ marginBottom:12 }}>
+              <label style={lbl}>Topic</label>
+              <input value={editPost.topic || ''} onChange={e=>setEditPost(p=>({...p,topic:e.target.value}))}
+                placeholder="Brief topic label..." style={inp} />
+            </div>
+
+            <div style={{ marginBottom:18 }}>
+              <label style={lbl}>Content</label>
+              <textarea value={editPost.content} onChange={e=>setEditPost(p=>({...p,content:e.target.value}))}
+                rows={6} placeholder="Post content..." style={{ ...inp, resize:'vertical', lineHeight:1.6 }} />
+            </div>
+
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={()=>{setShowModal(false);setEditPost(null)}}
+                style={{ flex:1, padding:'10px 0', background:'transparent', color:T.muted,
+                  border:`1px solid ${T.border2}`, borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={()=>savePost(editPost)} disabled={saving||!editPost.content.trim()}
+                style={{ flex:2, padding:'10px 0', borderRadius:8, fontSize:13, fontWeight:700,
+                  cursor:saving||!editPost.content.trim()?'not-allowed':'pointer',
+                  background:saving||!editPost.content.trim()?T.cardBg2:'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                  color:saving||!editPost.content.trim()?T.muted:'#fff', border:'none' }}>
+                {saving ? 'Saving...' : editPost.id ? 'Save Changes' : 'Create Post'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
-  );
+  )
+}
+
+function StatusBadge({ status }) {
+  const map = {
+    draft:     { bg:'#1a2535', color:'#4a6080', label:'Draft' },
+    scheduled: { bg:'#1a2a1a', color:'#10b981', label:'Scheduled' },
+    published: { bg:'#1a2030', color:'#3b82f6', label:'Published' },
+  }
+  const s = map[status] || map.draft
+  return (
+    <span style={{ background:s.bg, color:s.color, borderRadius:10,
+      padding:'2px 8px', fontSize:10, fontWeight:700 }}>
+      {s.label}
+    </span>
+  )
 }
