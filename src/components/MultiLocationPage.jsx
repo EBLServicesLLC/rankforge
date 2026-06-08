@@ -67,22 +67,24 @@ const inp = { width: '100%', background: T.cardBg2, border: `1px solid ${T.borde
 
 function genSchema(loc) {
   const typeMap = { 'Home Services': 'HomeAndConstructionBusiness', Restaurant: 'Restaurant', Healthcare: 'MedicalBusiness', Legal: 'LegalService', Automotive: 'AutomotiveBusiness' };
-  return JSON.stringify({
+  const schema = {
     '@context': 'https://schema.org',
     '@type': typeMap[loc.category] || 'LocalBusiness',
     name: loc.name || 'Business',
     url: loc.website || '',
     telephone: loc.phone || '',
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: loc.addr || '',
-      addressLocality: loc.city || '',
-      addressRegion: loc.state || '',
-      postalCode: loc.zip || '',
-      addressCountry: 'US',
-    },
     openingHours: loc.hours || 'Mo-Fr 08:00-17:00',
-  }, null, 2);
+  };
+  if (loc.isSAB) {
+    if (loc.city || loc.state) {
+      schema.address = { '@type': 'PostalAddress', addressLocality: loc.city || '', addressRegion: loc.state || '', addressCountry: 'US' };
+    }
+    const areas = (loc.serviceAreas || []).filter(a => a.trim());
+    if (areas.length) { schema.areaServed = areas.map(a => ({ '@type': 'City', name: a })); }
+  } else {
+    schema.address = { '@type': 'PostalAddress', streetAddress: loc.addr || '', addressLocality: loc.city || '', addressRegion: loc.state || '', postalCode: loc.zip || '', addressCountry: 'US' };
+  }
+  return JSON.stringify(schema, null, 2);
 }
 
 function newLoc(overrides = {}) {
@@ -91,6 +93,7 @@ function newLoc(overrides = {}) {
     name: '', addr: '', city: '', state: '', zip: '',
     phone: '', website: '', hours: 'Mon-Fri 8:00 AM - 5:00 PM',
     category: '', notes: '', isPrimary: false, dSt: {},
+    isSAB: false, serviceAreas: [], sabRadius: '', sabChecklist: {},
     ...overrides,
   };
 }
@@ -307,8 +310,9 @@ export default function MultiLocationPage({ session, clientId }) {
                   return (
                     <div key={loc.id}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ color: T.textSub, fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
-                          {loc.isPrimary && <i className="ti ti-star-filled" style={{ color: T.yellow, fontSize: 10, marginRight: 4 }} />}
+                        <span style={{ color: T.textSub, fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          {loc.isPrimary && <i className="ti ti-star-filled" style={{ color: T.yellow, fontSize: 10 }} />}
+                          {loc.isSAB && <i className="ti ti-map-pins" style={{ color: T.purple, fontSize: 10 }} />}
                           {loc.name || 'Unnamed'}
                         </span>
                         <span style={{ color: col, fontSize: 12, fontWeight: 700 }}>{sub}/{DIRS_SAMPLE.length}</span>
@@ -355,8 +359,11 @@ export default function MultiLocationPage({ session, clientId }) {
                             {loc.isPrimary && <i className="ti ti-star-filled" style={{ color: T.yellow, fontSize: 11 }} />}
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{loc.name || 'Unnamed Location'}</span>
                           </div>
-                          <div style={{ color: T.muted, fontSize: 11, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {[loc.city, loc.state].filter(Boolean).join(', ') || 'No address set'}
+                          <div style={{ color: T.muted, fontSize: 11, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            {loc.isSAB && <span style={{ background: `${T.purple}20`, color: T.purple, borderRadius: 4, padding: '1px 5px', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>SAB</span>}
+                            {loc.isSAB
+                              ? `${(loc.serviceAreas || []).length} service area${(loc.serviceAreas || []).length !== 1 ? 's' : ''}`
+                              : [loc.city, loc.state].filter(Boolean).join(', ') || 'No address set'}
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
@@ -437,6 +444,106 @@ export default function MultiLocationPage({ session, clientId }) {
                     </div>
                   </div>
 
+                  {/* SAB Toggle */}
+                  <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 16, marginTop: 4, marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <div>
+                        <div style={{ color: T.text, fontWeight: 600, fontSize: 13 }}>
+                          <i className="ti ti-map-pins" style={{ color: activeLoc.isSAB ? T.purple : T.muted, marginRight: 7 }} />
+                          Service Area Business (SAB) Mode
+                        </div>
+                        <div style={{ color: T.muted, fontSize: 11, marginTop: 3 }}>
+                          {activeLoc.isSAB
+                            ? 'Address hidden from public listings. Service cities shown instead.'
+                            : 'Physical storefront — full address shown on GMB and Bing.'}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => updateField(activeLoc.id, 'isSAB', !activeLoc.isSAB)}
+                        style={{
+                          width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+                          background: activeLoc.isSAB ? T.purple : T.border,
+                          position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+                        }}
+                      >
+                        <div style={{
+                          width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                          position: 'absolute', top: 3,
+                          left: activeLoc.isSAB ? 23 : 3,
+                          transition: 'left 0.2s',
+                        }} />
+                      </button>
+                    </div>
+
+                    {activeLoc.isSAB && (
+                      <div>
+                        {/* Service radius */}
+                        <div style={{ marginBottom: 12 }}>
+                          <label style={{ color: T.textSub, fontSize: 12, display: 'block', marginBottom: 5 }}>
+                            Service Radius (optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={activeLoc.sabRadius || ''}
+                            onChange={e => updateField(activeLoc.id, 'sabRadius', e.target.value)}
+                            placeholder="e.g. 30 miles, 50km"
+                            style={inp}
+                          />
+                        </div>
+
+                        {/* Service areas */}
+                        <div>
+                          <label style={{ color: T.textSub, fontSize: 12, display: 'block', marginBottom: 5 }}>
+                            Service Cities / Zip Codes
+                            <span style={{ color: T.muted, fontSize: 11, marginLeft: 6 }}>
+                              (press Enter to add)
+                            </span>
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Type a city or ZIP and press Enter..."
+                            style={inp}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' && e.target.value.trim()) {
+                                const val = e.target.value.trim();
+                                const current = activeLoc.serviceAreas || [];
+                                if (!current.includes(val)) {
+                                  updateField(activeLoc.id, 'serviceAreas', [...current, val]);
+                                }
+                                e.target.value = '';
+                              }
+                            }}
+                          />
+                          {(activeLoc.serviceAreas || []).length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                              {(activeLoc.serviceAreas || []).map((area, i) => (
+                                <div key={i} style={{
+                                  display: 'flex', alignItems: 'center', gap: 5,
+                                  background: `${T.purple}20`, border: `1px solid ${T.purple}40`,
+                                  borderRadius: 20, padding: '4px 10px', fontSize: 12, color: T.textSub,
+                                }}>
+                                  <i className="ti ti-map-pin" style={{ color: T.purple, fontSize: 11 }} />
+                                  {area}
+                                  <button
+                                    onClick={() => updateField(activeLoc.id, 'serviceAreas', (activeLoc.serviceAreas || []).filter((_, j) => j !== i))}
+                                    style={{ background: 'none', border: 'none', color: T.muted, cursor: 'pointer', padding: 0, fontSize: 12, lineHeight: 1 }}
+                                  >
+                                    <i className="ti ti-x" style={{ fontSize: 10 }} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {(activeLoc.serviceAreas || []).length === 0 && (
+                            <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>
+                              No service areas added yet. These appear in your schema and GMB service area settings.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                     <Btn onClick={() => submitLocDirs(activeLoc.id)} disabled={submittingId === activeLoc.id}>
                       <i className={`ti ${submittingId === activeLoc.id ? 'ti-loader-2' : 'ti-send'}`} />
@@ -447,6 +554,104 @@ export default function MultiLocationPage({ session, clientId }) {
                     </Btn>
                   </div>
                 </Card>
+
+                {/* SAB Checklist — only shown when SAB mode on */}
+                {activeLoc.isSAB && (
+                  <Card>
+                    <CardHead icon="ti-list-check" title="GMB + Bing Service Area Setup Checklist" />
+                    <div style={{ background: `${T.accent}10`, border: `1px solid ${T.accent}30`, borderRadius: 8, padding: '12px 14px', marginBottom: 14, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
+                      <i className="ti ti-info-circle" style={{ color: T.accent, marginRight: 6 }} />
+                      <strong style={{ color: T.text }}>API limitation:</strong> Google and Bing do not allow programmatic service area updates without OAuth. Use this checklist to manually configure each platform.
+                    </div>
+                    {[
+                      {
+                        platform: 'Google Business Profile',
+                        icon: 'ti-brand-google', color: '#ea4335',
+                        url: 'https://business.google.com',
+                        steps: [
+                          'Sign in and select your business profile',
+                          'Click "Edit profile" then go to "Location"',
+                          'Under "Do you serve customers at your business address?", select No (SAB) or Yes (storefront)',
+                          'If SAB: toggle off "Show business address"',
+                          'Click "Service area" and add each city or ZIP from your list',
+                          'Set a service area radius if applicable',
+                          'Save changes — Google re-indexes within 3-7 days',
+                        ],
+                      },
+                      {
+                        platform: 'Bing Places for Business',
+                        icon: 'ti-brand-windows', color: '#008373',
+                        url: 'https://bingplaces.com',
+                        steps: [
+                          'Sign in at bingplaces.com',
+                          'Select your business listing',
+                          'Click "Edit Business Information"',
+                          'Under Address, check "I deliver goods and services to my customers"',
+                          'Check "I do not serve customers at my business address" if SAB',
+                          'Add service area cities or ZIP codes',
+                          'Save — Bing updates within 1-3 business days',
+                        ],
+                      },
+                      {
+                        platform: 'Apple Maps Connect',
+                        icon: 'ti-brand-apple', color: '#555',
+                        url: 'https://mapsconnect.apple.com',
+                        steps: [
+                          'Sign in at mapsconnect.apple.com',
+                          'Select your place',
+                          'Edit the "Service Area" field',
+                          'Add cities or regions you serve',
+                          'Submit for review — Apple reviews within 5-7 days',
+                        ],
+                      },
+                    ].map((p, pi) => {
+                      const checkKey = `${activeLoc.id}_${p.platform}`;
+                      const checks = activeLoc.sabChecklist || {};
+                      const done = p.steps.filter((_, si) => checks[`${checkKey}_${si}`]).length;
+                      return (
+                        <div key={pi} style={{ marginBottom: pi < 2 ? 16 : 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                            <div style={{ width: 30, height: 30, borderRadius: 7, background: p.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <i className={`ti ${p.icon}`} style={{ color: p.color, fontSize: 15 }} />
+                            </div>
+                            <span style={{ color: T.text, fontWeight: 600, fontSize: 13, flex: 1 }}>{p.platform}</span>
+                            <span style={{ color: done === p.steps.length ? T.green : T.muted, fontSize: 12, fontWeight: 600 }}>
+                              {done}/{p.steps.length}
+                            </span>
+                            <a href={p.url} target="_blank" rel="noreferrer"
+                              style={{ color: T.accentHi, fontSize: 11, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
+                              <i className="ti ti-external-link" style={{ fontSize: 11 }} />Open
+                            </a>
+                          </div>
+                          {p.steps.map((step, si) => {
+                            const key = `${checkKey}_${si}`;
+                            const isChecked = !!checks[key];
+                            return (
+                              <div
+                                key={si}
+                                onClick={() => updateField(activeLoc.id, 'sabChecklist', { ...checks, [key]: !isChecked })}
+                                style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '7px 0', borderBottom: si < p.steps.length - 1 ? `1px solid ${T.border}` : 'none', cursor: 'pointer' }}
+                              >
+                                <div style={{
+                                  width: 17, height: 17, borderRadius: 5, flexShrink: 0, marginTop: 1,
+                                  border: `1.5px solid ${isChecked ? T.green : T.border}`,
+                                  background: isChecked ? T.green : 'transparent',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                  {isChecked && <i className="ti ti-check" style={{ fontSize: 10, color: '#fff' }} />}
+                                </div>
+                                <span style={{ color: isChecked ? T.muted : T.textSub, fontSize: 12, lineHeight: 1.5, textDecoration: isChecked ? 'line-through' : 'none' }}>
+                                  {step}
+                                </span>
+                              </div>
+                            );
+                          })}
+                          {pi < 2 && <div style={{ height: 1, background: T.border, marginTop: 12 }} />}
+                        </div>
+                      );
+                    })}
+                  </Card>
+                )}
 
                 {/* Directory coverage for this location */}
                 <Card>
