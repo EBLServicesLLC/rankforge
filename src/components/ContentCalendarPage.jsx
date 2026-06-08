@@ -200,27 +200,49 @@ Return ONLY a valid JSON array, no markdown, no explanation. Each object:
   // Save approved previews
   const saveApproved = async () => {
     const toSave = previews.filter(p=>p.approved)
-    if (!toSave.length) return
+    if (!toSave.length) { setSaveMsg('No posts approved - toggle Approved on the cards below.'); return }
+    if (!clientId) { setSaveMsg('No business selected. Go back and select a client.'); return }
     setSaving(true)
+    setSaveMsg('')
+    // Only include base columns guaranteed to exist
     const rows = toSave.map(p=>({
-      user_id:userId, client_id:clientId,
-      post_date:p.post_date, platform:p.platform,
-      content:p.content, topic:p.topic||'',
-      status:'draft', keywords, tone, length:postLen,
+      user_id:    userId,
+      client_id:  clientId,
+      post_date:  p.post_date  || todayStr,
+      platform:   p.platform   || 'google',
+      content:    p.content    || '',
+      topic:      p.topic      || '',
+      status:     'draft',
     }))
-    await supabase.from('content_calendar').insert(rows)
+    const { error } = await supabase.from('content_calendar').insert(rows)
     setSaving(false)
+    if (error) {
+      setSaveMsg('Save failed: ' + error.message)
+      return
+    }
     setPreviews([])
-    setSaveMsg(toSave.length+' post'+(toSave.length>1?'s':'')+' saved. See them in All Posts tab.')
+    setSaveMsg(toSave.length+' post'+(toSave.length>1?'s':'')+' saved! Click All Posts tab to see them.')
     loadPosts()
-    setTimeout(()=>setSaveMsg(''),5000)
+    setMainTab('posts')
+    setTimeout(()=>setSaveMsg(''),8000)
   }
 
   // Open modal
   const openModal = (post) => {
-    setModal(post)
-    setEditData({...post})
-    setModalTab('view')
+    const fresh = {
+      id:         post.id        || null,
+      post_date:  post.post_date || todayStr,
+      platform:   post.platform  || 'google',
+      content:    post.content   || '',
+      topic:      post.topic     || '',
+      status:     post.status    || 'draft',
+      tone:       post.tone      || 'Professional',
+      keywords:   post.keywords  || '',
+      length:     post.length    || 'Medium (100-200 words)',
+    }
+    setModal(fresh)
+    setEditData({...fresh})
+    setModalTab(post.id ? 'view' : 'edit')
   }
 
   // Save edit
@@ -228,18 +250,25 @@ Return ONLY a valid JSON array, no markdown, no explanation. Each object:
     if (!editData) return
     setModalSaving(true)
     const row = {
-      post_date:editData.post_date, platform:editData.platform,
-      content:editData.content, topic:editData.topic||'',
-      status:editData.status||'draft',
+      post_date: editData.post_date || todayStr,
+      platform:  editData.platform  || 'google',
+      content:   editData.content   || '',
+      topic:     editData.topic     || '',
+      status:    editData.status    || 'draft',
     }
+    let error
     if (editData.id) {
-      await supabase.from('content_calendar').update(row).eq('id',editData.id)
+      const res = await supabase.from('content_calendar').update(row).eq('id',editData.id)
+      error = res.error
     } else {
-      await supabase.from('content_calendar').insert({...row,user_id:userId,client_id:clientId})
+      const res = await supabase.from('content_calendar').insert({...row,user_id:userId,client_id:clientId})
+      error = res.error
     }
     setModalSaving(false)
+    if (error) { alert('Save failed: '+error.message); return }
     setModal(null)
     setEditData(null)
+    setModalTab('view')
     loadPosts()
   }
 
@@ -349,12 +378,11 @@ Return only the rewritten post text, no labels or explanation.`
 
       {/* ===================== TAB: CREATE ===================== */}
       {mainTab==='create' && (
-        <div style={{display:'grid',gridTemplateColumns:'380px 1fr',minHeight:'calc(100vh - 112px)'}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',minHeight:'calc(100vh - 112px)'}}>
 
           {/* LEFT: Generator */}
           <div style={{borderRight:'1px solid #0f2040',display:'flex',flexDirection:'column',height:'calc(100vh - 112px)'}}>
-            {/* Scrollable form area */}
-            <div style={{flex:1,overflowY:'auto',padding:20,paddingBottom:8}}>
+            <div style={{flex:1,overflowY:'auto',padding:20,paddingBottom:4}}>
 
             {!apiKey && (
               <div style={{padding:'10px 14px',background:'#1a0a00',border:'1px solid #f97316',
@@ -533,43 +561,59 @@ Return only the rewritten post text, no labels or explanation.`
                         <textarea
                           value={p.content}
                           onChange={e=>setPreviews(prev=>prev.map((x,j)=>j===i?{...x,content:e.target.value}:x))}
-                          rows={7}
+                          rows={6}
                           style={{...F,resize:'vertical',lineHeight:1.65,fontSize:13,border:'1px solid '+T.border}}/>
                       </div>
                     </div>
                   )
                 })}
 
-                {/* save bar moved to fixed bottom */}
+                {/* save bar moved to fixed bottom bar */}
               </div>
             )}
-            </div>{/* end scrollable form area */}
+            </div>{/* end scroll area */}
 
-            {/* FIXED BOTTOM: always-visible save bar */}
-            <div style={{flexShrink:0,borderTop:'1px solid #0f2040',background:'#060d1a',padding:'14px 20px'}}>
+            {/* Always-visible save bar */}
+            <div style={{flexShrink:0,padding:'14px 20px',borderTop:'1px solid #0f2040',background:'#060d1a'}}>
               {previews.length>0 ? (
-                <div style={{display:'flex',gap:10}}>
-                  <button onClick={()=>setPreviews([])}
-                    style={{flex:1,padding:'11px 0',background:'transparent',
-                      border:'1px solid #1a3560',borderRadius:8,color:'#4a6080',
-                      fontSize:13,fontWeight:700,cursor:'pointer'}}>
-                    Discard All
-                  </button>
-                  <button onClick={saveApproved} disabled={saving}
-                    style={{flex:2,padding:'11px 0',
-                      background:saving?'#0d1f3c':'linear-gradient(135deg,#10b981,#059669)',
-                      border:'none',borderRadius:8,color:saving?'#4a6080':'#fff',
-                      fontSize:13,fontWeight:700,cursor:saving?'not-allowed':'pointer',
-                      display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
-                    {saving
-                      ? <><i className="ti ti-loader-2" style={{animation:'spin 1s linear infinite'}}/> Saving...</>
-                      : <><i className="ti ti-calendar-plus"/> Save {previews.filter(p=>p.approved).length} Post{previews.filter(p=>p.approved).length!==1?'s':''} to Calendar</>}
-                  </button>
+                <div>
+                  <div style={{fontSize:11,color:'#4a6080',marginBottom:8,textAlign:'center'}}>
+                    {previews.filter(p=>p.approved).length} of {previews.length} posts approved
+                  </div>
+                  <div style={{display:'flex',gap:10}}>
+                    <button onClick={()=>setPreviews([])}
+                      style={{flex:1,padding:'10px 0',background:'transparent',
+                        border:'1px solid #1a3560',borderRadius:8,color:'#4a6080',
+                        fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                      Discard All
+                    </button>
+                    <button onClick={saveApproved} disabled={saving}
+                      style={{flex:2,padding:'10px 0',
+                        background:saving?'#0d1f3c':'linear-gradient(135deg,#10b981,#059669)',
+                        border:'none',borderRadius:8,
+                        color:saving?'#4a6080':'#fff',
+                        fontSize:13,fontWeight:700,cursor:saving?'not-allowed':'pointer',
+                        display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                      {saving
+                        ? <><i className="ti ti-loader-2" style={{animation:'spin 1s linear infinite'}}/> Saving...</>
+                        : <><i className="ti ti-calendar-plus"/> Save {previews.filter(p=>p.approved).length} Posts to Calendar</>}
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div style={{textAlign:'center',color:'#4a6080',fontSize:12}}>
-                  <i className="ti ti-arrow-up" style={{marginRight:6}}/>
-                  Fill in the form above and click Generate
+                <div style={{fontSize:12,color:'#4a6080',textAlign:'center',padding:'4px 0'}}>
+                  <i className="ti ti-sparkles" style={{marginRight:6}}/>
+                  Fill in the form and click Generate to create posts
+                </div>
+              )}
+              {saveMsg && (
+                <div style={{marginTop:10,padding:'8px 14px',
+                  background:saveMsg.includes('failed')||saveMsg.includes('No ')?'#1a0505':'#051a0f',
+                  border:'1px solid '+(saveMsg.includes('failed')||saveMsg.includes('No ')?'#f87171':'#10b981'),
+                  borderRadius:8,
+                  color:saveMsg.includes('failed')||saveMsg.includes('No ')?'#f87171':'#10b981',
+                  fontSize:12,fontWeight:600}}>
+                  {saveMsg}
                 </div>
               )}
             </div>
