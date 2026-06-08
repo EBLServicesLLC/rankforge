@@ -266,6 +266,7 @@ function ItemModal({ item, onClose, onSave, onDelete }) {
     date: item?.date || new Date().toISOString().split('T')[0],
     keywords: item?.keywords?.join(', ') || '',
     notes: item?.notes || '',
+    platform: item?.platform || 'facebook',
   });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -352,6 +353,28 @@ function ItemModal({ item, onClose, onSave, onDelete }) {
           </div>
         </div>
 
+        {form.type === 'social' && (
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ color: T.textSub, fontSize: 12, display: 'block', marginBottom: 5 }}>Publish To</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[
+                { id: 'facebook', label: 'Facebook', icon: 'ti-brand-facebook' },
+                { id: 'linkedin', label: 'LinkedIn', icon: 'ti-brand-linkedin' },
+              ].map(p => (
+                <button key={p.id} onClick={() => set('platform', p.id)} style={{
+                  flex: 1, background: form.platform === p.id ? `${T.accent}20` : T.cardBg2,
+                  border: `1px solid ${form.platform === p.id ? T.accent : T.border}`,
+                  borderRadius: 6, padding: '7px 0', color: form.platform === p.id ? T.accentHi : T.muted,
+                  cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                }}>
+                  <i className={`ti ${p.icon}`} />{p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20 }}>
           <div>
             {item?.id && (
@@ -384,6 +407,42 @@ export default function ContentCalendarPage({ clientId, userId, bizName }) {
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [clickedDate, setClickedDate] = useState(null);
+  const [publishingId, setPublishingId] = useState(null);
+  const [publishMsg, setPublishMsg] = useState(null);
+
+  const publishToSocial = async (item) => {
+    setPublishingId(item.id);
+    setPublishMsg(null);
+    try {
+      const sbUrl = sessionStorage.getItem('rf_sb_url');
+      const sbKey = sessionStorage.getItem('rf_sb_key');
+      const platform = item.platform || 'facebook';
+      const res = await fetch(`${sbUrl}/functions/v1/social-publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sbKey}`,
+        },
+        body: JSON.stringify({
+          platform,
+          message: item.description || item.title,
+          client_id: clientId,
+          user_id: userId,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && !data.error) {
+        saveItem({ ...item, status: 'published', publishedAt: new Date().toISOString() });
+        setPublishMsg({ type: 'success', text: `Posted to ${platform} successfully` });
+      } else {
+        setPublishMsg({ type: 'error', text: data.error || 'Publish failed' });
+      }
+    } catch (e) {
+      setPublishMsg({ type: 'error', text: e.message });
+    }
+    setPublishingId(null);
+    setTimeout(() => setPublishMsg(null), 4000);
+  };
 
   // Load from localStorage (no new table needed per session handoff)
   const storageKey = `content_calendar_${userId}_${clientId}`;
@@ -602,6 +661,19 @@ export default function ContentCalendarPage({ clientId, userId, bizName }) {
             </div>
           </CardHead>
 
+          {publishMsg && (
+            <div style={{
+              background: publishMsg.type === 'success' ? `${T.green}20` : `${T.red}20`,
+              border: `1px solid ${publishMsg.type === 'success' ? T.green : T.red}`,
+              borderRadius: 8, padding: '10px 14px', marginBottom: 14,
+              color: publishMsg.type === 'success' ? T.green : T.red,
+              fontSize: 13, display: 'flex', alignItems: 'center', gap: 8
+            }}>
+              <i className={`ti ${publishMsg.type === 'success' ? 'ti-circle-check' : 'ti-alert-circle'}`} />
+              {publishMsg.text}
+            </div>
+          )}
+
           {filteredItems.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: T.muted }}>
               <i className="ti ti-calendar-off" style={{ fontSize: 40, display: 'block', marginBottom: 12 }} />
@@ -642,6 +714,21 @@ export default function ContentCalendarPage({ clientId, userId, bizName }) {
                       )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                      {item.type === 'social' && item.status !== 'published' && (
+                        <button
+                          onClick={e => { e.stopPropagation(); publishToSocial(item); }}
+                          disabled={publishingId === item.id}
+                          style={{
+                            background: `${T.green}15`, color: T.green,
+                            border: `1px solid ${T.green}40`, borderRadius: 5,
+                            padding: '4px 10px', fontSize: 11, fontWeight: 600,
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                          }}
+                        >
+                          <i className={`ti ${publishingId === item.id ? 'ti-loader-2' : 'ti-send'}`} />
+                          {publishingId === item.id ? 'Posting...' : 'Publish'}
+                        </button>
+                      )}
                       <span style={{
                         background: `${st.color}20`, color: st.color,
                         border: `1px solid ${st.color}40`,
