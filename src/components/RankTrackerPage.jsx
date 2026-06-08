@@ -72,7 +72,7 @@ function StatBox({ label, value, color, sub }) {
   )
 }
 
-export default function RankTrackerPage({ session, clientId }) {
+export default function RankTrackerPage({ session, clientId, onTabChange }) {
   const [connected, setConnected]     = useState(false)
   const [gscEmail, setGscEmail]       = useState('')
   const [siteUrl, setSiteUrl]         = useState('')
@@ -257,10 +257,24 @@ export default function RankTrackerPage({ session, clientId }) {
                 </div>
               ) : (
                 <div style={{ padding: '10px 12px', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)', borderRadius: 8 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: T.yellow, marginBottom: 4 }}>⚠️ Not connected</div>
-                  <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.6 }}>
-                    Go to <strong style={{ color: T.accentHi }}>API Keys tab</strong> in rankforge3 and add your Google OAuth token, then return here.
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.yellow, marginBottom: 6 }}>⚠️ Not connected</div>
+                  <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.6, marginBottom: 10 }}>
+                    Add your Google OAuth token in API Keys to pull real keyword rankings from Google Search Console.
                   </div>
+                  {onTabChange && (
+                    <button
+                      onClick={() => onTabChange('keys')}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        background: T.accent, color: '#fff', border: 'none',
+                        borderRadius: 6, padding: '6px 12px', fontSize: 11,
+                        fontWeight: 600, cursor: 'pointer', width: '100%', justifyContent: 'center',
+                      }}
+                    >
+                      <i className="ti ti-key" style={{ fontSize: 12 }} />
+                      Go to API Keys
+                    </button>
+                  )}
                 </div>
               )}
             </div>

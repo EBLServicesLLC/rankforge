@@ -469,7 +469,7 @@ export default function DashboardShell({ session, subscription }) {
         {/* Rank Tracker — renders inline */}
         {activeTab === 'rank-tracker' && (
           <div style={{ flex:1, overflowY:'auto', background:'#060d1a' }}>
-            <RankTrackerPage session={session} clientId={activeId} />
+            <RankTrackerPage session={session} clientId={activeId} onTabChange={setActiveTab} />
           </div>
         )}
 
