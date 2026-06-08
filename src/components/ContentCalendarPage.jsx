@@ -352,7 +352,9 @@ Return only the rewritten post text, no labels or explanation.`
         <div style={{display:'grid',gridTemplateColumns:'380px 1fr',minHeight:'calc(100vh - 112px)'}}>
 
           {/* LEFT: Generator */}
-          <div style={{borderRight:'1px solid #0f2040',padding:20,overflowY:'auto',maxHeight:'calc(100vh - 112px)'}}>
+          <div style={{borderRight:'1px solid #0f2040',display:'flex',flexDirection:'column',height:'calc(100vh - 112px)'}}>
+            {/* Scrollable form area */}
+            <div style={{flex:1,overflowY:'auto',padding:20,paddingBottom:8}}>
 
             {!apiKey && (
               <div style={{padding:'10px 14px',background:'#1a0a00',border:'1px solid #f97316',
@@ -531,36 +533,47 @@ Return only the rewritten post text, no labels or explanation.`
                         <textarea
                           value={p.content}
                           onChange={e=>setPreviews(prev=>prev.map((x,j)=>j===i?{...x,content:e.target.value}:x))}
-                          rows={4}
-                          style={{...F,resize:'vertical',lineHeight:1.65,fontSize:12,border:'1px solid '+T.border}}/>
+                          rows={7}
+                          style={{...F,resize:'vertical',lineHeight:1.65,fontSize:13,border:'1px solid '+T.border}}/>
                       </div>
                     </div>
                   )
                 })}
 
-                <div style={{position:'sticky',bottom:0,background:T.pageBg,
-                  borderTop:'1px solid '+T.border,padding:'12px 0',marginTop:4}}>
-                  <div style={{display:'flex',gap:10}}>
-                    <button onClick={()=>setPreviews([])}
-                      style={{flex:1,padding:'10px 0',background:'transparent',
-                        border:'1px solid '+T.border2,borderRadius:8,color:T.muted,
-                        fontSize:13,fontWeight:700,cursor:'pointer'}}>
-                      Discard All
-                    </button>
-                    <button onClick={saveApproved} disabled={saving}
-                      style={{flex:2,padding:'10px 0',
-                        background:'linear-gradient(135deg,#10b981,#059669)',
-                        border:'none',borderRadius:8,color:'#fff',
-                        fontSize:13,fontWeight:700,cursor:saving?'not-allowed':'pointer',
-                        display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
-                      {saving
-                        ? <><i className="ti ti-loader-2" style={{animation:'spin 1s linear infinite'}}/> Saving...</>
-                        : <><i className="ti ti-calendar-plus"/> Save {previews.filter(p=>p.approved).length} Approved to Calendar</>}
-                    </button>
-                  </div>
-                </div>
+                {/* save bar moved to fixed bottom */}
               </div>
             )}
+            </div>{/* end scrollable form area */}
+
+            {/* FIXED BOTTOM: always-visible save bar */}
+            <div style={{flexShrink:0,borderTop:'1px solid #0f2040',background:'#060d1a',padding:'14px 20px'}}>
+              {previews.length>0 ? (
+                <div style={{display:'flex',gap:10}}>
+                  <button onClick={()=>setPreviews([])}
+                    style={{flex:1,padding:'11px 0',background:'transparent',
+                      border:'1px solid #1a3560',borderRadius:8,color:'#4a6080',
+                      fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                    Discard All
+                  </button>
+                  <button onClick={saveApproved} disabled={saving}
+                    style={{flex:2,padding:'11px 0',
+                      background:saving?'#0d1f3c':'linear-gradient(135deg,#10b981,#059669)',
+                      border:'none',borderRadius:8,color:saving?'#4a6080':'#fff',
+                      fontSize:13,fontWeight:700,cursor:saving?'not-allowed':'pointer',
+                      display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                    {saving
+                      ? <><i className="ti ti-loader-2" style={{animation:'spin 1s linear infinite'}}/> Saving...</>
+                      : <><i className="ti ti-calendar-plus"/> Save {previews.filter(p=>p.approved).length} Post{previews.filter(p=>p.approved).length!==1?'s':''} to Calendar</>}
+                  </button>
+                </div>
+              ) : (
+                <div style={{textAlign:'center',color:'#4a6080',fontSize:12}}>
+                  <i className="ti ti-arrow-up" style={{marginRight:6}}/>
+                  Fill in the form above and click Generate
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* RIGHT: Calendar */}
