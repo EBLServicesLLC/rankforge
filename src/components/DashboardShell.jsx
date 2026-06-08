@@ -24,6 +24,7 @@ import SocialProofPage from './SocialProofPage'
 import ApiKeysPage from './ApiKeysPage'
 import IndexingPage from './IndexingPage'
 import AgentsPage from './AgentsPage'
+import MultiLocationPage from './MultiLocationPage'
 import SearchConsolePage from './SearchConsolePage'
 import DirectoriesPage from './DirectoriesPage'
 import ContentCalendarPage from './ContentCalendarPage'
@@ -106,7 +107,7 @@ export default function DashboardShell({ session, subscription }) {
   }, [activeId]) // eslint-disable-line
 
   //  Switch tab by clicking the real button inside iframe 
-  const JSX_TABS_SW = ['dash','bl','keys','index','social-proof','social-pub','locallinks','voice','schema-mon','pages','local','rank-tracker','meta','gbpqa','napaudit','kwgap','reputation','web2','pdfreport','agents','calendar','gsc','dir'];
+  const JSX_TABS_SW = ['dash','bl','keys','index','social-proof','social-pub','locallinks','voice','schema-mon','pages','local','rank-tracker','meta','gbpqa','napaudit','kwgap','reputation','web2','pdfreport','agents','calendar','gsc','dir','mloc'];
 
   const switchTab = useCallback((tabId) => {
     setActiveTab(tabId)
@@ -200,7 +201,7 @@ export default function DashboardShell({ session, subscription }) {
   useEffect(() => {
     if (!activeId || activeTab === 'clients' || activeTab === 'dash') return
     // Skip JSX pages — they render inline, not in the iframe
-    const JSX_TABS = ['dash','bl','keys','index','social-proof','social-pub','locallinks','voice','schema-mon','pages','local','rank-tracker','meta','gbpqa','napaudit','kwgap','reputation','web2','pdfreport','agents','calendar','gsc','dir']
+    const JSX_TABS = ['dash','bl','keys','index','social-proof','social-pub','locallinks','voice','schema-mon','pages','local','rank-tracker','meta','gbpqa','napaudit','kwgap','reputation','web2','pdfreport','agents','calendar','gsc','dir','mloc']
     if (JSX_TABS.includes(activeTab)) return
     pendingTabRef.current = activeTab
     // postMessage is the ONLY way  contentDocument is null (cross-origin restriction)
@@ -566,8 +567,14 @@ export default function DashboardShell({ session, subscription }) {
           </div>
         )}
 
+        {activeTab === 'mloc' && (
+          <div style={{ flex:1, overflowY:'auto', background:'#060d1a' }}>
+            <MultiLocationPage session={session} clientId={activeId} />
+          </div>
+        )}
+
         {/* Tool iframe */}
-        {activeTab!=='clients' && activeTab!=='dash' && activeTab!=='bl' && activeTab!=='keys' && activeTab!=='index' && activeTab!=='social-proof' && activeTab!=='social-pub' && activeTab!=='locallinks' && activeTab!=='voice' && activeTab!=='schema-mon' && activeTab!=='pages' && activeTab!=='local' && activeTab!=='rank-tracker' && activeTab!=='meta' && activeTab!=='gbpqa' && activeTab!=='napaudit' && activeTab!=='kwgap' && activeTab!=='reputation' && activeTab!=='web2' && activeTab!=='pdfreport' && activeTab!=='agents' && activeTab!=='calendar' && activeTab!=='gsc' && activeTab!=='dir' && (
+        {activeTab!=='clients' && activeTab!=='dash' && activeTab!=='bl' && activeTab!=='keys' && activeTab!=='index' && activeTab!=='social-proof' && activeTab!=='social-pub' && activeTab!=='locallinks' && activeTab!=='voice' && activeTab!=='schema-mon' && activeTab!=='pages' && activeTab!=='local' && activeTab!=='rank-tracker' && activeTab!=='meta' && activeTab!=='gbpqa' && activeTab!=='napaudit' && activeTab!=='kwgap' && activeTab!=='reputation' && activeTab!=='web2' && activeTab!=='pdfreport' && activeTab!=='agents' && activeTab!=='calendar' && activeTab!=='gsc' && activeTab!=='dir' && activeTab!=='mloc' && (
           <div style={{ flex:1,position:'relative',overflow:'hidden',margin:0,padding:0 }}>
             {/* No client */}
             {!activeId && (
