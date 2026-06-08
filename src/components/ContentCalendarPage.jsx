@@ -99,9 +99,13 @@ export default function ContentCalendarPage({ clientId, userId, bizName }) {
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
 
-  // Edit modal
-  const [editPost,  setEditPost]  = useState(null)
-  const [editSaving, setEditSaving] = useState(false)
+  // View / edit modal
+  const [editPost,    setEditPost]    = useState(null)
+  const [editSaving,  setEditSaving]  = useState(false)
+  const [editTab,     setEditTab]     = useState('edit')   // 'edit' | 'rewrite'
+  const [rewriteTone, setRewriteTone] = useState('Professional')
+  const [rewriteLen,  setRewriteLen]  = useState('Medium (100-200 words)')
+  const [rewriting,   setRewriting]   = useState(false)
 
   // Posts view filter
   const [filterPlatform, setFilterPlatform] = useState('all')
@@ -258,7 +262,33 @@ Return ONLY a valid JSON array. No markdown. No explanation. Each object:
     loadPosts()
   }
 
-  const deletePost = async (id) => {
+  const rewritePost = async () => {
+    if (!apiKey || !editPost) return
+    setRewriting(true)
+    const lenMap = {
+      'Short (50-100 words)':   '50-100 words',
+      'Medium (100-200 words)': '100-200 words',
+      'Long (200-400 words)':   '200-400 words',
+    }
+    const prompt = `Rewrite the following social media post for ${editPost.platform} in a ${rewriteTone} tone.
+Length: ${lenMap[rewriteLen]}
+${bizCtx()}
+
+ORIGINAL POST:
+${editPost.content}
+
+Return only the rewritten post text, no explanation or labels.`
+    try {
+      const result = await callClaude(apiKey, prompt, 1000)
+      setEditPost(p => ({ ...p, content: result.trim() }))
+      setEditTab('edit')
+    } catch (err) {
+      alert('Rewrite error: ' + err.message)
+    }
+    setRewriting(false)
+  }
+
+
     if (!window.confirm('Delete this post?')) return
     await supabase.from('content_calendar').delete().eq('id', id)
     loadPosts()
@@ -759,82 +789,179 @@ Return ONLY a valid JSON array. No markdown. No explanation. Each object:
         </div>
       )}
 
-      {/* ── Edit / Add post modal ── */}
+      {/* ── Edit / Rewrite modal ── */}
       {editPost && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', zIndex:1000,
           display:'flex', alignItems:'center', justifyContent:'center' }}
-          onClick={e => { if (e.target === e.currentTarget) setEditPost(null) }}>
+          onClick={e => { if (e.target === e.currentTarget) { setEditPost(null); setEditTab('edit') } }}>
           <div style={{ background:'#0d1f3c', border:'1px solid #1a3560', borderRadius:14,
-            width:540, maxHeight:'88vh', overflowY:'auto', padding:24 }}>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:20 }}>
-              <span style={{ fontWeight:800, color:T.text, fontSize:17 }}>
-                {editPost.id ? 'Edit Post' : 'Add Post Manually'}
-              </span>
-              <button onClick={() => setEditPost(null)}
-                style={{ background:'transparent', border:'none', color:T.muted, cursor:'pointer', fontSize:20 }}>
+            width:580, maxHeight:'90vh', overflowY:'auto' }}>
+
+            {/* Header */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+              padding:'18px 24px', borderBottom:'1px solid #0f2040' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <i className={'ti ' + (PC[editPost.platform]?.icon || 'ti-file')}
+                  style={{ color: PC[editPost.platform]?.color || T.accent, fontSize:18 }} />
+                <span style={{ fontWeight:800, color:T.text, fontSize:17 }}>
+                  {editPost.id ? 'View / Edit Post' : 'Add Post Manually'}
+                </span>
+              </div>
+              <button onClick={() => { setEditPost(null); setEditTab('edit') }}
+                style={{ background:'transparent', border:'none', color:T.muted, cursor:'pointer', fontSize:22 }}>
                 <i className="ti ti-x" />
               </button>
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
-              <div>
-                <label style={lbl}>Date</label>
-                <input type="date" value={editPost.post_date}
-                  onChange={e => setEditPost(p => ({ ...p, post_date:e.target.value }))} style={field} />
+            {/* Sub-tabs for existing posts */}
+            {editPost.id && (
+              <div style={{ display:'flex', borderBottom:'1px solid #0f2040' }}>
+                {[
+                  { id:'edit',    label:'Edit Post',       icon:'ti-pencil'   },
+                  { id:'rewrite', label:'Rewrite with AI', icon:'ti-sparkles' },
+                ].map(t => (
+                  <button key={t.id} onClick={() => setEditTab(t.id)}
+                    style={{ display:'flex', alignItems:'center', gap:7, padding:'11px 22px',
+                      background:'transparent', border:'none', cursor:'pointer', fontSize:13, fontWeight:700,
+                      borderBottom:'3px solid ' + (editTab === t.id ? T.accent : 'transparent'),
+                      color: editTab === t.id ? T.accentHi : T.muted, marginBottom:-1 }}>
+                    <i className={'ti ' + t.icon} />{t.label}
+                  </button>
+                ))}
               </div>
-              <div>
-                <label style={lbl}>Platform</label>
-                <select value={editPost.platform}
-                  onChange={e => setEditPost(p => ({ ...p, platform:e.target.value }))}
-                  style={{ ...field, cursor:'pointer' }}>
-                  {PLATFORMS.map(pt => <option key={pt} value={pt}>{pt.charAt(0).toUpperCase() + pt.slice(1)}</option>)}
-                </select>
-              </div>
-            </div>
+            )}
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
-              <div>
-                <label style={lbl}>Topic</label>
-                <input value={editPost.topic || ''} onChange={e => setEditPost(p => ({ ...p, topic:e.target.value }))}
-                  placeholder="Short label..." style={field} />
-              </div>
-              <div>
-                <label style={lbl}>Status</label>
-                <select value={editPost.status || 'draft'}
-                  onChange={e => setEditPost(p => ({ ...p, status:e.target.value }))}
-                  style={{ ...field, cursor:'pointer' }}>
-                  <option value="draft">Draft</option>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="published">Published</option>
-                </select>
-              </div>
-            </div>
+            <div style={{ padding:24 }}>
+              {/* EDIT TAB */}
+              {(editTab === 'edit' || !editPost.id) && (
+                <>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+                    <div>
+                      <label style={lbl}>Date</label>
+                      <input type="date" value={editPost.post_date}
+                        onChange={e => setEditPost(p => ({ ...p, post_date:e.target.value }))} style={field} />
+                    </div>
+                    <div>
+                      <label style={lbl}>Platform</label>
+                      <select value={editPost.platform}
+                        onChange={e => setEditPost(p => ({ ...p, platform:e.target.value }))}
+                        style={{ ...field, cursor:'pointer' }}>
+                        {PLATFORMS.map(pt => <option key={pt} value={pt}>{pt.charAt(0).toUpperCase() + pt.slice(1)}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
+                    <div>
+                      <label style={lbl}>Topic</label>
+                      <input value={editPost.topic || ''}
+                        onChange={e => setEditPost(p => ({ ...p, topic:e.target.value }))}
+                        placeholder="Short label..." style={field} />
+                    </div>
+                    <div>
+                      <label style={lbl}>Status</label>
+                      <select value={editPost.status || 'draft'}
+                        onChange={e => setEditPost(p => ({ ...p, status:e.target.value }))}
+                        style={{ ...field, cursor:'pointer' }}>
+                        <option value="draft">Draft</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="published">Published</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom:20 }}>
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:5 }}>
+                      <label style={{ ...lbl, marginBottom:0 }}>Content</label>
+                      <button onClick={() => navigator.clipboard.writeText(editPost.content || '')}
+                        style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px',
+                          background:'transparent', border:'1px solid ' + T.border2,
+                          borderRadius:6, color:T.muted, fontSize:11, cursor:'pointer' }}>
+                        <i className="ti ti-copy" /> Copy
+                      </button>
+                    </div>
+                    <textarea value={editPost.content || ''}
+                      onChange={e => setEditPost(p => ({ ...p, content:e.target.value }))}
+                      rows={9} placeholder="Post content..."
+                      style={{ ...field, resize:'vertical', lineHeight:1.7 }} />
+                    <div style={{ textAlign:'right', fontSize:11, color:T.muted, marginTop:3 }}>
+                      {(editPost.content || '').length} chars
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', gap:10 }}>
+                    <button onClick={() => { setEditPost(null); setEditTab('edit') }}
+                      style={{ flex:1, padding:'10px 0', background:'transparent', color:T.muted,
+                        border:'1px solid ' + T.border2, borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                      Cancel
+                    </button>
+                    <button onClick={saveEdit} disabled={editSaving || !(editPost.content || '').trim()}
+                      style={{ flex:2, padding:'10px 0', borderRadius:8, fontSize:13, fontWeight:700, border:'none',
+                        cursor: editSaving || !(editPost.content || '').trim() ? 'not-allowed' : 'pointer',
+                        background: editSaving || !(editPost.content || '').trim()
+                          ? T.cardBg2 : 'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+                        color: editSaving || !(editPost.content || '').trim() ? T.muted : '#fff' }}>
+                      {editSaving ? 'Saving...' : editPost.id ? 'Save Changes' : 'Add to Calendar'}
+                    </button>
+                  </div>
+                </>
+              )}
 
-            <div style={{ marginBottom:20 }}>
-              <label style={lbl}>Content</label>
-              <textarea value={editPost.content}
-                onChange={e => setEditPost(p => ({ ...p, content:e.target.value }))}
-                rows={8} placeholder="Post content..."
-                style={{ ...field, resize:'vertical', lineHeight:1.7 }} />
-              <div style={{ textAlign:'right', fontSize:11, color:T.muted, marginTop:3 }}>
-                {(editPost.content || '').length} chars
-              </div>
-            </div>
-
-            <div style={{ display:'flex', gap:10 }}>
-              <button onClick={() => setEditPost(null)}
-                style={{ flex:1, padding:'10px 0', background:'transparent', color:T.muted,
-                  border:'1px solid ' + T.border2, borderRadius:8, fontSize:13, fontWeight:700, cursor:'pointer' }}>
-                Cancel
-              </button>
-              <button onClick={saveEdit} disabled={editSaving || !(editPost.content || '').trim()}
-                style={{ flex:2, padding:'10px 0', borderRadius:8, fontSize:13, fontWeight:700, border:'none',
-                  cursor: editSaving || !(editPost.content || '').trim() ? 'not-allowed' : 'pointer',
-                  background: editSaving || !(editPost.content || '').trim()
-                    ? T.cardBg2 : 'linear-gradient(135deg,#3b82f6,#1d4ed8)',
-                  color: editSaving || !(editPost.content || '').trim() ? T.muted : '#fff' }}>
-                {editSaving ? 'Saving...' : editPost.id ? 'Save Changes' : 'Add to Calendar'}
-              </button>
+              {/* REWRITE TAB */}
+              {editTab === 'rewrite' && editPost.id && (
+                <>
+                  <div style={{ background:T.pageBg, border:'1px solid ' + T.border,
+                    borderRadius:9, padding:14, marginBottom:18 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:T.muted, marginBottom:8,
+                      textTransform:'uppercase', letterSpacing:'0.5px' }}>Current Content</div>
+                    <div style={{ color:T.textSub, fontSize:13, lineHeight:1.65, whiteSpace:'pre-wrap' }}>
+                      {editPost.content}
+                    </div>
+                  </div>
+                  <div style={{ marginBottom:16 }}>
+                    <label style={lbl}>New Tone</label>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:6 }}>
+                      {TONES.map(t => (
+                        <button key={t} onClick={() => setRewriteTone(t)}
+                          style={{ padding:'8px 10px', borderRadius:8, fontSize:12, fontWeight:600,
+                            cursor:'pointer', textAlign:'left',
+                            border:'1px solid ' + (rewriteTone === t ? T.accent : T.border),
+                            background: rewriteTone === t ? '#1d3a6a' : 'transparent',
+                            color: rewriteTone === t ? T.accentHi : T.muted }}>
+                          {rewriteTone === t && <i className="ti ti-check" style={{ marginRight:6, color:T.accent }} />}
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ marginBottom:24 }}>
+                    <label style={lbl}>New Length</label>
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      {LENGTHS.map(l => (
+                        <button key={l} onClick={() => setRewriteLen(l)}
+                          style={{ padding:'9px 14px', borderRadius:8, fontSize:12, fontWeight:600,
+                            cursor:'pointer', textAlign:'left',
+                            border:'1px solid ' + (rewriteLen === l ? T.accent : T.border),
+                            background: rewriteLen === l ? '#1d3a6a' : 'transparent',
+                            color: rewriteLen === l ? T.accentHi : T.muted }}>
+                          {rewriteLen === l && <i className="ti ti-check" style={{ marginRight:8, color:T.accent }} />}
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <button onClick={rewritePost} disabled={rewriting || !apiKey}
+                    style={{ width:'100%', padding:'12px 0', borderRadius:10, fontSize:14, fontWeight:800,
+                      cursor: rewriting || !apiKey ? 'not-allowed' : 'pointer', border:'none',
+                      background: rewriting || !apiKey ? T.cardBg2 : 'linear-gradient(135deg,#8b5cf6,#6d28d9)',
+                      color: rewriting || !apiKey ? T.muted : '#fff',
+                      display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}>
+                    {rewriting
+                      ? <><i className="ti ti-loader-2" style={{ animation:'spin 1s linear infinite' }} /> Rewriting...</>
+                      : <><i className="ti ti-sparkles" /> Rewrite Post</>}
+                  </button>
+                  <div style={{ marginTop:10, fontSize:12, color:T.muted, textAlign:'center' }}>
+                    Rewritten content will appear in the Edit Post tab ready to save.
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -930,22 +1057,25 @@ function PostCard({ post, onEdit, onDelete, onStatus }) {
       <div style={{ display:'flex', gap:0, borderTop:'1px solid ' + c.border + '44' }}>
         {sm.next && (
           <button onClick={() => onStatus(sm.next)}
-            style={{ flex:2, padding:'8px 0', background:'transparent', border:'none',
+            style={{ flex:2, padding:'9px 0', background:'transparent', border:'none',
               borderRight:'1px solid ' + c.border + '44',
-              color:sm.nextColor, fontSize:11, fontWeight:700, cursor:'pointer' }}>
-            <i className="ti ti-check" style={{ marginRight:4 }} />{sm.nextLabel}
+              color:sm.nextColor, fontSize:11, fontWeight:700, cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
+            <i className="ti ti-check" />{sm.nextLabel}
           </button>
         )}
         <button onClick={onEdit}
-          style={{ flex:1, padding:'8px 0', background:'transparent', border:'none',
+          style={{ flex:2, padding:'9px 0', background:'transparent', border:'none',
             borderRight:'1px solid ' + c.border + '44',
-            color:T.muted, fontSize:11, cursor:'pointer' }}>
-          <i className="ti ti-pencil" />
+            color:T.accentHi, fontSize:11, fontWeight:700, cursor:'pointer',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
+          <i className="ti ti-pencil" /> View / Edit
         </button>
         <button onClick={onDelete}
-          style={{ flex:1, padding:'8px 0', background:'transparent',
-            border:'none', color:T.red, fontSize:11, cursor:'pointer' }}>
-          <i className="ti ti-trash" />
+          style={{ flex:1, padding:'9px 0', background:'transparent',
+            border:'none', color:T.red, fontSize:11, fontWeight:700, cursor:'pointer',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
+          <i className="ti ti-trash" /> Delete
         </button>
       </div>
     </div>
