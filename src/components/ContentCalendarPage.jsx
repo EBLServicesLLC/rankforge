@@ -31,9 +31,10 @@ function pad(n)        { return String(n).padStart(2,'0') }
 function toDS(y,m,d)   { return `${y}-${pad(m+1)}-${pad(d)}` }
 
 const F = {
-  bg:'#060d1a', border:'1px solid #1a3560', borderRadius:8,
+  background:'#060d1a', border:'1px solid #1a3560', borderRadius:8,
   color:'#e2e8f0', padding:'9px 12px', fontSize:13,
   width:'100%', boxSizing:'border-box', outline:'none',
+  WebkitTextFillColor:'#e2e8f0',
 }
 const LBL = { color:'#94a3b8', fontSize:11, fontWeight:700, marginBottom:5,
   display:'block', textTransform:'uppercase', letterSpacing:'0.5px' }
@@ -306,6 +307,10 @@ Return only the rewritten post text, no labels or explanation.`
         .rfcal-card:hover{border-color:#3b82f6!important;transform:translateY(-1px)}
         .rfcal-card{transition:transform 0.15s,border-color 0.15s}
         input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.5)}
+        input,select,textarea{color:#e2e8f0!important;background:#060d1a!important;-webkit-text-fill-color:#e2e8f0!important}
+        input::placeholder,textarea::placeholder{color:#4a6080!important;opacity:1!important}
+        input:-webkit-autofill,select:-webkit-autofill,textarea:-webkit-autofill{-webkit-text-fill-color:#e2e8f0!important;-webkit-box-shadow:0 0 0 1000px #060d1a inset!important}
+        option{background:#0d1f3c;color:#e2e8f0}
       `}</style>
 
       {/* PAGE HEADER */}
