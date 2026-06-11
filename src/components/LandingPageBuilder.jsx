@@ -413,7 +413,7 @@ Write only the post text, no labels or explanation.`
           border:`1px solid ${genStatus.type==='ok'?T.green:genStatus.type==='info'?T.border2:T.red}`,
           color: genStatus.type==='ok'?T.green:genStatus.type==='info'?T.muted:T.red,
           display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <span><i className={`ti ${genStatus.type==='ok'?'ti-check':'genStatus.type==="info"?ti-loader-2':'ti-alert-circle'}`} style={{ marginRight:8 }} />{genStatus.msg}</span>
+          <span><i className={`ti ${genStatus.type==='ok' ? 'ti-check' : genStatus.type==='info' ? 'ti-loader-2' : 'ti-alert-circle'}`} style={{ marginRight:8 }} />{genStatus.msg}</span>
           <button onClick={()=>setGenStatus(null)} style={{ background:'none', border:'none', color:'inherit', cursor:'pointer' }}>
             <i className="ti ti-x" />
           </button>
