@@ -308,44 +308,41 @@ export default function ApiKeysPage({ session }) {
               </div>
             </div>
           ))}
-        </div>
-
-      {/* Report Settings */}
-      {!loading && (
-        <div style={{ marginTop: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <i className="ti ti-mail-forward" style={{ color: T.accent, fontSize: 16 }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Report Settings</span>
-            <span style={{ fontSize: 11, color: T.muted }}>Configure your automated weekly SEO report email.</span>
-          </div>
-          <Card style={{ maxWidth: 420 }}>
-            <div style={{ padding: '14px 16px' }}>
-              <label style={{ fontSize: 11, color: T.muted, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8, display: 'block' }}>
-                Weekly report send day
-              </label>
-              <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.5, marginBottom: 12 }}>
-                Your weekly SEO summary email will be sent every week on this day at 8:00 AM UTC.
-              </div>
-              <div style={{ display: 'flex', gap: 7 }}>
-                <select
-                  value={reportDay}
-                  onChange={e => setReportDay(e.target.value)}
-                  style={{ flex: 1, background: T.cardBg2, border: '1px solid ' + T.border2, borderRadius: 7, color: T.text, padding: '9px 12px', fontSize: 13, fontFamily: 'inherit', outline: 'none', cursor: 'pointer' }}
-                >
-                  {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(d => (
-                    <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
-                  ))}
-                </select>
-                <button onClick={saveReportDay} disabled={savingReport}
-                  style={{ padding: '0 14px', background: savedReport ? T.green : T.accent, color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: savingReport ? 'not-allowed' : 'pointer', flexShrink: 0, transition: 'background .2s', whiteSpace: 'nowrap' }}>
-                  {savingReport ? '...' : savedReport ? 'Saved!' : 'Save'}
-                </button>
-              </div>
+        {/* Report Settings */}
+          <div style={{ marginTop: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <i className="ti ti-mail-forward" style={{ color: T.accent, fontSize: 16 }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Report Settings</span>
+              <span style={{ fontSize: 11, color: T.muted }}>Configure your automated weekly SEO report email.</span>
             </div>
-          </Card>
+            <Card style={{ maxWidth: 420 }}>
+              <div style={{ padding: '14px 16px' }}>
+                <label style={{ fontSize: 11, color: T.muted, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8, display: 'block' }}>
+                  Weekly report send day
+                </label>
+                <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.5, marginBottom: 12 }}>
+                  Your weekly SEO summary email will be sent every week on this day at 8:00 AM UTC.
+                </div>
+                <div style={{ display: 'flex', gap: 7 }}>
+                  <select
+                    value={reportDay}
+                    onChange={e => setReportDay(e.target.value)}
+                    style={{ flex: 1, background: T.cardBg2, border: '1px solid ' + T.border2, borderRadius: 7, color: T.text, padding: '9px 12px', fontSize: 13, fontFamily: 'inherit', outline: 'none', cursor: 'pointer' }}
+                  >
+                    {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(d => (
+                      <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>
+                    ))}
+                  </select>
+                  <button onClick={saveReportDay} disabled={savingReport}
+                    style={{ padding: '0 14px', background: savedReport ? T.green : T.accent, color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: savingReport ? 'not-allowed' : 'pointer', flexShrink: 0, transition: 'background .2s', whiteSpace: 'nowrap' }}>
+                    {savingReport ? '...' : savedReport ? 'Saved!' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            </Card>
+          </div>
         </div>
       )}
-
-      </div>
+    </div>
   )
 }
