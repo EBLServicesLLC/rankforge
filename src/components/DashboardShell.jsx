@@ -248,7 +248,7 @@ export default function DashboardShell({ session, subscription }) {
               <div style={{ width:7,height:7,borderRadius:'50%',background:PLAN_COLORS[plan]||'#3b82f6' }} />
               <span style={{ fontSize:11,color:'#64748b',fontWeight:600,textTransform:'capitalize' }}>{plan}</span>
             </div>
-            <span style={{ fontSize:10,color:'#1a3560' }}>{clients.length}/{maxClients}</span>
+            <span style={{ fontSize:10,color:'#4a7aaa' }}>{clients.length}/{maxClients}</span>
           </div>
         </div>
 
@@ -279,7 +279,7 @@ export default function DashboardShell({ session, subscription }) {
             width:'100%',display:'flex',alignItems:'center',gap:8,padding:'8px 10px',
             borderRadius:8,border:'none',cursor:'pointer',marginBottom:8,textAlign:'left',
             background:activeTab==='clients'?'linear-gradient(135deg,rgba(59,130,246,.22),rgba(59,130,246,.08))':'transparent',
-            color:activeTab==='clients'?'#93c5fd':'#4a6080',fontWeight:activeTab==='clients'?700:500,
+            color:activeTab==='clients'?'#93c5fd':'#7a9cc0',fontWeight:activeTab==='clients'?700:500,
             fontSize:13,borderLeft:activeTab==='clients'?'2px solid #3b82f6':'2px solid transparent',
           }}>
             My Businesses
@@ -288,7 +288,7 @@ export default function DashboardShell({ session, subscription }) {
 
           {NAV_GROUPS.map(group => (
             <div key={group.label} style={{ marginBottom:4 }}>
-              <div style={{ fontSize:9.5,fontWeight:700,color:'#1a3560',textTransform:'uppercase',
+              <div style={{ fontSize:9.5,fontWeight:700,color:'#4a7aaa',textTransform:'uppercase',
                 letterSpacing:'.07em',padding:'3px 10px 4px',marginBottom:1 }}>
                 {group.label}
               </div>
@@ -297,7 +297,7 @@ export default function DashboardShell({ session, subscription }) {
                   width:'100%',display:'flex',alignItems:'center',gap:8,padding:'7px 10px',
                   borderRadius:7,border:'none',cursor:'pointer',marginBottom:1,textAlign:'left',
                   background:activeTab===tab.id?'linear-gradient(135deg,rgba(59,130,246,.18),rgba(59,130,246,.06))':'transparent',
-                  color:activeTab===tab.id?'#93c5fd':!activeId?'#243550':'#4a6080',
+                  color:activeTab===tab.id?'#93c5fd':!activeId?'#4a7aaa':'#7a9cc0',
                   fontWeight:activeTab===tab.id?700:400,fontSize:12.5,transition:'.1s',
                   borderLeft:activeTab===tab.id?'2px solid #3b82f6':'2px solid transparent',
                   opacity:!activeId?0.4:1,
@@ -324,7 +324,7 @@ export default function DashboardShell({ session, subscription }) {
                 {session.user.email}
               </div>
             </div>
-            <span style={{ color:'#1a3560',fontSize:9 }}>{userMenuOpen?'':''}</span>
+            <span style={{ color:'#4a7aaa',fontSize:9 }}>{userMenuOpen?'':''}</span>
           </div>
           {userMenuOpen && (
             <div style={{ position:'absolute',bottom:'100%',left:8,right:8,background:'#0d1f3c',
@@ -364,7 +364,7 @@ export default function DashboardShell({ session, subscription }) {
                 <span style={{ color:'#1a3050',flexShrink:0 }}></span>
               </>
             )}
-            <span style={{ fontSize:12.5,color:'#4a6080',fontWeight:500,whiteSpace:'nowrap' }}>
+            <span style={{ fontSize:12.5,color:'#7a9cc0',fontWeight:500,whiteSpace:'nowrap' }}>
               {isToolTab ? (currentTab?.label || activeTab) : 'My Businesses'}
             </span>
           </div>
