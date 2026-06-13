@@ -431,12 +431,13 @@ export default function AgentsPage({ clientId, userId }) {
       const basePrompt = AGENT_PROMPTS[agentId] || `You are the ${agent.name} agent. Run your analysis and provide actionable findings.`
       const fullPrompt = `${basePrompt}\n\n${bizContext}\n\n${globalPrompt ? `Additional instructions: ${globalPrompt}` : ''}\n\nBe specific, practical, and concise. Limit to 300 words.`
 
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      const token = currentSession?.access_token
       const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/send-email', {
         method:'POST',
         headers:{
           'Content-Type':'application/json',
-          'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU',
-          'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU'
+          'Authorization':`Bearer ${token}`
         },
         body:JSON.stringify({ action:'agent_run', anthropic_key:settings.anthropic_key, model:'claude-sonnet-4-6', max_tokens:700, messages:[{ role:'user', content:fullPrompt }] })
       })
@@ -502,12 +503,13 @@ export default function AgentsPage({ clientId, userId }) {
         { role:'user', content:userMsg }
       ]
 
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      const token = currentSession?.access_token
       const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/send-email', {
         method:'POST',
         headers:{
           'Content-Type':'application/json',
-          'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU',
-          'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU'
+          'Authorization':`Bearer ${token}`
         },
         body:JSON.stringify({ action:'agent_run', anthropic_key:settings.anthropic_key, model:'claude-sonnet-4-6', max_tokens:1000, system:systemPrompt, messages })
       })
