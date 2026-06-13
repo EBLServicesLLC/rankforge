@@ -422,7 +422,7 @@ export default function AgentsPage({ clientId, userId }) {
       const { data: biz } = await supabase
         .from('client_data')
         .select('biz_name,biz_cat,biz_city,biz_state,biz_kw,biz_website,biz_phone,biz_addr')
-        .eq('id', clientId).single()
+        .eq('client_id', clientId).single()
 
       const bizContext = biz
         ? `Business: ${biz.biz_name} | Category: ${biz.biz_cat} | Location: ${biz.biz_city}, ${biz.biz_state} | Address: ${biz.biz_addr} | Phone: ${biz.biz_phone} | Website: ${biz.biz_website} | Keywords: ${biz.biz_kw}`
@@ -431,14 +431,18 @@ export default function AgentsPage({ clientId, userId }) {
       const basePrompt = AGENT_PROMPTS[agentId] || `You are the ${agent.name} agent. Run your analysis and provide actionable findings.`
       const fullPrompt = `${basePrompt}\n\n${bizContext}\n\n${globalPrompt ? `Additional instructions: ${globalPrompt}` : ''}\n\nBe specific, practical, and concise. Limit to 300 words.`
 
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/send-email', {
         method:'POST',
-        headers:{ 'Content-Type':'application/json', 'x-api-key':settings.anthropic_key, 'anthropic-version':'2023-06-01' },
-        body:JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:700, messages:[{ role:'user', content:fullPrompt }] })
+        headers:{
+          'Content-Type':'application/json',
+          'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU',
+          'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU'
+        },
+        body:JSON.stringify({ action:'agent_run', anthropic_key:settings.anthropic_key, model:'claude-sonnet-4-6', max_tokens:700, messages:[{ role:'user', content:fullPrompt }] })
       })
 
       const data = await res.json()
-      const output = data.content?.[0]?.text || data.error?.message || 'No response received.'
+      const output = data.content?.[0]?.text || data.output || data.error?.message || 'No response received.'
 
       // Save result to Supabase
       const { data: saved } = await supabase
@@ -489,7 +493,7 @@ export default function AgentsPage({ clientId, userId }) {
 
       const { data: biz } = await supabase
         .from('client_data').select('biz_name,biz_cat,biz_city,biz_state,biz_kw,biz_website')
-        .eq('id', clientId).single()
+        .eq('client_id', clientId).single()
 
       const systemPrompt = `You are an expert local SEO AI assistant for RankForged AI. You have deep knowledge of Google Business Profile optimization, local pack rankings, citation building, review management, and local content strategy.${biz ? ` Current client: ${biz.biz_name} (${biz.biz_cat}) in ${biz.biz_city}, ${biz.biz_state}. Website: ${biz.biz_website}. Keywords: ${biz.biz_kw}` : ''} Provide concise, actionable advice.`
 
@@ -498,14 +502,18 @@ export default function AgentsPage({ clientId, userId }) {
         { role:'user', content:userMsg }
       ]
 
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/send-email', {
         method:'POST',
-        headers:{ 'Content-Type':'application/json', 'x-api-key':settings.anthropic_key, 'anthropic-version':'2023-06-01' },
-        body:JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:1000, system:systemPrompt, messages })
+        headers:{
+          'Content-Type':'application/json',
+          'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU',
+          'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU'
+        },
+        body:JSON.stringify({ action:'agent_run', anthropic_key:settings.anthropic_key, model:'claude-sonnet-4-6', max_tokens:1000, system:systemPrompt, messages })
       })
 
       const data = await res.json()
-      setChatHistory(prev => [...prev, { role:'assistant', content:data.content?.[0]?.text || 'No response.' }])
+      setChatHistory(prev => [...prev, { role:'assistant', content:data.content?.[0]?.text || data.output || 'No response.' }])
     } catch (err) {
       setChatHistory(prev => [...prev, { role:'assistant', content:`Error: ${err.message}` }])
     }

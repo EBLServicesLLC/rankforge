@@ -34,7 +34,41 @@ Deno.serve(async (req) => {
       return okRes({ sent: true });
     }
 
-    return errRes("Invalid action", 400);
+    if (action === "weekly_report") {
+      const { to, subject, html, from_name } = body;
+      if (!to || !subject || !html) return errRes("to, subject, and html are required", 400);
+      const from = from_name ? `${from_name} <onboarding@resend.dev>` : FROM;
+      await sendEmail(RESEND_KEY, from, to, subject, html);
+      return okRes({ sent: true });
+    }
+
+    if (action === "agent_run") {
+      const { anthropic_key, model, max_tokens, messages, system } = body;
+      if (!anthropic_key) return errRes("anthropic_key is required", 400);
+      if (!messages) return errRes("messages is required", 400);
+
+      const payload: Record<string, unknown> = {
+        model: model || "claude-sonnet-4-6",
+        max_tokens: max_tokens || 700,
+        messages,
+      };
+      if (system) payload.system = system;
+
+      const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": anthropic_key,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const aiData = await aiRes.json();
+      return okRes(aiData);
+    }
+
+    return errRes("Invalid action. Use welcome, activation_key, weekly_report, or agent_run.", 400);
   } catch (e) {
     console.error("[send-email]", e);
     return errRes(e.message || "Internal server error", 500);

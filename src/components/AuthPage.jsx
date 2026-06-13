@@ -98,10 +98,10 @@ const handleForgot = async () => {
         {/* Feature bullets */}
         <div style={{ width: '100%', maxWidth: 400 }}>
           {[
-            ['ðŸ“', 'Local Citations', 'Submit to 75+ high-DA directories automatically'],
-            ['ðŸ”—', 'Backlink Pipeline', 'Prospect, pitch and track link building campaigns'],
-            ['ðŸ¤–', 'AI Agents', '11 autonomous agents running your full SEO campaign'],
-            ['ðŸ“Š', 'Weekly Reports', 'Branded client reports emailed on autopilot'],
+            ['📍', 'Local Citations', 'Submit to 75+ high-DA directories automatically'],
+            ['🔗', 'Backlink Pipeline', 'Prospect, pitch and track link building campaigns'],
+            ['🤖', 'AI Agents', '20 autonomous agents running your full SEO campaign'],
+            ['📊', 'Weekly Reports', 'Branded client reports emailed on autopilot'],
           ].map(([icon, title, desc]) => (
             <div key={title} style={{
               display: 'flex', alignItems: 'flex-start', gap: 14,
