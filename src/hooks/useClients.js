@@ -9,9 +9,16 @@ import { supabase } from '../lib/supabase'
 
 export function useClients(userId) {
   const [clients, setClients]     = useState([])
-  const [activeId, setActiveId]   = useState(null)
+  const [activeId, setActiveIdRaw] = useState(() => sessionStorage.getItem('rf_active_client') || null)
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState(null)
+
+  // Persist activeId to sessionStorage whenever it changes
+  const setActiveId = (id) => {
+    if (id) sessionStorage.setItem('rf_active_client', id)
+    else sessionStorage.removeItem('rf_active_client')
+    setActiveIdRaw(id)
+  }
 
   // ── Load all clients for this user ─────────────────
   const loadClients = useCallback(async () => {
@@ -20,10 +27,17 @@ export function useClients(userId) {
     const { data, error } = await supabase
       .from('clients')
       .select('*')
+      .eq('user_id', userId)
       .order('updated_at', { ascending: false })
 
     if (error) setError(error.message)
-    else setClients(data || [])
+    else {
+      setClients(data || [])
+      // Auto-select first client if no activeId stored or stored id no longer exists
+      const stored = sessionStorage.getItem('rf_active_client')
+      const valid  = stored && (data || []).some(c => c.id === stored)
+      if (!valid && data?.length > 0) setActiveId(data[0].id)
+    }
     setLoading(false)
   }, [userId])
 
