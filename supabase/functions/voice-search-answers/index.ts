@@ -29,7 +29,7 @@ serve(async (req: Request) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return jsonError("Unauthorized", 401);
 
-    const { questions, services, city } = await req.json();
+    const { questions, biz_name, services, city } = await req.json();
     if (!questions?.length) return jsonError("questions array is required", 400);
 
     const { data: settings } = await supabase
@@ -43,17 +43,20 @@ serve(async (req: Request) => {
 
     const qList = questions.map((q: string, i: number) => `${i + 1}. ${q}`).join("\n");
 
-    const prompt = `You are a local SEO expert writing voice-optimised FAQ answers for a local business.
+    const prompt = `You are a local SEO expert writing voice-optimised FAQ answers for a specific local business.
 
-Business: ${services}
+Business Name: ${biz_name || services}
+Business Type / Services: ${services}
 Location: ${city}
 
 Write a 40-60 word answer for each question below. Answers must:
 - Start with the direct answer (no preamble)
 - Sound natural when read aloud
-- Include the business type and city where relevant
+- ALWAYS mention the business by name ("${biz_name || services}") at least once per answer
+- Promote the specific business — not generic advice about the industry
+- Include the city (${city}) where it fits naturally
 - Be between 40-60 words each
-- Be factual and helpful
+- Be factual, helpful, and specific to this business
 
 Questions:
 ${qList}

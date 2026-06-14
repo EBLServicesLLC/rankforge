@@ -100,6 +100,7 @@ const btnPurple = {
 }
 
 export default function VoiceSearchPage({ session, clientId }) {
+  const [bizName, setBizName]             = useState('')
   const [services, setServices]           = useState('')
   const [city, setCity]                   = useState('')
   const [selectedTypes, setSelectedTypes] = useState(['how', 'what', 'cost', 'nearme'])
@@ -121,12 +122,13 @@ export default function VoiceSearchPage({ session, clientId }) {
     if (!clientId || !session) return
     supabase
       .from('client_data')
-      .select('biz_cat, biz_city, biz_state')
+      .select('biz_name, biz_cat, biz_city, biz_state')
       .eq('id', clientId)
       .eq('user_id', session.user.id)
       .single()
       .then(({ data }) => {
         if (data) {
+          if (data.biz_name) setBizName(data.biz_name)
           if (data.biz_cat)  setServices(data.biz_cat)
           if (data.biz_city) setCity(data.biz_city + (data.biz_state ? ', ' + data.biz_state : ''))
           setProfileLoaded(true)
@@ -149,7 +151,7 @@ export default function VoiceSearchPage({ session, clientId }) {
     try {
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-search-generate`, {
         method: 'POST', headers: getAuthHeaders(),
-        body: JSON.stringify({ services, city, types: selectedTypes, client_id: clientId }),
+        body: JSON.stringify({ biz_name: bizName, services, city, types: selectedTypes, client_id: clientId }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Generation failed')
@@ -164,7 +166,7 @@ export default function VoiceSearchPage({ session, clientId }) {
     try {
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-search-answers`, {
         method: 'POST', headers: getAuthHeaders(),
-        body: JSON.stringify({ questions, services, city, client_id: clientId }),
+        body: JSON.stringify({ biz_name: bizName, questions, services, city, client_id: clientId }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Answer generation failed')
@@ -188,7 +190,7 @@ export default function VoiceSearchPage({ session, clientId }) {
     try {
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-search-snippet`, {
         method: 'POST', headers: getAuthHeaders(),
-        body: JSON.stringify({ question: snippetQ, keyword: snippetKw, services, city, client_id: clientId }),
+        body: JSON.stringify({ biz_name: bizName, question: snippetQ, keyword: snippetKw, services, city, client_id: clientId }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Snippet generation failed')
@@ -254,6 +256,12 @@ export default function VoiceSearchPage({ session, clientId }) {
               </div>
             </div>
             <div style={cardBody}>
+              {bizName && (
+                <div style={{ marginBottom: 12 }}>
+                  <label style={labelStyle}>Business Name</label>
+                  <div style={{ ...inputStyle, color: '#10b981', fontWeight: 600, cursor: 'default' }}>{bizName}</div>
+                </div>
+              )}
               <div style={{ marginBottom: 12 }}>
                 <label style={labelStyle}>Services (comma separated)</label>
                 <input value={services} onChange={e => setServices(e.target.value)}
