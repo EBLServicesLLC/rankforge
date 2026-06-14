@@ -65,13 +65,18 @@ const QUICK_ACTIONS = [
 
 const DEMO_SCORES = { overall: 72, directories: 58, backlinks: 61, web2: 45, local: 83, voice: 39, indexing: 77 }
 
-const ACTIVITY = [
-  { icon: 'ti ti-check',          color: T.green,  text: 'NAP audit completed',                  time: 'Today'      },
-  { icon: 'ti ti-star',           color: T.yellow, text: '3 new reviews detected',               time: 'Yesterday'  },
-  { icon: 'ti ti-world',          color: T.purple, text: 'Web 2.0 signal submitted to Medium',   time: '2 days ago' },
-  { icon: 'ti ti-map-pin',        color: T.accent, text: 'Citation added to Yelp',               time: '3 days ago' },
-  { icon: 'ti ti-file-analytics', color: T.cyan,   text: 'Monthly report generated',             time: '1 week ago' },
-]
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins  = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days  = Math.floor(diff / 86400000)
+  if (mins  <  1) return 'Just now'
+  if (hours <  1) return mins  + 'm ago'
+  if (days  <  1) return hours + 'h ago'
+  if (days  === 1) return 'Yesterday'
+  if (days  <  7) return days  + ' days ago'
+  return new Date(dateStr).toLocaleDateString()
+}
 
 function gradeFromScore(s) {
   return s >= 80 ? 'A' : s >= 65 ? 'B' : s >= 50 ? 'C' : 'D'
@@ -97,8 +102,9 @@ export default function DashboardPage({ clientId, userId, session }) {
   const [scores,   setScores]   = useState(null)
   const [loading,  setLoading]  = useState(true)
   const [usingDemo,setUsingDemo]= useState(false)
-  const [auditing, setAuditing] = useState(false)
-  const [auditMsg, setAuditMsg] = useState('')
+  const [auditing,  setAuditing]  = useState(false)
+  const [auditMsg,  setAuditMsg]  = useState('')
+  const [activity,  setActivity]  = useState([])
 
   useEffect(() => {
     if (!clientId || !uid) return
@@ -111,10 +117,32 @@ export default function DashboardPage({ clientId, userId, session }) {
         .select('overall,directories,backlinks,web2,local,voice,indexing,recorded_at')
         .eq('client_id', clientId).eq('user_id', uid)
         .order('recorded_at', { ascending: false }).limit(1).maybeSingle(),
-    ]).then(([{ data: cd }, { data: sh }]) => {
+      supabase.from('score_history')
+        .select('recorded_at').eq('client_id', clientId).eq('user_id', uid)
+        .order('recorded_at', { ascending: false }).limit(5),
+      supabase.from('reputation_reviews')
+        .select('created_at').eq('client_id', clientId).eq('user_id', uid)
+        .order('created_at', { ascending: false }).limit(5),
+      supabase.from('content_calendar')
+        .select('created_at,platform,topic').eq('client_id', clientId).eq('user_id', uid)
+        .order('created_at', { ascending: false }).limit(5),
+      supabase.from('agent_results')
+        .select('created_at').eq('client_id', clientId).eq('user_id', uid)
+        .order('created_at', { ascending: false }).limit(5),
+    ]).then(([{ data: cd }, { data: sh }, { data: audits }, { data: reviews }, { data: posts }, { data: agents }]) => {
       if (cd) setBiz(cd)
       if (sh) { setScores(sh); setUsingDemo(false) }
       else    { setScores(DEMO_SCORES); setUsingDemo(true) }
+
+      const events = [
+        ...(audits  || []).map(r => ({ icon: 'ti ti-radar',    color: T.accent,  text: 'SEO audit completed',     time: r.recorded_at })),
+        ...(reviews || []).map(r => ({ icon: 'ti ti-star',     color: T.yellow,  text: 'New review detected',     time: r.created_at  })),
+        ...(posts   || []).map(r => ({ icon: 'ti ti-calendar', color: T.purple,  text: 'Content scheduled' + (r.platform ? ' on ' + r.platform : ''), time: r.created_at })),
+        ...(agents  || []).map(r => ({ icon: 'ti ti-robot',    color: T.cyan,    text: 'AI agent task completed', time: r.created_at  })),
+      ]
+      events.sort((a, b) => new Date(b.time) - new Date(a.time))
+      setActivity(events.slice(0, 8))
+
       setLoading(false)
     }).catch(() => {
       setScores(DEMO_SCORES); setUsingDemo(true); setLoading(false)
@@ -326,18 +354,22 @@ export default function DashboardPage({ clientId, userId, session }) {
             <Card>
               <CardHead icon="ti ti-activity" title="Recent Activity" sub="Latest tool actions" />
               <div style={{ padding: '4px 16px' }}>
-                {ACTIVITY.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < ACTIVITY.length - 1 ? '1px solid ' + T.border : 'none' }}>
-                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: item.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <i className={item.icon} style={{ color: item.color, fontSize: 14 }} />
-                    </div>
-                    <div style={{ flex: 1, fontSize: 12, color: T.textSub }}>{item.text}</div>
-                    <div style={{ fontSize: 11, color: T.muted, flexShrink: 0 }}>{item.time}</div>
+                {activity.length === 0 ? (
+                  <div style={{ padding: '24px 0', fontSize: 12, color: T.muted, textAlign: 'center' }}>
+                    <i className="ti ti-clock" style={{ fontSize: 20, display: 'block', marginBottom: 6, opacity: 0.4 }} />
+                    No activity yet. Run an audit or use a tool to get started.
                   </div>
-                ))}
-                <div style={{ padding: '10px 0', fontSize: 11, color: T.border2, textAlign: 'center' }}>
-                  Live activity tracking coming soon
-                </div>
+                ) : (
+                  activity.map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < activity.length - 1 ? '1px solid ' + T.border : 'none' }}>
+                      <div style={{ width: 30, height: 30, borderRadius: '50%', background: item.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <i className={item.icon} style={{ color: item.color, fontSize: 14 }} />
+                      </div>
+                      <div style={{ flex: 1, fontSize: 12, color: T.textSub }}>{item.text}</div>
+                      <div style={{ fontSize: 11, color: T.muted, flexShrink: 0 }}>{timeAgo(item.time)}</div>
+                    </div>
+                  ))
+                )}
               </div>
             </Card>
           </div>
