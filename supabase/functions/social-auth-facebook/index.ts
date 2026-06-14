@@ -15,7 +15,7 @@
  *   1. Go to https://developers.facebook.com
  *   2. Create App → Business type
  *   3. Add "Facebook Login" product
- *   4. Set redirect URI: https://rankforgedai-5ipq.vercel.app/social/callback
+ *   4. Set redirect URI: https://app.rankforgedai.com/social/callback
  *   5. Copy App ID and App Secret
  *   6. supabase secrets set FACEBOOK_APP_ID=your_id FACEBOOK_APP_SECRET=your_secret
  */
@@ -194,3 +194,4 @@ function jsonError(error: string, status = 400) {
     headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
   });
 }
+

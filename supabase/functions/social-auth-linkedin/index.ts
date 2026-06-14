@@ -15,7 +15,7 @@
  *   1. Go to https://www.linkedin.com/developers/apps
  *   2. Create App → fill in company and app name
  *   3. Under Auth tab, add redirect URI:
- *      https://rankforgedai-5ipq.vercel.app/social/callback
+ *      https://app.rankforgedai.com/social/callback
  *   4. Under Products tab, request access to "Share on LinkedIn"
  *   5. Copy Client ID and Client Secret
  *   6. supabase secrets set LINKEDIN_CLIENT_ID=your_id LINKEDIN_CLIENT_SECRET=your_secret
@@ -180,3 +180,4 @@ function jsonError(error: string, status = 400) {
     headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
   });
 }
+

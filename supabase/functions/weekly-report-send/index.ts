@@ -225,7 +225,7 @@ function buildEmail(biz: string, sections: Record<string, unknown>): string {
         <tr><td style="padding:24px 32px;border-top:1px solid #e5e7eb;background:#f9fafb">
           <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center">
             Powered by <strong>RankForged AI</strong> &middot; 
-            <a href="https://rankforgedai-5ipq.vercel.app" style="color:#3b82f6;text-decoration:none">Open dashboard</a>
+            <a href="https://app.rankforgedai.com" style="color:#3b82f6;text-decoration:none">Open dashboard</a>
           </p>
         </td></tr>
 
@@ -300,6 +300,7 @@ Deno.serve(async (req) => {
               'Authorization': `Bearer ${ANON_KEY}`,
             },
             body: JSON.stringify({
+              action: 'weekly_report',
               to: email,
               subject,
               html,
@@ -334,3 +335,4 @@ Deno.serve(async (req) => {
     })
   }
 })
+

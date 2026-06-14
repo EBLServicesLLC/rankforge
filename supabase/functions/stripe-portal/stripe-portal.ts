@@ -38,7 +38,7 @@ serve(async (req) => {
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer:   sub.stripe_customer_id,
-      return_url: `${req.headers.get('origin') || 'https://rankforgedai-5ipq.vercel.app'}/?billing=portal_return`,
+      return_url: `${req.headers.get('origin') || 'https://app.rankforgedai.com'}/?billing=portal_return`,
     })
 
     return new Response(JSON.stringify({ url: portalSession.url }), {
@@ -52,3 +52,4 @@ serve(async (req) => {
     })
   }
 })
+

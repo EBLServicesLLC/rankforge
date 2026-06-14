@@ -53,8 +53,8 @@ serve(async (req) => {
     const sessionParams: any = {
       mode: 'subscription',
       line_items: [{ price: price_id, quantity: 1 }],
-      success_url: (success_url || 'https://rankforgedai-5ipq.vercel.app/?activated=1') + '&session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: cancel_url || 'https://rankforgedai-5ipq.vercel.app/',
+      success_url: (success_url || 'https://app.rankforgedai.com/?activated=1') + '&session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: cancel_url || 'https://app.rankforgedai.com/',
       allow_promotion_codes: true,
       metadata: {
         user_id: user_id || '',
@@ -78,3 +78,4 @@ serve(async (req) => {
     })
   }
 })
+

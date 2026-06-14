@@ -14,7 +14,7 @@
  *   1. Go to console.cloud.google.com
  *   2. Create project → Enable "Google Search Console API"
  *   3. OAuth 2.0 Credentials → Web Application
- *   4. Add redirect URI: https://rankforgedai-5ipq.vercel.app/social/callback
+ *   4. Add redirect URI: https://app.rankforgedai.com/social/callback
  *   5. Copy Client ID and Client Secret
  *   6. supabase secrets set GOOGLE_CLIENT_ID=xxx GOOGLE_CLIENT_SECRET=yyy
  */
@@ -198,3 +198,4 @@ function jsonResponse(data: Record<string, unknown>, status = 200) {
 function jsonError(error: string, status = 400) {
   return new Response(JSON.stringify({ error }), { status, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
 }
+
