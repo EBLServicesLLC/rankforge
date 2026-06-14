@@ -215,7 +215,8 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
       .from('activation_keys').select('*')
       .eq('key', activationKey.trim().toUpperCase()).single()
     if (error || !data) { setError('Invalid activation key  check your email and try again'); setValidating(false); return }
-    if (data.used)       { setError('This key has already been used. Contact support if this is an error.'); setValidating(false); return }
+    const isOwnerKey = data.key.startsWith('RFA-OWNER-')
+    if (data.used && !isOwnerKey) { setError('This key has already been used. Contact support if this is an error.'); setValidating(false); return }
     setKeyData(data); setKeyValid(true)
     setSeoTypes(PLANS[data.plan]?.types || ['local'])
     setValidating(false)
@@ -225,7 +226,10 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
     setError(''); setSaving(true)
     try {
       if (step === 0) {
-        await supabase.from('activation_keys').update({ used:true, used_by:userId, used_at:new Date().toISOString() }).eq('key', keyData.key)
+        const isOwnerKey = keyData.key.startsWith('RFA-OWNER-')
+        if (!isOwnerKey) {
+          await supabase.from('activation_keys').update({ used:true, used_by:userId, used_at:new Date().toISOString() }).eq('key', keyData.key)
+        }
         await supabase.from('subscriptions').upsert({ user_id:userId, plan:keyData.plan, max_clients:keyData.max_clients, seo_types:PLANS[keyData.plan]?.types||['local'], activation_key:keyData.key, onboarding_step:1, status:'active' }, { onConflict:'user_id' })
         // Ensure settings row exists so keys can be saved later
         await supabase.from('settings').upsert({ user_id:userId }, { onConflict:'user_id' })
