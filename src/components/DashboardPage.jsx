@@ -97,6 +97,8 @@ export default function DashboardPage({ clientId, userId, session }) {
   const [scores,   setScores]   = useState(null)
   const [loading,  setLoading]  = useState(true)
   const [usingDemo,setUsingDemo]= useState(false)
+  const [auditing, setAuditing] = useState(false)
+  const [auditMsg, setAuditMsg] = useState('')
 
   useEffect(() => {
     if (!clientId || !uid) return
@@ -121,6 +123,39 @@ export default function DashboardPage({ clientId, userId, session }) {
 
   function navigateTo(tab) {
     window.dispatchEvent(new CustomEvent('rf-switch-tab', { detail: { tab } }))
+  }
+
+  async function runAudit() {
+    if (!biz?.biz_website) { setAuditMsg('Add a website URL in the Business Profile first.'); return }
+    setAuditing(true)
+    setAuditMsg('')
+    try {
+      const { data: { session: sess } } = await supabase.auth.getSession()
+      const token = sess?.access_token
+      const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/seo-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+          client_id: clientId,
+          user_id: uid,
+          website:  biz.biz_website,
+          biz_name: biz.biz_name,
+          biz_cat:  biz.biz_cat,
+          biz_addr: biz.biz_addr,
+          biz_phone: biz.biz_phone,
+          biz_kw:   biz.biz_kw,
+        })
+      })
+      const data = await res.json()
+      if (data.error) { setAuditMsg('Audit failed: ' + data.error); return }
+      setScores(data)
+      setUsingDemo(false)
+      setAuditMsg('Audit complete!')
+      setTimeout(() => setAuditMsg(''), 3000)
+    } catch(e) {
+      setAuditMsg('Audit failed: ' + e.message)
+    }
+    setAuditing(false)
   }
 
   const bizName  = biz?.biz_name || 'Your Business'
@@ -150,7 +185,19 @@ export default function DashboardPage({ clientId, userId, session }) {
             )}
           </div>
         </div>
-        {/* Overall score badge */}
+        {/* Overall score badge + audit button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <button onClick={runAudit} disabled={auditing} style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '8px 14px', borderRadius: 8, border: 'none',
+            background: auditing ? T.border : T.accent,
+            color: '#fff', fontSize: 12, fontWeight: 700, cursor: auditing ? 'not-allowed' : 'pointer',
+            opacity: auditing ? 0.7 : 1,
+          }}>
+            <i className={auditing ? 'ti ti-loader-2' : 'ti ti-radar'} style={{ fontSize: 14 }} />
+            {auditing ? 'Running Audit...' : 'Run SEO Audit'}
+          </button>
+          {auditMsg && <span style={{ fontSize: 11, color: auditMsg.includes('failed') ? T.red : T.green }}>{auditMsg}</span>}
         <div style={{ background: T.cardBg, border: '1px solid ' + T.border2, borderRadius: 10, padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 32, fontWeight: 800, color: oColor, lineHeight: 1 }}>{gradeFromScore(overall)}</div>
@@ -161,6 +208,7 @@ export default function DashboardPage({ clientId, userId, session }) {
             <div style={{ fontSize: 26, fontWeight: 800, color: T.text, lineHeight: 1 }}>{overall}<span style={{ fontSize: 13, color: T.muted, fontWeight: 500 }}>/100</span></div>
             <div style={{ fontSize: 11, color: oColor, marginTop: 2 }}>{gradeLabel(overall)}</div>
           </div>
+        </div>
         </div>
       </div>
 
