@@ -118,6 +118,13 @@ export default function DashboardShell({ session, subscription }) {
     )
   }, [])
 
+  // Listen for rf-switch-tab events fired by JSX pages (e.g. DashboardPage quick actions)
+  useEffect(() => {
+    const handler = (e) => switchTab(e.detail?.tab)
+    window.addEventListener("rf-switch-tab", handler)
+    return () => window.removeEventListener("rf-switch-tab", handler)
+  }, [switchTab])
+
   //  After iframe loads: inject CSS + switch to active tab 
   const onIframeLoad = useCallback(() => {
     setIframeReady(true)
