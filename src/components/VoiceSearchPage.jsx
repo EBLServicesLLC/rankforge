@@ -123,7 +123,7 @@ export default function VoiceSearchPage({ session, clientId }) {
     supabase
       .from('client_data')
       .select('biz_name, biz_cat, biz_city, biz_state')
-      .eq('id', clientId)
+      .eq('client_id', clientId)
       .eq('user_id', session.user.id)
       .single()
       .then(({ data }) => {
