@@ -132,6 +132,12 @@ export default function DashboardPage({ clientId, userId, session }) {
     try {
       const { data: { session: sess } } = await supabase.auth.getSession()
       const token = sess?.access_token
+
+      // Fetch google_key from settings
+      const { data: settings } = await supabase
+        .from('settings').select('pagespeed_key').eq('user_id', uid).single()
+      const pagespeed_key = settings?.pagespeed_key || ''
+
       const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/seo-audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -144,6 +150,7 @@ export default function DashboardPage({ clientId, userId, session }) {
           biz_addr: biz.biz_addr,
           biz_phone: biz.biz_phone,
           biz_kw:   biz.biz_kw,
+          pagespeed_key,
         })
       })
       const data = await res.json()

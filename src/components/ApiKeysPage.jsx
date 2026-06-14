@@ -45,6 +45,12 @@ const KEYS = [
     link:'https://console.cloud.google.com', linkLabel:'Open Google Cloud Console',
   },
   {
+    key:'pagespeed_key', label:'Google PageSpeed API', required:false, color:'#34a853', icon:'ti ti-gauge',
+    why:'Powers the SEO Audit on your dashboard. Free — 25,000 requests/day. Enable PageSpeed Insights API in Google Cloud Console.',
+    placeholder:'AIza...',
+    link:'https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com', linkLabel:'Enable PageSpeed API',
+  },
+  {
     key:'gmail_token', label:'Gmail (Email Sending)', required:false, color:'#ea4335', icon:'ti ti-mail',
     why:'Sends outreach emails directly from Backlinks tab and weekly reports from your Gmail account.',
     placeholder:'ya29...',
@@ -187,7 +193,7 @@ export default function ApiKeysPage({ session }) {
 
   // Group keys
   const AI_KEYS  = ['anthropic_key','openai_key','gemini_key']
-  const SOC_KEYS = ['gmail_token','fb_token','fb_page_id','linkedin_token','google_key']
+  const SOC_KEYS = ['gmail_token','fb_token','fb_page_id','linkedin_token','google_key','pagespeed_key']
   const SEO_KEYS = ['yext_key','yext_account','moz_id','moz_secret','brightlocal_key','brightlocal_cid','indexnow_key']
 
   const groups = [
