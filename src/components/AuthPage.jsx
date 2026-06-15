@@ -1,4 +1,4 @@
-﻿// src/components/AuthPage.jsx
+// src/components/AuthPage.jsx
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useWelcomeEmail } from '../hooks/useWelcomeEmail'
@@ -59,7 +59,7 @@ const handleForgot = async () => {
       background: '#080e1a',
     }}>
 
-      {/* â”€â”€ Left panel â€” branding â”€â”€ */}
+      {/* ── Left panel — branding ── */}
       <div style={{
         flex: 1,
         display: 'flex',
@@ -98,10 +98,10 @@ const handleForgot = async () => {
         {/* Feature bullets */}
         <div style={{ width: '100%', maxWidth: 400 }}>
           {[
-            ['📍', 'Local Citations', 'Submit to 75+ high-DA directories automatically'],
-            ['🔗', 'Backlink Pipeline', 'Prospect, pitch and track link building campaigns'],
-            ['🤖', 'AI Agents', '20 autonomous agents running your full SEO campaign'],
-            ['📊', 'Weekly Reports', 'Branded client reports emailed on autopilot'],
+            ['??', 'Local Citations', 'Submit to 75+ high-DA directories automatically'],
+            ['??', 'Backlink Pipeline', 'Prospect, pitch and track link building campaigns'],
+            ['??', 'AI Agents', '20 autonomous agents running your full SEO campaign'],
+            ['??', 'Weekly Reports', 'Branded client reports emailed on autopilot'],
           ].map(([icon, title, desc]) => (
             <div key={title} style={{
               display: 'flex', alignItems: 'flex-start', gap: 14,
@@ -132,7 +132,7 @@ const handleForgot = async () => {
         </div>
       </div>
 
-      {/* â”€â”€ Right panel â€” auth form â”€â”€ */}
+      {/* ── Right panel — auth form ── */}
       <div style={{
         width: 440,
         flexShrink: 0,
@@ -184,7 +184,7 @@ const handleForgot = async () => {
         {mode === 'forgot' && (
           <div style={{ marginBottom: 16, fontSize: 13, color: '#4a5c7a', cursor: 'pointer' }}
             onClick={() => { setMode('login'); setError(''); setMessage(''); }}>
-            â† Back to Login
+            ← Back to Login
           </div>
         )}
 
@@ -278,7 +278,7 @@ const handleForgot = async () => {
             boxShadow: loading ? 'none' : '0 4px 16px rgba(26,95,212,.4)',
             transition: '.2s',
           }}>
-            {loading ? 'Please waitâ€¦' : mode === 'login' ? 'Log In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'}
+            {loading ? 'Please wait…' : mode === 'login' ? 'Log In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'}
           </button>
         </form>
 
@@ -288,25 +288,19 @@ const handleForgot = async () => {
 
         <div style={{ marginTop:28, width:'100%' }}>
           <div style={{ textAlign:'center', fontSize:12, color:'#2a3a54', marginBottom:12 }}>
-            New to RankForged AI? Choose a plan to get started:
+            New to RankForged AI? Sign up then choose your plan:
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
             {[
               { label:'Solopreneur', price:'$97/mo',  priceId:'price_1TdJajLQRnOj0qLPQmbNz2kN', color:'#3b82f6' },
               { label:'Deluxe',      price:'$197/mo', priceId:'price_1TdJbkLQRnOj0qLPJPfsQsJI', color:'#8b5cf6' },
               { label:'Pro',         price:'$397/mo', priceId:'price_1TdJczLQRnOj0qLPa7nat9Hi', color:'#06b6d4' },
-              { label:'Agency',      price:'$997/mo', priceId:'price_1TdJdnLQRnOj0qLPv56ml87r', color:'#10b981' },
+              { label:'Agency',      price:'$1,997/mo', priceId:'price_1TdJdnLQRnOj0qLPv56ml87r', color:'#10b981' },
             ].map(plan => (
-              <button key={plan.label} onClick={async () => {
-                try {
-                  const res = await fetch('https://ybhpbpahhywiokhqpldj.supabase.co/functions/v1/stripe-checkout', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliaHBicGFoaHl3aW9raHFwbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwOTYwMzYsImV4cCI6MjA2MjY3MjAzNn0.K8YQLUJJbTBpHhQXfBJRWEMFGPkYkGLGRY_mGFy3jGU' },
-                    body: JSON.stringify({ price_id: plan.priceId, success_url: window.location.origin + '/?activated=1', cancel_url: window.location.origin })
-                  })
-                  const data = await res.json()
-                  if (data.url) window.location.href = data.url
-                } catch(e) { alert('Checkout error: ' + e.message) }
+              <button key={plan.label} onClick={() => {
+                setMode('signup')
+                setError('')
+                setMessage('')
               }} style={{
                 padding:'10px 8px', borderRadius:8,
                 border:'1px solid ' + plan.color,
@@ -321,7 +315,7 @@ const handleForgot = async () => {
         </div>
       </div>
 
-      {/* â”€â”€ Responsive: hide left panel on small screens â”€â”€ */}
+      {/* ── Responsive: hide left panel on small screens ── */}
       <style>{`
         @media (max-width: 768px) {
           .auth-left { display: none !important; }
@@ -331,5 +325,7 @@ const handleForgot = async () => {
     </div>
   )
 }
+
+
 
 
