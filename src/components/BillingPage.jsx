@@ -3,10 +3,10 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
 const PLANS = [
-  { id:'solopreneur', label:'Solopreneur', price:'$97',  clients:1,  color:'#60a5fa', priceId:'price_1TdJajLQRnOj0qLPQmbNz2kN', features:['1 Business','All 24 SEO Tools','AI Agents','Weekly Reports'] },
-  { id:'deluxe',      label:'Deluxe',      price:'$197', clients:3,  color:'#8b5cf6', priceId:'price_1TdJbkLQRnOj0qLPJPfsQsJI', features:['3 Businesses','All 24 SEO Tools','AI Agents','Weekly Reports','Regional SEO'] },
-  { id:'pro',         label:'Pro',         price:'$397', clients:5,  color:'#06b6d4', priceId:'price_1TdJczLQRnOj0qLPa7nat9Hi', features:['5 Businesses','All 24 SEO Tools','AI Agents','Weekly Reports','Regional + National SEO'] },
-  { id:'agency',      label:'Agency',      price:'$1,997', clients:25, color:'#10b981', priceId:'price_1TdJdnLQRnOj0qLPv56ml87r', features:['25 Businesses','All 24 SEO Tools','AI Agents','Weekly Reports','Full SEO Suite','Priority Support'] },
+  { id:'solopreneur', label:'Solopreneur', price:'$97',  clients:1,  color:'#60a5fa', priceId:'price_1TiIOkLQRnOj0qLPr4geBfjT', features:['1 Business','All 24 SEO Tools','AI Agents','Weekly Reports'] },
+  { id:'deluxe',      label:'Deluxe',      price:'$197', clients:3,  color:'#8b5cf6', priceId:'price_1TiIO1LQRnOj0qLPK15fSOJl', features:['3 Businesses','All 24 SEO Tools','AI Agents','Weekly Reports','Regional SEO'] },
+  { id:'pro',         label:'Pro',         price:'$397', clients:5,  color:'#06b6d4', priceId:'price_1TiINALQRnOj0qLPKp2SRdE4', features:['5 Businesses','All 24 SEO Tools','AI Agents','Weekly Reports','Regional + National SEO'] },
+  { id:'agency',      label:'Agency',      price:'$1,997', clients:25, color:'#10b981', priceId:'price_1TiHmnLQRnOj0qLPBlctvhrt', features:['25 Businesses','All 24 SEO Tools','AI Agents','Weekly Reports','Full SEO Suite','Priority Support'] },
 ]
 
 export default function BillingPage({ userId, userEmail, onBack }) {
@@ -156,3 +156,4 @@ export default function BillingPage({ userId, userEmail, onBack }) {
     </div>
   )
 }
+

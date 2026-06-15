@@ -103,6 +103,11 @@ export default function DashboardShell({ session, subscription }) {
     setIframeReady(false)
     setActiveTab('dash')
     pendingTabRef.current = null
+    // Set sessionStorage so rankforge3 can read Supabase credentials on load
+    sessionStorage.setItem('rf_sb_url', import.meta.env.VITE_SUPABASE_URL)
+    sessionStorage.setItem('rf_sb_key', import.meta.env.VITE_SUPABASE_ANON_KEY)
+    sessionStorage.setItem('rf_user_id', session.user.id)
+    sessionStorage.setItem('rf_client', activeId)
     setIframeSrc('/rankforge3.html?client=' + activeId + '&t=' + Date.now())
   }, [activeId]) // eslint-disable-line
 

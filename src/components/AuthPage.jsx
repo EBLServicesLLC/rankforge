@@ -292,10 +292,10 @@ const handleForgot = async () => {
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
             {[
-              { label:'Solopreneur', price:'$97/mo',  priceId:'price_1TdJajLQRnOj0qLPQmbNz2kN', color:'#3b82f6' },
-              { label:'Deluxe',      price:'$197/mo', priceId:'price_1TdJbkLQRnOj0qLPJPfsQsJI', color:'#8b5cf6' },
-              { label:'Pro',         price:'$397/mo', priceId:'price_1TdJczLQRnOj0qLPa7nat9Hi', color:'#06b6d4' },
-              { label:'Agency',      price:'$1,997/mo', priceId:'price_1TdJdnLQRnOj0qLPv56ml87r', color:'#10b981' },
+              { label:'Solopreneur', price:'$97/mo',  priceId:'price_1TiIOkLQRnOj0qLPr4geBfjT', color:'#3b82f6' },
+              { label:'Deluxe',      price:'$197/mo', priceId:'price_1TiIO1LQRnOj0qLPK15fSOJl', color:'#8b5cf6' },
+              { label:'Pro',         price:'$397/mo', priceId:'price_1TiINALQRnOj0qLPKp2SRdE4', color:'#06b6d4' },
+              { label:'Agency',      price:'$1,997/mo', priceId:'price_1TiHmnLQRnOj0qLPBlctvhrt', color:'#10b981' },
             ].map(plan => (
               <button key={plan.label} onClick={() => {
                 setMode('signup')
@@ -325,6 +325,7 @@ const handleForgot = async () => {
     </div>
   )
 }
+
 
 
 
