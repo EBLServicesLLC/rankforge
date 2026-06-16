@@ -131,7 +131,7 @@ export default function SearchConsolePage({ session, clientId }) {
       const siteUrl = cd?.biz_website || '';
       if (!siteUrl) throw new Error('No website URL set. Add it in the business profile.');
       const dateRangeMap = { '7d': 'last7days', '28d': 'last28days', '90d': 'last90days' };
-      const res = await fetch(`${sbUrl}/functions/v1/gsc-data`, {
+      const res = await fetch(`${sbUrl}/functions/v1/gcs-data`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,7 +141,20 @@ export default function SearchConsolePage({ session, clientId }) {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to fetch GSC data');
-      setData(json);
+      // Map gcs-data response shape to component expected shape
+      setData({
+        overview: {
+          clicks:      json.summary?.totalClicks      ?? 0,
+          impressions: json.summary?.totalImpressions ?? 0,
+          ctr:         json.summary?.avgCtr != null ? parseFloat(json.summary.avgCtr) / 100 : 0,
+          position:    json.summary?.avgPosition != null ? parseFloat(json.summary.avgPosition) : 0,
+        },
+        queries: json.keywords || [],
+        pages:   json.pages    || [],
+        devices: json.devices  || [],
+        trend:   [],
+        summary: json.summary,
+      });
     } catch (e) {
       setError(e.message);
     }
