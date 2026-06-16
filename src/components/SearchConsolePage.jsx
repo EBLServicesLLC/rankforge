@@ -117,6 +117,7 @@ export default function SearchConsolePage({ session, clientId }) {
   const [sortDir, setSortDir] = useState('desc');
 
   const sbUrl = import.meta.env.VITE_SUPABASE_URL;
+  const sbAnon = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   const fetchData = useCallback(async () => {
     if (!clientId) return;
@@ -124,8 +125,7 @@ export default function SearchConsolePage({ session, clientId }) {
     setError(null);
     try {
       const { data: { session: freshSession } } = await supabase.auth.getSession();
-      const token = freshSession?.access_token;
-      if (!token) throw new Error('Not authenticated. Please log in again.');
+      const token = freshSession?.access_token || sbAnon;
       const { data: cd } = await supabase
         .from('client_data')
         .select('biz_website')
@@ -139,6 +139,7 @@ export default function SearchConsolePage({ session, clientId }) {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
+          'apikey': sbAnon,
         },
         body: JSON.stringify({ site_url: siteUrl, date_range: dateRangeMap[range] || 'last28days' }),
       });
