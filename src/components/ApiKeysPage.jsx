@@ -39,10 +39,9 @@ const KEYS = [
     link:'https://aistudio.google.com', linkLabel:'Open AI Studio',
   },
   {
-    key:'google_key', label:'Google Search Console API', required:false, color:'#4285f4', icon:'ti ti-brand-google',
-    why:'Shows real keyword rankings from Google Search Console. Unlocks the GSC tab.',
-    placeholder:'AIza...',
-    link:'https://console.cloud.google.com', linkLabel:'Open Google Cloud Console',
+    key:'google_key', label:'Google Search Console', required:false, color:'#4285f4', icon:'ti ti-brand-google',
+    why:'Shows real keyword rankings from Google Search Console. Unlocks the GSC tab. Click Connect to authorize via Google OAuth.',
+    isOAuth: true,
   },
   {
     key:'pagespeed_key', label:'Google PageSpeed API', required:false, color:'#34a853', icon:'ti ti-gauge',
@@ -146,6 +145,49 @@ export default function ApiKeysPage({ session }) {
   const [reportDay,    setReportDay]    = useState('monday')
   const [savingReport, setSavingReport] = useState(false)
   const [savedReport,  setSavedReport]  = useState(false)
+  const [gscConnecting, setGscConnecting] = useState(false)
+
+  function connectGSC() {
+    setGscConnecting(true)
+    const state = 'gsc_' + Math.random().toString(36).slice(2)
+    sessionStorage.setItem('gsc_oauth_state', state)
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+    const redirectUri = encodeURIComponent(window.location.origin + '/social/callback')
+    const scope = encodeURIComponent(
+      'https://www.googleapis.com/auth/webmasters.readonly ' +
+      'https://www.googleapis.com/auth/userinfo.email'
+    )
+    const url = `https://accounts.google.com/o/oauth2/v2/auth` +
+      `?client_id=${clientId}` +
+      `&redirect_uri=${redirectUri}` +
+      `&response_type=code` +
+      `&scope=${scope}` +
+      `&state=${state}` +
+      `&access_type=offline` +
+      `&prompt=consent`
+    const popup = window.open(url, 'gsc_oauth', 'width=520,height=620')
+    const handler = (e) => {
+      if (e.origin !== window.location.origin) return
+      if (e.data?.type !== 'SOCIAL_AUTH_COMPLETE' || e.data?.platform !== 'gsc') return
+      window.removeEventListener('message', handler)
+      clearInterval(poll)
+      setGscConnecting(false)
+      if (e.data.success) {
+        // token saved by edge function; store a marker so StatusDot shows green
+        setValues(v => ({ ...v, google_key: e.data.token || 'connected' }))
+        setSaved(s => ({ ...s, google_key: true }))
+        setTimeout(() => setSaved(s => ({ ...s, google_key: false })), 3000)
+      }
+    }
+    window.addEventListener('message', handler)
+    const poll = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(poll)
+        window.removeEventListener('message', handler)
+        setGscConnecting(false)
+      }
+    }, 500)
+  }
 
   useEffect(() => {
     if (!session) return
@@ -288,6 +330,25 @@ export default function ApiKeysPage({ session }) {
                         )}
 
                         {/* Input row */}
+                        {def.isOAuth ? (
+                          <button
+                            onClick={def.key === 'google_key' ? connectGSC : undefined}
+                            disabled={gscConnecting}
+                            style={{
+                              width: '100%', padding: '9px 0',
+                              background: isSet ? T.green + '22' : T.accent,
+                              border: isSet ? '1px solid ' + T.green : 'none',
+                              borderRadius: 7,
+                              color: isSet ? T.green : '#fff',
+                              fontSize: 13, fontWeight: 600,
+                              cursor: gscConnecting ? 'not-allowed' : 'pointer',
+                              transition: 'background .2s',
+                            }}>
+                            <i className={isSet ? 'ti ti-circle-check' : 'ti ti-brand-google'}
+                              style={{ marginRight: 6, fontSize: 13 }} />
+                            {gscConnecting ? 'Connecting…' : isSet ? 'Connected — Reconnect' : 'Connect Google Search Console'}
+                          </button>
+                        ) : (
                         <div style={{ display: 'flex', gap: 7 }}>
                           <input
                             type={isText || isShown ? 'text' : 'password'}
@@ -307,6 +368,7 @@ export default function ApiKeysPage({ session }) {
                             {isSaving ? '...' : isSaved ? 'Saved!' : 'Save'}
                           </button>
                         </div>
+                        )}
                       </div>
                     </Card>
                   )

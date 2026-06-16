@@ -1,5 +1,5 @@
 /**
- * gsc-auth/index.ts
+ * gcs-auth/index.ts
  * Google Search Console OAuth Handler
  *
  * Actions:
@@ -7,16 +7,8 @@
  *   POST ?action=exchange_code             → Exchanges code for token, saves to Supabase
  *
  * Supabase Secrets required:
- *   GOOGLE_CLIENT_ID      — From Google Cloud Console
- *   GOOGLE_CLIENT_SECRET  — From Google Cloud Console
- *
- * Google Cloud Setup:
- *   1. Go to console.cloud.google.com
- *   2. Create project → Enable "Google Search Console API"
- *   3. OAuth 2.0 Credentials → Web Application
- *   4. Add redirect URI: https://app.rankforgedai.com/social/callback
- *   5. Copy Client ID and Client Secret
- *   6. supabase secrets set GOOGLE_CLIENT_ID=xxx GOOGLE_CLIENT_SECRET=yyy
+ *   GOOGLE_CLIENT_ID      – From Google Cloud Console
+ *   GOOGLE_CLIENT_SECRET  – From Google Cloud Console
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -46,7 +38,7 @@ serve(async (req: Request) => {
       return jsonError("Google credentials not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to Supabase secrets.", 503);
     }
 
-    // ── get_url ──────────────────────────────────────────────────────────────
+    // ── get_url ────────────────────────────────────────────────────────────
     if (action === "get_url" && req.method === "GET") {
       const redirectUri = url.searchParams.get("redirect_uri");
       if (!redirectUri) return jsonError("redirect_uri is required", 400);
@@ -65,7 +57,7 @@ serve(async (req: Request) => {
       return jsonResponse({ url: authUrl.toString(), state });
     }
 
-    // ── exchange_code ─────────────────────────────────────────────────────────
+    // ── exchange_code ──────────────────────────────────────────────────────
     if (action === "exchange_code" && req.method === "POST") {
       const authHeader = req.headers.get("Authorization");
       if (!authHeader) return jsonError("Unauthorized", 401);
@@ -119,14 +111,16 @@ serve(async (req: Request) => {
       const sites = sitesData.siteEntry || [];
 
       // Save tokens to Supabase settings
+      // NOTE: google_key stores the access token so gcs-data can read it directly
       const { error: saveError } = await supabase
         .from("settings")
         .upsert({
-          user_id:          user.id,
-          gsc_access_token:  accessToken,
+          user_id:           user.id,
+          google_key:        accessToken,   // ← gcs-data reads this column
           gsc_refresh_token: refreshToken,
           gsc_email:         userData.email || "",
           gsc_connected:     true,
+          updated_at:        new Date().toISOString(),
         }, { onConflict: "user_id" });
 
       if (saveError) {
@@ -143,7 +137,7 @@ serve(async (req: Request) => {
       });
     }
 
-    // ── refresh_token ─────────────────────────────────────────────────────────
+    // ── refresh_token ──────────────────────────────────────────────────────
     if (action === "refresh_token" && req.method === "POST") {
       const authHeader = req.headers.get("Authorization");
       if (!authHeader) return jsonError("Unauthorized", 401);
@@ -177,7 +171,7 @@ serve(async (req: Request) => {
       if (tokenData.error) return jsonError(`Token refresh failed: ${tokenData.error}`, 400);
 
       await supabase.from("settings").upsert(
-        { user_id: user.id, gsc_access_token: tokenData.access_token },
+        { user_id: user.id, google_key: tokenData.access_token, updated_at: new Date().toISOString() },
         { onConflict: "user_id" }
       );
 
@@ -187,7 +181,7 @@ serve(async (req: Request) => {
     return jsonError("Invalid action or method", 400);
 
   } catch (err) {
-    console.error("[gsc-auth] error:", err);
+    console.error("[gcs-auth] error:", err);
     return jsonError(err.message || "Internal server error", 500);
   }
 });
@@ -198,4 +192,3 @@ function jsonResponse(data: Record<string, unknown>, status = 200) {
 function jsonError(error: string, status = 400) {
   return new Response(JSON.stringify({ error }), { status, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
 }
-

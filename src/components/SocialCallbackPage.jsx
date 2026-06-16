@@ -60,7 +60,7 @@ export default function SocialCallbackPage() {
         const endpoint = platform === "facebook"
           ? `${SUPABASE_URL}/functions/v1/social-auth-facebook`
           : platform === "gsc"
-          ? `${SUPABASE_URL}/functions/v1/gsc-auth`
+          ? `${SUPABASE_URL}/functions/v1/gcs-auth`
           : `${SUPABASE_URL}/functions/v1/social-auth-linkedin`;
 
         // Exchange code for token via edge function
