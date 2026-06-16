@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
 
 const T = {
   pageBg: '#060d1a', cardBg: '#0d1f3c', cardBg2: '#080f1e',
@@ -115,21 +116,28 @@ export default function SearchConsolePage({ session, clientId }) {
   const [sortCol, setSortCol] = useState('clicks');
   const [sortDir, setSortDir] = useState('desc');
 
-  const sbUrl = sessionStorage.getItem('rf_sb_url');
-  const sbKey = sessionStorage.getItem('rf_sb_key');
+  const sbUrl = import.meta.env.VITE_SUPABASE_URL;
 
   const fetchData = useCallback(async () => {
-    if (!clientId || !sbUrl || !sbKey) return;
+    if (!clientId || !session?.access_token) return;
     setLoading(true);
     setError(null);
     try {
+      const { data: cd } = await supabase
+        .from('client_data')
+        .select('biz_website')
+        .eq('client_id', clientId)
+        .single();
+      const siteUrl = cd?.biz_website || '';
+      if (!siteUrl) throw new Error('No website URL set. Add it in the business profile.');
+      const dateRangeMap = { '7d': 'last7days', '28d': 'last28days', '90d': 'last90days' };
       const res = await fetch(`${sbUrl}/functions/v1/gsc-data`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sbKey}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ client_id: clientId, range }),
+        body: JSON.stringify({ site_url: siteUrl, date_range: dateRangeMap[range] || 'last28days' }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to fetch GSC data');
@@ -138,7 +146,7 @@ export default function SearchConsolePage({ session, clientId }) {
       setError(e.message);
     }
     setLoading(false);
-  }, [clientId, range, sbUrl, sbKey]);
+  }, [clientId, range, session?.access_token]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
