@@ -119,10 +119,13 @@ export default function SearchConsolePage({ session, clientId }) {
   const sbUrl = import.meta.env.VITE_SUPABASE_URL;
 
   const fetchData = useCallback(async () => {
-    if (!clientId || !session?.access_token) return;
+    if (!clientId) return;
     setLoading(true);
     setError(null);
     try {
+      const { data: { session: freshSession } } = await supabase.auth.getSession();
+      const token = freshSession?.access_token;
+      if (!token) throw new Error('Not authenticated. Please log in again.');
       const { data: cd } = await supabase
         .from('client_data')
         .select('biz_website')
@@ -135,7 +138,7 @@ export default function SearchConsolePage({ session, clientId }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ site_url: siteUrl, date_range: dateRangeMap[range] || 'last28days' }),
       });
@@ -159,7 +162,7 @@ export default function SearchConsolePage({ session, clientId }) {
       setError(e.message);
     }
     setLoading(false);
-  }, [clientId, range, session?.access_token]);
+  }, [clientId, range]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
