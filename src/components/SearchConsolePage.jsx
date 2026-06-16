@@ -123,11 +123,13 @@ export default function SearchConsolePage({ session, clientId }) {
     setLoading(true);
     setError(null);
     try {
-      const { data: cd } = await supabase
+      console.log('[GSC] fetching for clientId:', clientId, 'user:', session?.user?.id);
+      const { data: cd, error: cdErr } = await supabase
         .from('client_data')
         .select('biz_website')
         .eq('client_id', clientId)
         .single();
+      console.log('[GSC] client_data result:', cd, 'error:', cdErr);
       const siteUrl = cd?.biz_website || '';
       if (!siteUrl) throw new Error('No website URL set. Add it in the business profile.');
       const dateRangeMap = { '7d': 'last7days', '28d': 'last28days', '90d': 'last90days' };
