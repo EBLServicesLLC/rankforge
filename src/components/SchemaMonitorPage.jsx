@@ -214,10 +214,11 @@ export default function SchemaMonitorPage({ session, clientId }) {
     supabase
       .from('client_data')
       .select('biz_website, biz_name, biz_phone, biz_addr, biz_city, biz_state, biz_zip, biz_cat, biz_desc')
-      .eq('id', clientId)
+      .eq('client_id', clientId)
       .eq('user_id', session.user.id)
-      .single()
-      .then(({ data }) => {
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) console.error('SchemaMonitor profile load error:', error)
         if (data) {
           setProfile(data)
           if (data.biz_website) { setUrl(data.biz_website); setProfileLoaded(true) }

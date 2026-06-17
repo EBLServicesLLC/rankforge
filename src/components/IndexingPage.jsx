@@ -177,7 +177,7 @@ export default function IndexingPage({ session, clientId }) {
         .eq('user_id', session.user.id)
         .eq('client_id', clientId || '00000000-0000-0000-0000-000000000000'),
       supabase.from('settings')
-        .select('indexnow_key,biz_website')
+        .select('indexnow_key')
         .eq('user_id', session.user.id)
         .maybeSingle(),
       clientId ? supabase.from('client_data')
@@ -192,7 +192,7 @@ export default function IndexingPage({ session, clientId }) {
         setChecks(map)
       }
       if (settings?.indexnow_key) setIndexKey(settings.indexnow_key)
-      const site = client?.biz_website || settings?.biz_website || ''
+      const site = client?.biz_website || ''
       if (site) {
         setPageUrl(site)
         setSitemapUrl(site.replace(/\/$/, '') + '/sitemap.xml')

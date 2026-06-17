@@ -131,8 +131,9 @@ export default function Web2Page({ session, clientId }) {
     if (!clientId || !session) return
     supabase.from('client_data')
       .select('biz_name, biz_kw, biz_city, biz_website')
-      .eq('id', clientId).eq('user_id', session.user.id).single()
-      .then(({ data }) => {
+      .eq('client_id', clientId).eq('user_id', session.user.id).maybeSingle()
+      .then(({ data, error }) => {
+        if (error) console.error('Web2 profile load error:', error)
         if (!data) return
         setProfile(data)
         if (data.biz_kw && !keyword) setKeyword(data.biz_kw.split(',')[0].trim())

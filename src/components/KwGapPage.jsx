@@ -98,8 +98,11 @@ export default function KwGapPage({ session, clientId }) {
     if (!clientId || !session) return
     supabase.from('client_data')
       .select('biz_name, biz_kw, biz_city, biz_cat')
-      .eq('id', clientId).eq('user_id', session.user.id).single()
-      .then(({ data }) => { if (data) setProfile(data) })
+      .eq('client_id', clientId).eq('user_id', session.user.id).maybeSingle()
+      .then(({ data, error }) => {
+        if (error) console.error('KwGap profile load error:', error)
+        if (data) setProfile(data)
+      })
   }, [clientId, session])
 
   const getAuthHeader = async () => {

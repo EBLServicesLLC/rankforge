@@ -92,8 +92,9 @@ export default function RankTrackerPage({ session, clientId, onTabChange }) {
     supabase.from('settings')
       .select('google_key')
       .eq('user_id', session.user.id)
-      .single()
-      .then(({ data: s }) => {
+      .maybeSingle()
+      .then(({ data: s, error }) => {
+        if (error) console.error('RankTracker settings load error:', error)
         if (s?.google_key) {
           setConnected(true)
           setGscEmail('')
@@ -102,10 +103,13 @@ export default function RankTrackerPage({ session, clientId, onTabChange }) {
     if (clientId) {
       supabase.from('client_data')
         .select('biz_website')
-        .eq('id', clientId)
+        .eq('client_id', clientId)
         .eq('user_id', session.user.id)
-        .single()
-        .then(({ data: d }) => { if (d?.biz_website) setSiteUrl(d.biz_website) })
+        .maybeSingle()
+        .then(({ data: d, error }) => {
+          if (error) console.error('RankTracker client_data load error:', error)
+          if (d?.biz_website) setSiteUrl(d.biz_website)
+        })
     }
   }, [session, clientId])
 

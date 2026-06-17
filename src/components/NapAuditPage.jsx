@@ -91,8 +91,9 @@ export default function NapAuditPage({ session, clientId }) {
     if (!clientId || !session) return
     supabase.from('client_data')
       .select('biz_name, biz_phone, biz_addr, biz_city, biz_state, biz_zip, biz_website')
-      .eq('id', clientId).eq('user_id', session.user.id).single()
-      .then(({ data }) => {
+      .eq('client_id', clientId).eq('user_id', session.user.id).maybeSingle()
+      .then(({ data, error }) => {
+        if (error) console.error('NapAudit profile load error:', error)
         if (!data) return
         setProfile(data)
         setNapName(data.biz_name || '')

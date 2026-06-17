@@ -34,8 +34,9 @@ export function useSettings(userId) {
       .from('settings')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
       .then(({ data, error }) => {
+        if (error) console.error('Settings load error:', error)
         if (data) setSettings({ ...DEFAULT_SETTINGS, ...data })
         setLoading(false)
       })

@@ -116,8 +116,9 @@ export default function MetaTagGeneratorPage({ session, clientId }) {
     if (!clientId || !session) return
     supabase.from('client_data')
       .select('biz_name, biz_kw, biz_state, biz_city, biz_cat')
-      .eq('id', clientId).eq('user_id', session.user.id).single()
-      .then(({ data }) => {
+      .eq('client_id', clientId).eq('user_id', session.user.id).maybeSingle()
+      .then(({ data, error }) => {
+        if (error) console.error('MetaTagGenerator profile load error:', error)
         if (!data) return
         setProfile(data)
         if (data.biz_kw && !services) setServices(data.biz_kw)

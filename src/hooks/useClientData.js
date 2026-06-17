@@ -34,10 +34,9 @@ export function useClientData(clientId, userId) {
       .from('client_data')
       .select('*')
       .eq('client_id', clientId)
-      .single()
+      .maybeSingle()
       .then(({ data: row, error }) => {
-        if (error && error.code !== 'PGRST116') {
-          // PGRST116 = no rows found — that's fine for new clients
+        if (error) {
           console.error('Load error:', error)
         }
         setData(row ? { ...DEFAULT_DATA, ...row } : DEFAULT_DATA)

@@ -130,8 +130,9 @@ export default function LocalSEOPage({ session, clientId }) {
     // Load business profile
     supabase.from('client_data')
       .select('biz_name, biz_phone, biz_addr, biz_city, biz_state, biz_zip, biz_website, biz_desc, biz_cat, biz_kw')
-      .eq('id', clientId).eq('user_id', session.user.id).single()
-      .then(({ data }) => {
+      .eq('client_id', clientId).eq('user_id', session.user.id).maybeSingle()
+      .then(({ data, error }) => {
+        if (error) console.error('LocalSEO profile load error:', error)
         if (data) {
           setProfile(data)
           setNapName(data.biz_name || '')
@@ -143,15 +144,14 @@ export default function LocalSEOPage({ session, clientId }) {
 
     // Load checklist state from DB
     const loadTasks = async () => {
-      try {
-        const { data } = await supabase
-          .from('local_seo_tasks')
-          .select('tasks')
-          .eq('user_id', session.user.id)
-          .eq('client_id', clientId)
-          .single()
-        if (data?.tasks) setCheckedTasks(data.tasks)
-      } catch (e) {}
+      const { data, error } = await supabase
+        .from('local_seo_tasks')
+        .select('tasks')
+        .eq('user_id', session.user.id)
+        .eq('client_id', clientId)
+        .maybeSingle()
+      if (error) console.error('LocalSEO tasks load error:', error)
+      if (data?.tasks) setCheckedTasks(data.tasks)
     }
     loadTasks()
   }, [clientId, session])

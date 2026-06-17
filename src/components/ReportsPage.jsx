@@ -356,9 +356,11 @@ function ClientReportTab({ clientId, session }) {
 
   useEffect(function() {
     if (!clientId || !session) return
-    supabase.from('client_data').select('*').eq('id', clientId).eq('user_id', session.user.id).single()
-      .then(function(res) { if (res.data) setProfile(res.data) })
-      .catch(function() {})
+    supabase.from('client_data').select('*').eq('client_id', clientId).eq('user_id', session.user.id).maybeSingle()
+      .then(function(res) {
+        if (res.error) console.error('Reports profile load error:', res.error)
+        if (res.data) setProfile(res.data)
+      })
   }, [clientId])
 
   var inp = {
