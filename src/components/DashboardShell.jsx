@@ -467,7 +467,7 @@ export default function DashboardShell({ session, subscription }) {
         {/* Landing Page Builder — renders inline */}
         {activeTab === 'pages' && (
           <div style={{ flex:1, overflowY:'auto', background:'#060d1a' }}>
-            <ContentCalendarPage clientId={activeId} userId={session.user.id} bizName={activeClient?.name || '' } />
+            <LandingPageBuilder session={session} clientId={activeId} />
           </div>
         )}
 
