@@ -1,5 +1,5 @@
 # RankForged AI - Session Handoff
-**Date:** 2026-06-16 (Session 31 — End)
+**Date:** 2026-06-17 (Session 32 — End)
 **Stack:** React + Vite | Supabase (auth + Postgres + RLS) | Vercel
 **Repo (app):** https://github.com/EBLServicesLLC/rankforge
 **Repo (marketing):** https://github.com/EBLServicesLLC/rankforgedai-marketing
@@ -9,55 +9,56 @@
 
 ## CRITICAL LESSONS - READ FIRST
 ### All previous lessons still apply, plus:
-### #52 - gcs-data 401 was caused by supabase.auth.getUser() failing in edge function — fix is to decode JWT manually with atob() and use service role key for DB queries
-### #53 - Supabase edge function "shutdown" logs = idle timeout NOT crash. Real crashes show ERROR. Don't redeploy looking for crash fixes when you see only "shutdown"
-### #54 - esm.sh imports in edge functions must use versioned .mjs path: https://esm.sh/v135/@supabase/supabase-js@2.39.3/es2022/supabase-js.mjs — unversioned @2 and ?target=deno both pull Node shims that crash
-### #55 - Cannot delete Supabase auth users from dashboard UI ("Database error deleting user") — must use SQL editor or service role API
-### #56 - GSC Search Console integration abandoned this session — too many moving parts, deprioritized
+### #57 - A commit with an unrelated message (e.g. "Add Resend email...") can silently overwrite an unrelated file if too many files are staged in one sweep. ALWAYS check `git diff --stat` before committing broad/bulk changes — don't trust the commit message to reflect what's actually staged.
+### #58 - `client_data` table's primary/foreign key column is `client_id`, NOT `id`. This exact bug (`.eq('id', clientId)` instead of `.eq('client_id', clientId)`) was found and fixed in 9 separate component files this session — it's a recurring copy-paste mistake. If a new page is added that queries `client_data`, double-check the column name.
+### #59 - Supabase's `.single()` throws an HTTP 406 if a query returns 0 OR more than 1 rows. Always use `.maybeSingle()` for any query that might legitimately return zero rows (e.g. a settings/profile row that doesn't exist yet for a new user/client). This was the second half of the bug in #58 — found and fixed in 11 files total this session.
+### #60 - NEVER use PowerShell's `>` redirect to extract file content from `git show` on Windows without checking encoding afterward. It can silently write UTF-16 with mojibake (corrupted special characters) instead of clean UTF-8. Always verify with `file <filename>` after any `git show ... > file` extraction. Prefer `git show <commit>:<path> | Out-File -Encoding utf8 <path>` instead, or better, use `git checkout <commit> -- <path>` directly.
+### #61 - A component being correctly imported in DashboardShell.jsx does NOT mean it's being rendered. Always grep for both `import X from` AND `<X ... />` — an import with zero JSX usage is a silent dead component.
+### #62 - When a feature seems "broken in the UI" but the file is provably correct (builds clean, exports correct, no syntax errors), check for Vite dev-server cache staleness (`node_modules/.vite`) and browser extensions before assuming the code is wrong. In this session, local dev kept showing stale state even after correct fixes; the production build + fresh Vercel deploy resolved it immediately, confirming the issue was environmental, not code.
 
-## COMPLETED SESSION 31
-- Fixed gcs-data edge function import crash (Node shim issue) ✅
-- Fixed gcs-data 401 by replacing supabase.auth.getUser() with manual JWT decode ✅
-- gcs-data now returns 500 only due to GSC permissions mismatch (code is correct) ✅
-- Confirmed stub function works end-to-end ✅
-- SearchConsolePage.jsx updated to use getSession() for fresh token ✅
+## COMPLETED SESSION 32
+- **Restored `LandingPageBuilder.jsx`** — had been silently overwritten with duplicate `ContentCalendarPage` content by an unrelated commit (`e03bbd5`, "Add Resend email...") days earlier. Recovered from commit `a0b499c` (last known-good). ✅
+- **Fixed UTF-16/mojibake encoding corruption** in `LandingPageBuilder.jsx` introduced during git recovery (PowerShell `>` redirect issue — see lesson #60). Converted back to clean UTF-8, restored all special characters (✓ ✗ → 👁 ── etc). ✅
+- **Wired up the "Landing Pages" sidebar tab correctly** — `DashboardShell.jsx`'s `pages` tab was rendering `ContentCalendarPage` instead of `LandingPageBuilder`; fixed render call + props (`session`, `clientId`). ✅
+- **Added missing "Landing Pages" nav entry** to `NAV_GROUPS` (Content group) — it existed as a tab ID but had no sidebar entry, making it unreachable. Also added `'pages'` to both `JSX_TABS` / `JSX_TABS_SW` arrays. ✅ **CONFIRMED LIVE on app.rankforgedai.com.**
+- **Fixed the `client_data` wrong-column bug (`id` → `client_id`) across 9 files**, all paired with `.single()` → `.maybeSingle()`: `GbpQaPage.jsx`, `KwGapPage.jsx`, `LandingPageBuilder.jsx`, `LocalSEOPage.jsx` (two instances, including a second bug in a `local_seo_tasks` query that was silently swallowed by an empty `catch{}`), `MetaTagGeneratorPage.jsx`, `NapAuditPage.jsx`, `ReportsPage.jsx` (also had a silent `.catch(){}`), `SchemaMonitorPage.jsx`, `Web2Page.jsx`. ✅
+- **Fixed `IndexingPage.jsx`** — was querying the `settings` table for `biz_website`, a column that only exists on `client_data`, causing a 400 error that also broke the `indexnow_key` load. ✅
+- **Fixed `RankTrackerPage.jsx`** — same `id`/`client_id` bug plus a `.single()` 406 on the settings query. ✅
+- **Fixed `useSettings.js` and `useClientData.js` hooks** — both used `.single()`, converted to `.maybeSingle()`. ✅
+- **Confirmed via production build (`npm run build`)** — 93 modules, zero errors, clean output. ✅
+- **Cleaned up 3 accidentally-committed scratch files** (`recovered_LandingPageBuilder.jsx`, `recovered_v2_LandingPageBuilder.jsx`, a mistyped/garbled filename artifact) — removed in a follow-up commit. ✅
+- **Verified business profile data prefill is now likely fixed** across all 11 touched pages (was on the old "WHAT NEEDS FIXING" list) — not individually re-tested page by page, but the root query bug causing it is fixed everywhere it appeared.
 
-## BLOCKED / ABANDONED THIS SESSION
-- Google Search Console page — deprioritized, too complex
-- Test user deletion — blocked by FK constraints, needs SQL fix
+## BLOCKED / KNOWN ISSUE — NOT FIXED THIS SESSION
+- **`ApiKeysPage.jsx` shows all keys as blank/"Not set" in the UI**, despite the underlying `settings` table data being confirmed intact via direct SQL query (`anthropic_key`, `google_key`, `gemini_key` all show `'set'`). **This is a display/fetch bug only — no data loss.** The page's load `useEffect` already correctly uses `.maybeSingle()` and doesn't have the `id`/`client_id` bug. Root cause not yet identified — candidates: `session` prop timing/availability when `ApiKeysPage` mounts, or a silently swallowed error (the `.then()` callback doesn't check/log `error` at all). **Needs investigation next session** — start by adding `console.error` logging to the load effect and checking what `session` actually contains when this component mounts.
+- Owner explicitly deprioritized this to ship; data is safe, so this is a UI polish/trust issue, not urgent infrastructure risk.
 
-## PENDING - NEXT SESSION (PRIORITY ORDER)
-1. **Delete test users from Supabase** — FK constraints block dashboard deletion
-   - Run in SQL editor IN THIS ORDER:
-   ```sql
-   SELECT id, email FROM auth.users ORDER BY created_at;
-   -- Then delete dependents first:
-   DELETE FROM settings WHERE user_id IN (SELECT id FROM auth.users WHERE email != 'YOUR_REAL_EMAIL');
-   DELETE FROM client_data WHERE user_id IN (SELECT id FROM auth.users WHERE email != 'YOUR_REAL_EMAIL');
-   DELETE FROM activation_keys WHERE used_by IN (SELECT id FROM auth.users WHERE email != 'YOUR_REAL_EMAIL');
-   DELETE FROM auth.users WHERE email != 'YOUR_REAL_EMAIL';
-   ```
-2. **Fresh owner signup** with real email after test users cleared
-3. **Rebuild LandingPageBuilder.jsx** (was overwritten with ContentCalendarPage code)
-4. **Real signup end-to-end test**
-5. **hello@rankforgedai.com** email forwarding — set up in DreamHost (owner task)
+## PENDING FROM PRIOR SESSIONS (carried over, not touched this session)
+1. **Delete test users from Supabase** — FK constraints block dashboard deletion; use SQL editor (see Session 31 handoff for exact SQL).
+2. **Fresh owner signup** with real email after test users cleared.
+3. **Real signup end-to-end test.**
+4. **hello@rankforgedai.com** email forwarding — DreamHost (owner task, not code).
+5. Google Search Console integration — still deprioritized, too many moving parts (per Session 31).
 
 ## CURRENT STATE OF gcs-data FUNCTION
-- File: supabase/functions/gcs-data/index.ts
-- Status: STUB deployed (returns {ok:true})
-- Real function: gcs-data-final.ts in Downloads — uses manual JWT decode + service role key
-- To restore real function: copy gcs-data-final.ts → supabase/functions/gcs-data/index.ts and deploy
+- Unchanged from Session 31: STUB deployed (returns `{ok:true}`). Real function (`gcs-data-final.ts`) still in Downloads, not redeployed. Note: `supabase/functions/gcs-data/index.ts` showed as modified in this session's git status but was not intentionally touched — verify this wasn't an accidental change before next deploy of that function.
 
-## KEY FILE LOCATIONS
-- src/components/SearchConsolePage.jsx — updated to use getSession()
-- src/components/ApiKeysPage.jsx — google_key is OAuth button
-- src/components/SocialCallbackPage.jsx — fixed gcs-auth endpoint
-- supabase/functions/gcs-auth/index.ts — saves to google_key column
-- supabase/functions/gcs-data/index.ts — STUB currently deployed
+## KEY FILE LOCATIONS (updated)
+- `src/components/LandingPageBuilder.jsx` — restored, encoding-fixed, query-fixed. UTF-8, CRLF line endings, 603 lines.
+- `src/components/DashboardShell.jsx` — Landing Pages nav + render call fixed.
+- `src/components/ApiKeysPage.jsx` — **needs investigation** (display bug, see above).
+- `src/hooks/useSettings.js`, `src/hooks/useClientData.js` — `.maybeSingle()` fix applied.
+- All 9 other touched component files — `client_data` column fix applied, listed above.
+
+## GIT COMMITS THIS SESSION
+- `0aa5f13` — fix: restore LandingPageBuilder.jsx (initial attempt, later found to still be corrupted — see lesson #60)
+- `40cc008` — fix: restore LandingPageBuilder.jsx to last correct version (a0b499c), corrected from e03bbd5 corruption
+- `6110eed` — fix: restore LandingPageBuilder, fix client_data/settings query bugs across 11 files, add Landing Pages nav entry
+- `3f286cb` — chore: remove scratch/debug files accidentally committed
 
 ## DOMAIN STRUCTURE
 - rankforgedai.com — marketing website ✅ LIVE
-- app.rankforgedai.com — SaaS app ✅ LIVE
+- app.rankforgedai.com — SaaS app ✅ LIVE (this session's fixes confirmed live here)
 - send.rankforgedai.com — Resend email sending ✅
 
 ## GITHUB STRUCTURE
@@ -76,6 +77,7 @@ git add .
 git commit -m "description"
 git push
 ```
+(Vercel auto-deploys in ~2 minutes)
 
 ## DEPLOY PROCESS (MARKETING)
 ```
@@ -98,10 +100,15 @@ gsc_connected, indexnow_key, yext_key, yext_account, openai_key, gemini_key,
 pagespeed_key, moz_id, moz_secret, brightlocal_key, brightlocal_cid,
 gmail_token, fb_token, fb_page_id, linkedin_token, brand_color, agency_name,
 report_day, updated_at
+**Does NOT have:** biz_website, biz_name, or any biz_* field. Those belong to client_data only.
 
 ## SUPABASE TABLE: client_data columns
-client_id, user_id, biz_name, biz_cat, biz_addr, biz_city, biz_state,
+client_id (PRIMARY/FOREIGN KEY — NOT "id"), user_id, biz_name, biz_cat, biz_addr, biz_city, biz_state,
 biz_zip, biz_phone, biz_website, biz_desc, biz_kw
+
+## SUPABASE TABLE: clients columns (separate from client_data)
+id (PRIMARY KEY — this one DOES use "id"), user_id, name, color, updated_at
+This is the lightweight client list table used by useClients.js. Do not confuse with client_data.
 
 ## DESIGN SYSTEM
 pageBg:#060d1a cardBg:#0d1f3c border:#0f2040 border2:#1a3560
@@ -142,3 +149,13 @@ GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 
 ## TEST KEYS
 RFA-SOLO-TEST-0001, RFA-DLX-TEST-0001, RFA-PRO-TEST-0001, RFA-AGN-TEST-0001
+
+## LAUNCH READINESS SUMMARY (as of end of Session 32)
+✅ Landing Pages feature — live, working, confirmed in production
+✅ Business profile data flow — root bug fixed across 11 files, should resolve long-standing prefill issues
+✅ Production build — clean, zero errors
+✅ Data integrity — verified intact via direct SQL query
+⚠️ API Keys page UI display — known cosmetic bug, data is safe, owner approved shipping with this open
+⏸️ Test user cleanup, fresh signup test, GSC integration — still pending from prior sessions, not blockers for this launch
+
+**Owner decision: proceeding to launch with the ApiKeysPage display bug as a known follow-up item.**
