@@ -1,5 +1,5 @@
 // src/components/ClientsPage.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
 const PLAN_COLORS = {
@@ -25,11 +25,12 @@ const SEO_TIPS = [
 
 export default function ClientsPage({
   clients, activeId, maxClients, plan,
-  onSelect, onAdd, onDelete, onUpdateMeta, onCreate,
+  onSelect, onAdd, onDelete, onUpdateMeta, onUpdateData, onCreate,
   onUpgrade, onBilling, onSignOut, onResetPassword, userEmail
 }) {
   const [editId, setEditId]           = useState(null)
   const [editData, setEditData]       = useState({})
+  const [editClientData, setEditClientData] = useState({})
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [saving, setSaving]           = useState(false)
   const [search, setSearch]           = useState('')
@@ -39,15 +40,42 @@ export default function ClientsPage({
     (c.city||'').toLowerCase().includes(search.toLowerCase())
   )
 
-  const startEdit = (client) => {
+  const startEdit = async (client) => {
     setEditId(client.id)
     setEditData({ name: client.name, city: client.city||'', category: client.category||'', color: client.color || BIZ_COLORS[0] })
+    // Load full client_data
+    const { data } = await supabase.from('client_data').select('*').eq('client_id', client.id).maybeSingle()
+    setEditClientData({
+      biz_addr:    data?.biz_addr    || '',
+      biz_state:   data?.biz_state   || '',
+      biz_zip:     data?.biz_zip     || '',
+      biz_phone:   data?.biz_phone   || '',
+      biz_website: data?.biz_website || '',
+      biz_desc:    data?.biz_desc    || '',
+      biz_kw:      data?.biz_kw      || '',
+    })
   }
 
   const saveEdit = async () => {
     if (!editData.name?.trim()) return
     setSaving(true)
+    // Save to clients table
     await onUpdateMeta(editId, { name:editData.name.trim(), city:editData.city, category:editData.category, color:editData.color })
+    // Save to client_data table
+    if (onUpdateData) {
+      await onUpdateData(editId, {
+        biz_name:    editData.name.trim(),
+        biz_city:    editData.city,
+        biz_cat:     editData.category,
+        biz_addr:    editClientData.biz_addr,
+        biz_state:   editClientData.biz_state,
+        biz_zip:     editClientData.biz_zip,
+        biz_phone:   editClientData.biz_phone,
+        biz_website: editClientData.biz_website,
+        biz_desc:    editClientData.biz_desc,
+        biz_kw:      editClientData.biz_kw,
+      })
+    }
     setEditId(null)
     setSaving(false)
   }
@@ -191,7 +219,7 @@ export default function ClientsPage({
                       <div style={{ fontSize:12, fontWeight:700, color:'#60a5fa', marginBottom:12 }}>✏️ Edit Business</div>
                       {[
                         { label:'Business Name', key:'name', placeholder:'Business name' },
-                        { label:'City',          key:'city', placeholder:'City, State' },
+                        { label:'City',          key:'city', placeholder:'City' },
                         { label:'Category',      key:'category', placeholder:'e.g. Plumber, Dentist' },
                       ].map(f => (
                         <div key={f.key} style={{ marginBottom:10 }}>
@@ -202,6 +230,29 @@ export default function ClientsPage({
                           />
                         </div>
                       ))}
+                      {[
+                        { label:'Street Address', key:'biz_addr',    placeholder:'123 Main St' },
+                        { label:'State',          key:'biz_state',   placeholder:'TX' },
+                        { label:'ZIP',            key:'biz_zip',     placeholder:'78701' },
+                        { label:'Phone',          key:'biz_phone',   placeholder:'(555) 123-4567' },
+                        { label:'Website',        key:'biz_website', placeholder:'https://yourbusiness.com' },
+                        { label:'Keywords',       key:'biz_kw',      placeholder:'plumber, drain cleaning' },
+                      ].map(f => (
+                        <div key={f.key} style={{ marginBottom:10 }}>
+                          <label style={{ fontSize:11.5, color:'#4a6080', marginBottom:4, display:'block' }}>{f.label}</label>
+                          <input value={editClientData[f.key]||''} onChange={e=>setEditClientData(d=>({...d,[f.key]:e.target.value}))}
+                            placeholder={f.placeholder}
+                            style={{ width:'100%', padding:'8px 12px', background:'#07111f', color:'#e2e8f0', border:'1px solid #1a3560', borderRadius:7, fontSize:13, outline:'none', boxSizing:'border-box' }}
+                          />
+                        </div>
+                      ))}
+                      <div style={{ marginBottom:12 }}>
+                        <label style={{ fontSize:11.5, color:'#4a6080', marginBottom:4, display:'block' }}>Description</label>
+                        <textarea value={editClientData.biz_desc||''} onChange={e=>setEditClientData(d=>({...d,biz_desc:e.target.value}))}
+                          placeholder="Describe the business..."
+                          rows={3} style={{ width:'100%', padding:'8px 12px', background:'#07111f', color:'#e2e8f0', border:'1px solid #1a3560', borderRadius:7, fontSize:13, outline:'none', boxSizing:'border-box', resize:'vertical', fontFamily:'inherit' }}
+                        />
+                      </div>
                       {/* Color picker */}
                       <div style={{ marginBottom:12 }}>
                         <label style={{ fontSize:11.5, color:'#4a6080', marginBottom:6, display:'block' }}>Color</label>

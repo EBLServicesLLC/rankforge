@@ -44,11 +44,12 @@ export function useClients(userId) {
   useEffect(() => { loadClients() }, [loadClients])
 
   // ── Create a new client ────────────────────────────
-  const createClient = async (name) => {
+  const createClient = async (data) => {
+    const name = typeof data === 'string' ? data : data.name
     const colors = ['#1A6FBF','#1C7A37','#6B3FA0','#D97706','#C0392B','#0E7090']
     const color  = colors[clients.length % colors.length]
 
-    const { data, error } = await supabase
+    const { data: clientRow, error } = await supabase
       .from('clients')
       .insert({ user_id: userId, name, color })
       .select()
@@ -56,16 +57,28 @@ export function useClients(userId) {
 
     if (error) { setError(error.message); return null }
 
-    // Also create an empty client_data row
-    await supabase.from('client_data').insert({
-      client_id: data.id,
+    // Save all client_data fields if provided
+    const clientData = {
+      client_id: clientRow.id,
       user_id:   userId,
-      biz_name:  name
-    })
+      biz_name:  name,
+    }
+    if (typeof data === 'object') {
+      if (data.addr)     clientData.biz_addr    = data.addr
+      if (data.city)     clientData.biz_city    = data.city
+      if (data.state)    clientData.biz_state   = data.state
+      if (data.zip)      clientData.biz_zip     = data.zip
+      if (data.phone)    clientData.biz_phone   = data.phone
+      if (data.website)  clientData.biz_website = data.website
+      if (data.category) clientData.biz_cat     = data.category
+      if (data.desc)     clientData.biz_desc    = data.desc
+      if (data.keywords) clientData.biz_kw      = data.keywords
+    }
+    await supabase.from('client_data').insert(clientData)
 
-    setClients(prev => [data, ...prev])
-    setActiveId(data.id)
-    return data
+    setClients(prev => [clientRow, ...prev])
+    setActiveId(clientRow.id)
+    return clientRow
   }
 
   // ── Delete a client ────────────────────────────────
@@ -91,5 +104,15 @@ export function useClients(userId) {
     setClients(prev => prev.map(c => c.id === clientId ? { ...c, ...updates } : c))
   }
 
-  return { clients, activeId, setActiveId, loading, error, createClient, deleteClient, updateClientMeta, reload: loadClients }
+  // ── Update client_data (website, phone, address, etc) ──
+  const updateClientData = async (clientId, fields) => {
+    const { error } = await supabase
+      .from('client_data')
+      .upsert({ client_id: clientId, user_id: userId, ...fields }, { onConflict: 'client_id' })
+
+    if (error) { setError(error.message); return false }
+    return true
+  }
+
+  return { clients, activeId, setActiveId, loading, error, createClient, deleteClient, updateClientMeta, updateClientData, reload: loadClients }
 }

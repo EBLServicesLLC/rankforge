@@ -92,7 +92,7 @@ export default function DashboardShell({ session, subscription }) {
   const iframeRef = useRef(null)
   const pendingTabRef = useRef(null)
 
-  const { clients, activeId, setActiveId, createClient, deleteClient, updateClientMeta } = useClients(session.user.id)
+  const { clients, activeId, setActiveId, createClient, deleteClient, updateClientMeta, updateClientData } = useClients(session.user.id)
   const activeClient = clients.find(c => c.id === activeId)
   const plan = subscription?.plan || 'solopreneur'
   const maxClients = subscription?.max_clients || 1
@@ -418,6 +418,7 @@ export default function DashboardShell({ session, subscription }) {
             userEmail={session.user.email}
             onDelete={deleteClient}
             onUpdateMeta={updateClientMeta}
+            onUpdateData={updateClientData}
             onCreate={createClient}
           />
         )}
@@ -653,9 +654,8 @@ export default function DashboardShell({ session, subscription }) {
         <AddModal
           onClose={()=>setShowAddModal(false)}
           onCreate={async(data)=>{
-            const client = await createClient(data.name)
+            const client = await createClient(data)
             if (client) {
-              if (data.city||data.category) await updateClientMeta(client.id,{city:data.city,category:data.category})
               setActiveId(client.id)
               setActiveTab('dash')
             }

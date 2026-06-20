@@ -114,6 +114,18 @@ const API_GUIDES = [
     link:'https://www.indexnow.org/en/documentation', linkLabel:'Open IndexNow Docs ', placeholder:'your-indexnow-key',
   },
   {
+    key:'pagespeed', label:'Google PageSpeed API', required:false, color:'#34a853', icon:'⚡',
+    why:'Runs Core Web Vitals audits and PageSpeed scores for any URL. Powers the Site Speed Analyzer.',
+    steps:[
+      'Go to console.cloud.google.com',
+      'Select your project (or create one)',
+      'Search for "PageSpeed Insights API" and enable it',
+      'Go to Credentials → Create Credentials → API Key',
+      'Copy and paste the key below',
+    ],
+    link:'https://console.cloud.google.com', linkLabel:'Open Google Cloud Console →', placeholder:'AIza...',
+  },
+  {
     key:'gmail', label:'Gmail (Email Sending)', required:false, color:'#ea4335', icon:'',
     why:'Sends automated weekly reports and review request emails directly from your Gmail account.',
     steps:[
@@ -192,7 +204,7 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
     anthropic:'', openai:'', google:'', gemini:'',
     yext:'', yextAccount:'', moz:'', mozSecret:'',
     brightlocal:'', brightlocalCid:'', indexnow:'', gmail:'',
-    facebook:'', fbPageId:'', linkedin:''
+    facebook:'', fbPageId:'', linkedin:'', pagespeed:''
   })
   const [showKey, setShowKey]     = useState({})
   const [expanded, setExpanded]   = useState({ anthropic:true })
@@ -252,6 +264,7 @@ export default function OnboardingWizard({ userId, userEmail, onComplete }) {
           brightlocal_cid:apiKeys.brightlocalCid, gmail_token:apiKeys.gmail,
           fb_token:apiKeys.facebook,         fb_page_id:apiKeys.fbPageId,
           linkedin_token:apiKeys.linkedin,
+          pagespeed_key:apiKeys.pagespeed,
         }, { onConflict:'user_id' })
         await supabase.from('subscriptions').update({ onboarding_step:4 }).eq('user_id', userId)
       }
