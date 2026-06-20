@@ -24,9 +24,17 @@ function getPlanFromPriceId(priceId: string): string {
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   try {
-    const { price_id, user_id, user_email, success_url, cancel_url } = await req.json()
+    const { price_id, user_id, user_email, success_url, cancel_url, coupon_code } = await req.json()
 
     const plan = getPlanFromPriceId(price_id)
+
+    // RANKFORGED50 is Solo plan only
+    if (coupon_code && plan !== 'solopreneur') {
+      return new Response(JSON.stringify({ error: 'This promotion code is only valid for the Solo plan.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
 
     let customerId
     if (user_email) {
@@ -49,7 +57,8 @@ serve(async (req) => {
       line_items: [{ price: price_id, quantity: 1 }],
       success_url: (success_url || 'https://app.rankforgedai.com/?activated=1') + '&session_id={CHECKOUT_SESSION_ID}',
       cancel_url: cancel_url || 'https://app.rankforgedai.com/',
-      allow_promotion_codes: true,
+      // Apply coupon programmatically (Solo only — validated above)
+      ...(coupon_code ? { discounts: [{ promotion_code: 'promo_1TkWDZLQRnOj0qLPJl7KIHhw' }] } : { allow_promotion_codes: false }),
       metadata: {
         user_id: user_id || '',
         price_id,

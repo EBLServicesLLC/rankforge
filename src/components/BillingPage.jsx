@@ -15,6 +15,8 @@ export default function BillingPage({ userId, userEmail, onBack }) {
   const [portalLoading, setPortalLoading]     = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
   const [error, setError]                     = useState('')
+  const [promoCode, setPromoCode]             = useState('')
+  const [promoError, setPromoError]           = useState('')
 
   useEffect(() => { loadSubscription() }, [userId])
 
@@ -50,20 +52,30 @@ export default function BillingPage({ userId, userEmail, onBack }) {
   }
 
   const startCheckout = async (plan) => {
+    setPromoError('')
     setCheckoutLoading(plan.id); setError('')
     try {
       const { data: { session } } = await supabase.auth.getSession()
+      const body = {
+        price_id:    plan.priceId,
+        plan:        plan.id,
+        user_id:     userId,
+        user_email:  userEmail,
+        success_url: `${window.location.origin}/?billing=success`,
+        cancel_url:  `${window.location.origin}/?billing=cancelled`,
+      }
+      // Only pass coupon_code for Solo plan
+      if (promoCode.trim() && plan.id === 'solopreneur') {
+        body.coupon_code = promoCode.trim().toUpperCase()
+      } else if (promoCode.trim() && plan.id !== 'solopreneur') {
+        setPromoError('This promotion code is only valid for the Solo plan.')
+        setCheckoutLoading(null)
+        return
+      }
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({
-          price_id:    plan.priceId,
-          plan:        plan.id,
-          user_id:     userId,
-          user_email:  userEmail,
-          success_url: `${window.location.origin}/?billing=success`,
-          cancel_url:  `${window.location.origin}/?billing=cancelled`,
-        }),
+        body: JSON.stringify(body),
       })
       const json = await res.json()
       if (json.url) window.location.href = json.url
@@ -125,6 +137,23 @@ export default function BillingPage({ userId, userEmail, onBack }) {
 
         <div style={{ background:'#0d1f3c', border:'1px solid #1a3560', borderRadius:14, padding:'24px 28px', marginBottom:20 }}>
           <div style={{ fontSize:11, fontWeight:700, color:'#2a4a6a', textTransform:'uppercase', letterSpacing:'.05em', marginBottom:16 }}>{subscription ? 'Change Plan' : 'Choose a Plan'}</div>
+
+          {/* Promo code input */}
+          <div style={{ marginBottom:20, display:'flex', gap:10, alignItems:'flex-start', flexWrap:'wrap' }}>
+            <div style={{ flex:1, minWidth:200 }}>
+              <input
+                value={promoCode}
+                onChange={e=>{ setPromoCode(e.target.value.toUpperCase()); setPromoError('') }}
+                placeholder="Promo code (Solo plan only)"
+                style={{ width:'100%', padding:'9px 14px', background:'#07111f', color:'#e2e8f0', border:'1.5px solid #1a3560', borderRadius:8, fontSize:13.5, outline:'none', boxSizing:'border-box', fontFamily:'monospace', letterSpacing:'.05em' }}
+                onFocus={e=>e.target.style.borderColor='#3b82f6'}
+                onBlur={e=>e.target.style.borderColor='#1a3560'}
+              />
+              {promoError && <div style={{ fontSize:12, color:'#f87171', marginTop:5 }}>{promoError}</div>}
+              {promoCode && !promoError && <div style={{ fontSize:12, color:'#4ade80', marginTop:5 }}>✓ Code will apply at Solo plan checkout</div>}
+            </div>
+          </div>
+
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(185px,1fr))', gap:14 }}>
             {PLANS.map(plan => {
               const isCurrent = subscription?.plan === plan.id && isActive
