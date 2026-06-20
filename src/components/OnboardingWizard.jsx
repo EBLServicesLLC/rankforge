@@ -370,6 +370,11 @@ biz_desc:profile.desc, biz_kw:profile.keywords,
                 </button>
               </div>
 
+              <div style={{ fontSize:13, color:'#64748b', marginBottom:16 }}>
+                Don't have a key?{' '}
+                <a href="#" onClick={e=>{e.preventDefault();supabase.auth.signOut().then(()=>window.location.href='https://rankforgedai.com/#pricing')}} style={{ color:'#60a5fa', fontWeight:600 }}>Sign out &amp; purchase a plan</a>
+              </div>
+
               {keyValid && keyData && (
                 <div style={{ background:'rgba(16,185,129,.1)', border:'1.5px solid rgba(16,185,129,.4)', borderRadius:12, padding:'16px 20px', marginBottom:20 }}>
                   <div style={{ fontSize:13.5, fontWeight:700, color:'#4ade80', marginBottom:12 }}> Key activated successfully!</div>
