@@ -74,6 +74,9 @@ export default function App() {
   const [session, setSession]           = useState(undefined)
   const [subscription, setSubscription] = useState(undefined)
   const [isRecovery, setIsRecovery]     = useState(false)
+  const [pollCount, setPollCount]       = useState(0)
+
+  const isBillingSuccess = new URLSearchParams(window.location.search).get('billing') === 'success'
 
   // Capture path ONCE on mount — prevents ghost URL re-triggering on re-render
   const [initialPath] = useState(() => window.location.pathname)
@@ -106,13 +109,25 @@ export default function App() {
       .from('subscriptions')
       .select('*')
       .eq('user_id', session.user.id)
-      .single()
+      .maybeSingle()
       .then(({ data }) => setSubscription(data || null))
-  }, [session])
+  }, [session, pollCount])
 
-  // ── Social Publisher routes — checked against initialPath (captured on mount only)
-  // Using initialPath instead of window.location.pathname prevents ghost URL issue
-  // where navigating away from /social kept rendering SocialPublisherPage on re-renders
+  // Poll for subscription after successful Stripe checkout
+  // Webhook fires async — may take a few seconds after redirect
+  useEffect(() => {
+    if (!isBillingSuccess) return
+    if (subscription) return // already found it, stop polling
+    if (!session?.user?.id) return
+
+    const timer = setTimeout(() => {
+      setPollCount(c => c + 1)
+    }, 2000) // re-check every 2 seconds
+
+    return () => clearTimeout(timer)
+  }, [isBillingSuccess, subscription, session, pollCount])
+
+  // ── Social Publisher routes
   if (initialPath === '/social/callback') return <SocialCallbackPage />
   if (initialPath === '/social')          return <SocialPublisherPage />
 
@@ -152,6 +167,26 @@ export default function App() {
         userEmail={session.user.email}
         onBack={() => { window.history.replaceState({}, '', '/'); window.location.reload() }}
       />
+    )
+  }
+
+  // Waiting for webhook after Stripe checkout — show spinner not BillingPage
+  if (isBillingSuccess && !subscription) {
+    return (
+      <div style={{
+        display:'flex', alignItems:'center', justifyContent:'center',
+        height:'100vh', background:'#060d1a', color:'#fff',
+        fontFamily:"'Segoe UI', system-ui, sans-serif",
+        flexDirection:'column', gap:14,
+      }}>
+        <div style={{
+          width:36, height:36, border:'3px solid #0f2040',
+          borderTopColor:'#10b981', borderRadius:'50%',
+          animation:'spin 1s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform:rotate(360deg) } }`}</style>
+        <div style={{ fontSize:14, color:'#10b981', fontWeight:600 }}>Payment confirmed! Activating your account...</div>
+      </div>
     )
   }
 
