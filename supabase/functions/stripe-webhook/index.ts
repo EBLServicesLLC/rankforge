@@ -1,5 +1,4 @@
-// supabase/functions/stripe-webhook/index.ts
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
+﻿// supabase/functions/stripe-webhook/index.ts
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@13?target=deno'
 
@@ -17,7 +16,7 @@ const PLAN_CLIENTS: Record<string, number> = {
   agency:      25,
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
 
   const signature = req.headers.get('stripe-signature')
@@ -153,3 +152,4 @@ serve(async (req) => {
     })
   }
 })
+

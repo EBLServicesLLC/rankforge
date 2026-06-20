@@ -1,5 +1,5 @@
 # RankForged AI - Session Handoff
-**Date:** 2026-06-17 (Session 32 — End)
+**Date:** 2026-06-20 (Session 33 — End)
 **Stack:** React + Vite | Supabase (auth + Postgres + RLS) | Vercel
 **Repo (app):** https://github.com/EBLServicesLLC/rankforge
 **Repo (marketing):** https://github.com/EBLServicesLLC/rankforgedai-marketing
@@ -9,66 +9,82 @@
 
 ## CRITICAL LESSONS - READ FIRST
 ### All previous lessons still apply, plus:
-### #57 - A commit with an unrelated message (e.g. "Add Resend email...") can silently overwrite an unrelated file if too many files are staged in one sweep. ALWAYS check `git diff --stat` before committing broad/bulk changes — don't trust the commit message to reflect what's actually staged.
-### #58 - `client_data` table's primary/foreign key column is `client_id`, NOT `id`. This exact bug (`.eq('id', clientId)` instead of `.eq('client_id', clientId)`) was found and fixed in 9 separate component files this session — it's a recurring copy-paste mistake. If a new page is added that queries `client_data`, double-check the column name.
-### #59 - Supabase's `.single()` throws an HTTP 406 if a query returns 0 OR more than 1 rows. Always use `.maybeSingle()` for any query that might legitimately return zero rows (e.g. a settings/profile row that doesn't exist yet for a new user/client). This was the second half of the bug in #58 — found and fixed in 11 files total this session.
-### #60 - NEVER use PowerShell's `>` redirect to extract file content from `git show` on Windows without checking encoding afterward. It can silently write UTF-16 with mojibake (corrupted special characters) instead of clean UTF-8. Always verify with `file <filename>` after any `git show ... > file` extraction. Prefer `git show <commit>:<path> | Out-File -Encoding utf8 <path>` instead, or better, use `git checkout <commit> -- <path>` directly.
-### #61 - A component being correctly imported in DashboardShell.jsx does NOT mean it's being rendered. Always grep for both `import X from` AND `<X ... />` — an import with zero JSX usage is a silent dead component.
-### #62 - When a feature seems "broken in the UI" but the file is provably correct (builds clean, exports correct, no syntax errors), check for Vite dev-server cache staleness (`node_modules/.vite`) and browser extensions before assuming the code is wrong. In this session, local dev kept showing stale state even after correct fixes; the production build + fresh Vercel deploy resolved it immediately, confirming the issue was environmental, not code.
+### #63 - stripe-webhook MUST be deployed with --no-verify-jwt flag. Stripe does not send a JWT auth header. Without this flag the function returns 401 and no subscriptions or activation keys are created. Command: `supabase functions deploy stripe-webhook --project-ref ybhpbpahhywiokhqpldj --no-verify-jwt`
+### #64 - After deleting test users from auth.users, Stripe may retry old webhook events for those deleted users. The webhook will return 200 OK but subscription inserts will fail silently due to FK constraint on user_id. This is harmless — only affects deleted test users, not new real users.
+### #65 - Resend blocks emails to non-verified addresses unless FROM_EMAIL is set to a verified domain. Set secret: `supabase secrets set FROM_EMAIL="RankForged AI <noreply@send.rankforgedai.com>" --project-ref ybhpbpahhywiokhqpldj`
+### #66 - App.jsx must poll for subscription after Stripe redirect. Webhook fires async — if app checks subscription immediately on /?billing=success it finds null and shows BillingPage again. Fix: poll every 2 seconds until subscription appears, show green spinner meanwhile.
+### #67 - Stripe coupon codes cannot be reused once expired/deleted. Always create new coupon with a different code name.
+### #68 - stripe-checkout edge function still uses old `serve()` pattern from std@0.168.0. Should be updated to `Deno.serve()` to match stripe-webhook. Not yet done — do this next session.
 
-## COMPLETED SESSION 32
-- **Restored `LandingPageBuilder.jsx`** — had been silently overwritten with duplicate `ContentCalendarPage` content by an unrelated commit (`e03bbd5`, "Add Resend email...") days earlier. Recovered from commit `a0b499c` (last known-good). ✅
-- **Fixed UTF-16/mojibake encoding corruption** in `LandingPageBuilder.jsx` introduced during git recovery (PowerShell `>` redirect issue — see lesson #60). Converted back to clean UTF-8, restored all special characters (✓ ✗ → 👁 ── etc). ✅
-- **Wired up the "Landing Pages" sidebar tab correctly** — `DashboardShell.jsx`'s `pages` tab was rendering `ContentCalendarPage` instead of `LandingPageBuilder`; fixed render call + props (`session`, `clientId`). ✅
-- **Added missing "Landing Pages" nav entry** to `NAV_GROUPS` (Content group) — it existed as a tab ID but had no sidebar entry, making it unreachable. Also added `'pages'` to both `JSX_TABS` / `JSX_TABS_SW` arrays. ✅ **CONFIRMED LIVE on app.rankforgedai.com.**
-- **Fixed the `client_data` wrong-column bug (`id` → `client_id`) across 9 files**, all paired with `.single()` → `.maybeSingle()`: `GbpQaPage.jsx`, `KwGapPage.jsx`, `LandingPageBuilder.jsx`, `LocalSEOPage.jsx` (two instances, including a second bug in a `local_seo_tasks` query that was silently swallowed by an empty `catch{}`), `MetaTagGeneratorPage.jsx`, `NapAuditPage.jsx`, `ReportsPage.jsx` (also had a silent `.catch(){}`), `SchemaMonitorPage.jsx`, `Web2Page.jsx`. ✅
-- **Fixed `IndexingPage.jsx`** — was querying the `settings` table for `biz_website`, a column that only exists on `client_data`, causing a 400 error that also broke the `indexnow_key` load. ✅
-- **Fixed `RankTrackerPage.jsx`** — same `id`/`client_id` bug plus a `.single()` 406 on the settings query. ✅
-- **Fixed `useSettings.js` and `useClientData.js` hooks** — both used `.single()`, converted to `.maybeSingle()`. ✅
-- **Confirmed via production build (`npm run build`)** — 93 modules, zero errors, clean output. ✅
-- **Cleaned up 3 accidentally-committed scratch files** (`recovered_LandingPageBuilder.jsx`, `recovered_v2_LandingPageBuilder.jsx`, a mistyped/garbled filename artifact) — removed in a follow-up commit. ✅
-- **Verified business profile data prefill is now likely fixed** across all 11 touched pages (was on the old "WHAT NEEDS FIXING" list) — not individually re-tested page by page, but the root query bug causing it is fixed everywhere it appeared.
+## COMPLETED SESSION 33
+- **Fixed ApiKeysPage** — added error logging, confirmed keys now display correctly after maybeSingle fix. ✅
+- **Fixed DashboardShell** — two .single() calls → .maybeSingle() (settings + client_data queries in iframe loader). ✅
+- **Fixed BillingPage** — added `plan: plan.id` to Stripe checkout body so metadata is complete. ✅
+- **Fixed stripe-checkout edge function** — updated price ID map to match BillingPage price IDs (old map had completely different IDs, causing plan to always return 'unknown'). ✅
+- **Fixed stripe-webhook** — removed old `serve()` import, now uses `Deno.serve()`. Redeployed with `--no-verify-jwt`. 401 errors resolved. ✅
+- **Fixed App.jsx** — added polling logic after /?billing=success. Shows green spinner, polls every 2s until subscription exists, then routes to OnboardingWizard. ✅
+- **Fixed OnboardingWizard** — removed Testing hint block, restored "Don't have a key? Sign out & purchase a plan" link pointing to rankforgedai.com/#pricing. ✅
+- **Fixed FROM_EMAIL** — set Supabase secret to noreply@send.rankforgedai.com (verified domain). ✅
+- **Cleared all test users** — full FK-safe delete across all dependent tables. Owner account (mike@eblservicesllc.com / 4521e942-dd3f-4cde-94fa-fe103fe0f498) preserved. ✅
+- **Confirmed webhook working** — activation keys created correctly with proper plan names for all recent purchases. ✅
 
-## BLOCKED / KNOWN ISSUE — NOT FIXED THIS SESSION
-- **`ApiKeysPage.jsx` shows all keys as blank/"Not set" in the UI**, despite the underlying `settings` table data being confirmed intact via direct SQL query (`anthropic_key`, `google_key`, `gemini_key` all show `'set'`). **This is a display/fetch bug only — no data loss.** The page's load `useEffect` already correctly uses `.maybeSingle()` and doesn't have the `id`/`client_id` bug. Root cause not yet identified — candidates: `session` prop timing/availability when `ApiKeysPage` mounts, or a silently swallowed error (the `.then()` callback doesn't check/log `error` at all). **Needs investigation next session** — start by adding `console.error` logging to the load effect and checking what `session` actually contains when this component mounts.
-- Owner explicitly deprioritized this to ship; data is safe, so this is a UI polish/trust issue, not urgent infrastructure risk.
+## CURRENT STATE
+- Webhook: WORKING ✅ (200 OK, correct metadata, keys created)
+- Subscription insert: WORKING ✅ (confirmed for new users)
+- Activation key creation: WORKING ✅
+- Email delivery: NOT YET CONFIRMED ⚠️ (FROM_EMAIL fixed but no successful delivery test completed)
+- Fresh end-to-end test: NOT COMPLETED ⚠️ (ran out of test emails this session)
+- Stripe coupon: NEEDS RECREATION ⚠️ (old coupon expired 5/5 redemptions, cannot reuse name)
 
-## PENDING FROM PRIOR SESSIONS (carried over, not touched this session)
-1. **Delete test users from Supabase** — FK constraints block dashboard deletion; use SQL editor (see Session 31 handoff for exact SQL).
-2. **Fresh owner signup** with real email after test users cleared.
-3. **Real signup end-to-end test.**
-4. **hello@rankforgedai.com** email forwarding — DreamHost (owner task, not code).
-5. Google Search Console integration — still deprioritized, too many moving parts (per Session 31).
+## IMMEDIATE NEXT SESSION TASKS (in order)
+1. **Create new Stripe coupon** — Stripe Dashboard → Products → Coupons → Create new with different code name
+2. **Fresh end-to-end test** — new email, sign up, pay, confirm spinner → OnboardingWizard → activation email arrives
+3. **If email still not arriving** — check Supabase → Edge Functions → send-email → Logs for errors
+4. **Fix stripe-checkout** — update from `serve()` to `Deno.serve()` pattern (low priority, working despite old pattern)
+5. **Go live** — owner confirmed flow is ready pending email confirmation
 
-## CURRENT STATE OF gcs-data FUNCTION
-- Unchanged from Session 31: STUB deployed (returns `{ok:true}`). Real function (`gcs-data-final.ts`) still in Downloads, not redeployed. Note: `supabase/functions/gcs-data/index.ts` showed as modified in this session's git status but was not intentionally touched — verify this wasn't an accidental change before next deploy of that function.
+## OWNER ACCOUNT
+- Email: mike@eblservicesllc.com
+- user_id: 4521e942-dd3f-4cde-94fa-fe103fe0f498
+- Plan: agency, max_clients: 999, onboarding_completed: true
 
-## KEY FILE LOCATIONS (updated)
-- `src/components/LandingPageBuilder.jsx` — restored, encoding-fixed, query-fixed. UTF-8, CRLF line endings, 603 lines.
-- `src/components/DashboardShell.jsx` — Landing Pages nav + render call fixed.
-- `src/components/ApiKeysPage.jsx` — **needs investigation** (display bug, see above).
-- `src/hooks/useSettings.js`, `src/hooks/useClientData.js` — `.maybeSingle()` fix applied.
-- All 9 other touched component files — `client_data` column fix applied, listed above.
+## KEY FILE CHANGES THIS SESSION
+- `src/App.jsx` — polling logic added for billing=success
+- `src/components/ApiKeysPage.jsx` — error logging added
+- `src/components/DashboardShell.jsx` — .single() → .maybeSingle() in iframe loader
+- `src/components/BillingPage.jsx` — plan added to checkout body
+- `src/components/OnboardingWizard.jsx` — testing hint removed, purchase link restored
+- `supabase/functions/stripe-webhook/index.ts` — serve() → Deno.serve(), deployed --no-verify-jwt
+- `supabase/functions/stripe-checkout/index.ts` — price ID map updated
 
 ## GIT COMMITS THIS SESSION
-- `0aa5f13` — fix: restore LandingPageBuilder.jsx (initial attempt, later found to still be corrupted — see lesson #60)
-- `40cc008` — fix: restore LandingPageBuilder.jsx to last correct version (a0b499c), corrected from e03bbd5 corruption
-- `6110eed` — fix: restore LandingPageBuilder, fix client_data/settings query bugs across 11 files, add Landing Pages nav entry
-- `3f286cb` — chore: remove scratch/debug files accidentally committed
+- `9fa0ed6` — fix: ApiKeysPage error logging + single() to maybeSingle() in DashboardShell
+- App.jsx, BillingPage.jsx, OnboardingWizard.jsx pushed (check git log for exact hashes)
 
 ## DOMAIN STRUCTURE
 - rankforgedai.com — marketing website ✅ LIVE
-- app.rankforgedai.com — SaaS app ✅ LIVE (this session's fixes confirmed live here)
-- send.rankforgedai.com — Resend email sending ✅
+- app.rankforgedai.com — SaaS app ✅ LIVE
+- send.rankforgedai.com — Resend email sending ✅ VERIFIED
 
-## GITHUB STRUCTURE
-- EBLServicesLLC/rankforge — app (main) → auto-deploys to rankforgedai project
-- EBLServicesLLC/rankforgedai-marketing — marketing (main) → auto-deploys to project-gd2vh
-- NOTE: Local marketing branch is 'master', remote is 'main' — always: git push origin HEAD:main
+## SUPABASE TABLE: subscriptions columns
+id, user_id (NOT NULL), plan (NOT NULL, default 'solopreneur'), max_clients (NOT NULL, default 1),
+seo_types, status (NOT NULL, default 'active'), activation_key, stripe_customer_id,
+stripe_subscription_id, onboarding_completed (default false), onboarding_step (default 0),
+created_at, updated_at, stripe_price_id, subscription_status
 
-## LOCAL FOLDER STRUCTURE
-- C:\Users\Darno\RankForgedAI — app code
-- C:\Users\Darno\RankForged AI Website — marketing site
+## SUPABASE TABLE: activation_keys columns
+id, key, plan, max_clients, used, used_by, used_at, created_at, created_for,
+stripe_session_id, stripe_customer_id, stripe_subscription_id
+
+## FK DEPENDENCY ORDER FOR USER DELETION
+auth.identities, auth.sessions, auth.mfa_factors, auth.one_time_tokens,
+auth.flow_state, auth.oauth_authorizations, auth.oauth_consents,
+auth.webauthn_credentials, auth.webauthn_challenges,
+auth.refresh_tokens (user_id is varchar — cast: user_id::text != 'uuid'),
+local_seo_tasks, reputation_reviews, w2_status, score_history, bl_status,
+social_proof, indexing_checks, agent_states, agent_results, content_calendar,
+subscriptions, activation_keys (used_by), client_data, clients, settings,
+auth.users (LAST)
 
 ## DEPLOY PROCESS (APP)
 ```
@@ -77,7 +93,6 @@ git add .
 git commit -m "description"
 git push
 ```
-(Vercel auto-deploys in ~2 minutes)
 
 ## DEPLOY PROCESS (MARKETING)
 ```
@@ -92,23 +107,14 @@ git push origin HEAD:main
 $env:SUPABASE_ACCESS_TOKEN = "sbp_xxx"
 supabase secrets set KEY=value --project-ref ybhpbpahhywiokhqpldj
 supabase functions deploy function-name --project-ref ybhpbpahhywiokhqpldj
+supabase functions deploy stripe-webhook --project-ref ybhpbpahhywiokhqpldj --no-verify-jwt
 ```
 
-## SUPABASE TABLE: settings columns
-anthropic_key, google_key (GSC OAuth access token), gsc_refresh_token, gsc_email,
-gsc_connected, indexnow_key, yext_key, yext_account, openai_key, gemini_key,
-pagespeed_key, moz_id, moz_secret, brightlocal_key, brightlocal_cid,
-gmail_token, fb_token, fb_page_id, linkedin_token, brand_color, agency_name,
-report_day, updated_at
-**Does NOT have:** biz_website, biz_name, or any biz_* field. Those belong to client_data only.
-
-## SUPABASE TABLE: client_data columns
-client_id (PRIMARY/FOREIGN KEY — NOT "id"), user_id, biz_name, biz_cat, biz_addr, biz_city, biz_state,
-biz_zip, biz_phone, biz_website, biz_desc, biz_kw
-
-## SUPABASE TABLE: clients columns (separate from client_data)
-id (PRIMARY KEY — this one DOES use "id"), user_id, name, color, updated_at
-This is the lightweight client list table used by useClients.js. Do not confuse with client_data.
+## STRIPE PRICE IDs (LIVE)
+- solopreneur: price_1TiIOkLQRnOj0qLPr4geBfjT ($97/mo, 1 client)
+- deluxe: price_1TiIO1LQRnOj0qLPK15fSOJl ($197/mo, 3 clients)
+- pro: price_1TiINALQRnOj0qLPKp2SRdE4 ($397/mo, 5 clients)
+- agency: price_1TiHmnLQRnOj0qLPBlctvhrt ($1,997/mo, 25 clients)
 
 ## DESIGN SYSTEM
 pageBg:#060d1a cardBg:#0d1f3c border:#0f2040 border2:#1a3560
@@ -117,45 +123,5 @@ text:#e2e8f0 muted:#4a6080 accent:#3b82f6 green:#10b981 red:#f87171
 ## MODEL STRING
 claude-sonnet-4-6
 
-## VERCEL PROJECTS
-- rankforgedai → app.rankforgedai.com → EBLServicesLLC/rankforge
-- project-gd2vh → rankforgedai.com → EBLServicesLLC/rankforgedai-marketing
-
-## VERCEL ENV VARS (app)
-- VITE_SUPABASE_URL=https://ybhpbpahhywiokhqpldj.supabase.co
-- VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-- VITE_GOOGLE_CLIENT_ID=179014220794-0bkt30vkd30lc2g4pcttb41ktckbc4va.apps.googleusercontent.com
-
-## SUPABASE SECRETS (active)
-ANTHROPIC_API_KEY, FACEBOOK_APP_ID, FACEBOOK_APP_SECRET,
-LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET, RESEND_API_KEY,
-STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
-GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-
-## STRIPE STATUS
-- Products: ACTIVE ✅
-- Checkout: confirmed working for all 4 plans ✅
-- Live mode: NOT YET TESTED
-
-## RESEND / EMAIL STATUS
-- DKIM/MX/SPF: Verified ✅ on send.rankforgedai.com
-- FROM_EMAIL: noreply@send.rankforgedai.com ✅
-- hello@rankforgedai.com: PENDING setup in DreamHost
-
-## MARKETING SITE ROUTES (vercel.json)
-- /privacy-policy → privacy-policy.html ✅
-- /terms-of-service → terms-of-service.html ✅
-- /(.*) → index.html (catch-all)
-
-## TEST KEYS
-RFA-SOLO-TEST-0001, RFA-DLX-TEST-0001, RFA-PRO-TEST-0001, RFA-AGN-TEST-0001
-
-## LAUNCH READINESS SUMMARY (as of end of Session 32)
-✅ Landing Pages feature — live, working, confirmed in production
-✅ Business profile data flow — root bug fixed across 11 files, should resolve long-standing prefill issues
-✅ Production build — clean, zero errors
-✅ Data integrity — verified intact via direct SQL query
-⚠️ API Keys page UI display — known cosmetic bug, data is safe, owner approved shipping with this open
-⏸️ Test user cleanup, fresh signup test, GSC integration — still pending from prior sessions, not blockers for this launch
-
-**Owner decision: proceeding to launch with the ApiKeysPage display bug as a known follow-up item.**
+## TEST KEYS (still valid in DB)
+RFA-OWNER-MASTER-0001 (agency, 999 clients, unused)

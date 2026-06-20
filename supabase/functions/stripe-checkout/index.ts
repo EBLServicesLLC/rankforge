@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+﻿import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@13'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
@@ -13,16 +13,10 @@ const corsHeaders = {
 
 function getPlanFromPriceId(priceId: string): string {
   const map: Record<string, string> = {
-    // Live price IDs
-    'price_1TdJajLQRnOj0qLPQmbNz2kN': 'solopreneur',
-    'price_1TdJbkLQRnOj0qLPJPfsQsJI': 'deluxe',
-    'price_1TdJczLQRnOj0qLPa7nat9Hi': 'pro',
-    'price_1TdJdnLQRnOj0qLPv56ml87r': 'agency',
-    // Test price IDs
-    'price_1TegQ5LQRnOj0qLPTa30h9aV': 'solopreneur',
-    'price_1TegQLLQRnOj0qLPVIkeOkH5': 'deluxe',
-    'price_1TegQbLQRnOj0qLPiEPGi74n': 'pro',
-    'price_1TegQwLQRnOj0qLPDTeqAOTV': 'agency',
+    'price_1TiIOkLQRnOj0qLPr4geBfjT': 'solopreneur',
+    'price_1TiIO1LQRnOj0qLPK15fSOJl': 'deluxe',
+    'price_1TiINALQRnOj0qLPKp2SRdE4': 'pro',
+    'price_1TiHmnLQRnOj0qLPBlctvhrt': 'agency',
   }
   return map[priceId] || 'unknown'
 }
@@ -78,4 +72,5 @@ serve(async (req) => {
     })
   }
 })
+
 
