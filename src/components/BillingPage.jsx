@@ -58,6 +58,7 @@ export default function BillingPage({ userId, userEmail, onBack }) {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
         body: JSON.stringify({
           price_id:    plan.priceId,
+          plan:        plan.id,
           user_id:     userId,
           user_email:  userEmail,
           success_url: `${window.location.origin}/?billing=success`,
