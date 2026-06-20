@@ -150,8 +150,8 @@ export default function DashboardShell({ session, subscription }) {
         // 1. Load settings + client data from Supabase and inject into rankforge3
         try {
           const [settingsRes, clientRes] = await Promise.all([
-            supabase.from('settings').select('*').eq('user_id', session.user.id).single(),
-            activeId ? supabase.from('client_data').select('*').eq('client_id', activeId).single() : Promise.resolve({ data: null })
+            supabase.from('settings').select('*').eq('user_id', session.user.id).maybeSingle(),
+            activeId ? supabase.from('client_data').select('*').eq('client_id', activeId).maybeSingle() : Promise.resolve({ data: null })
           ])
 
           const s = settingsRes.data || {}

@@ -192,7 +192,8 @@ export default function ApiKeysPage({ session }) {
   useEffect(() => {
     if (!session) return
     supabase.from('settings').select('*').eq('user_id', session.user.id).maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error('[ApiKeysPage] settings load error:', error)
         if (data) {
           setValues(data)
           if (data.report_day) setReportDay(data.report_day)
